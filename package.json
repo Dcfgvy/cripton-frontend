@@ -9,7 +9,7 @@
     "test": "ng test",
     "serve:ssr:solana-token-generator-frontend": "node dist/solana-token-generator-frontend/server/server.mjs"
   },
-  "private": true,
+  "private": false,
   "dependencies": {
     "@angular/animations": "^19.0.0",
     "@angular/common": "^19.0.0",
@@ -22,6 +22,7 @@
     "@angular/router": "^19.0.0",
     "@angular/ssr": "^19.0.2",
     "express": "^4.18.2",
+    "redis": "^4.7.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"

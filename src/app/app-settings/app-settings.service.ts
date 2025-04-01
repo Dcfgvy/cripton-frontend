@@ -1,0 +1,64 @@
+// app-settings.service.ts
+import { isPlatformServer } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { Inject, Injectable, makeStateKey, PLATFORM_ID, TransferState } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
+import { environment } from '../../environments/environment';
+
+const EXAMPLE_DATA_KEY = makeStateKey<AppSettings>('appSettings');
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AppSettingsService {
+  private _settings = new BehaviorSubject<AppSettings|null>(null);
+
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private transferState: TransferState,
+    private http: HttpClient
+  ) {}
+
+  settings$ = this._settings.asObservable();
+  get currentSettings(): AppSettings | null {
+    return this._settings.value;
+  }
+
+  init(): void {
+    if (isPlatformServer(this.platformId)) {
+      this.fetchDataOnServer();
+    } else {
+      this.handleDataOnClient();
+    }
+  }
+
+  private fetchDataOnServer(): void {
+    this.http.get(`${environment.ssrApiUrl}/api/settings`).subscribe(data => {
+      this.transferState.set(EXAMPLE_DATA_KEY, data);
+    });
+  }
+
+  private handleDataOnClient(): void {
+    const storedData = this.transferState.get(EXAMPLE_DATA_KEY, null);
+    
+    if (storedData) {
+      console.log('Using server-fetched data', storedData);
+      this._settings.next(storedData);
+    } else {
+      // Client-side fallback fetch
+      console.log('Client-side fetch initiated');
+      this.http.get<AppSettings>(`${environment.apiUrl}/api/settings`).subscribe(data => {
+        console.log('Client-side fetch completed', data);
+        this._settings.next(data);
+      });
+    }
+  }
+}
+
+export interface AppSettings {
+  solanaAddress: string;
+  baseTokenCreationCost: number;
+  additionalOptionsCost: number;
+  tokenExpirationTimeMin: number;
+  maxImageSize: number; // in MB
+}
