@@ -1,1 +1,23 @@
-/* You can add global styles to this file, and also import other style files */
+
+body {
+  font-family: "Open Sans", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  font-variation-settings:
+    "wdth" 100;
+}
+
+/* Ensure all text-related elements inherit the default font */
+h1, h2, h3, h4, h5, h6, p, span, label, a, div, input, textarea, button {
+  font-family: inherit;
+}
+
+/* PrimeNG Components: Ensure they use the default font */
+.p-component {
+  font-family: inherit !important;
+}
+
+// no_text_decorea {
+//   text-decoration: none;
+// }

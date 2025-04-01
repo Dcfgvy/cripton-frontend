@@ -1,0 +1,19 @@
+<ng-template #networkTemplate let-network>
+  <div class="flex items-center gap-2">
+    @if (network?.code == 'mainnet-beta') {
+      <div>
+        <img src="images/solana.png" class="-mb-1" style="height: 1.2rem;" />
+      </div>
+    }
+    <div>{{ network?.name }}</div>
+  </div>
+</ng-template>
+
+<p-select [options]="networks" [(ngModel)]="selectedNetwork" optionLabel="name">
+  <ng-template #selectedItem let-selectedOption>
+      <div [ngTemplateOutlet]="networkTemplate" [ngTemplateOutletContext]="{ $implicit: selectedOption }"></div>
+  </ng-template>
+  <ng-template let-network #item>
+    <div [ngTemplateOutlet]="networkTemplate" [ngTemplateOutletContext]="{ $implicit: network }"></div>
+  </ng-template>
+</p-select>

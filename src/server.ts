@@ -8,6 +8,7 @@ import express from 'express';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createClient } from 'redis';
+import { environment } from './environments/environment';
 
 const serverDistFolder = dirname(fileURLToPath(import.meta.url));
 const browserDistFolder = resolve(serverDistFolder, '../browser');
@@ -62,7 +63,7 @@ app.use('/**', async (req, res, next) => {
     if (response) {
       console.log('RENDERING');
       const html = await response.text();
-      await redisClient.setEx(cacheKey, 60, html);
+      await redisClient.setEx(cacheKey, environment.ssrCacheExpirySeconds, html);
       return res.send(html);
     }
     
