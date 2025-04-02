@@ -1,0 +1,64 @@
+<ng-template #continueButton let-page="page" let-canContinue="canContinue" let-activateCallback="activateCallback">
+  <div class="w-full flex pt-4 justify-content-between">
+    @if(page > 1){
+      <p-button label="Back" severity="secondary" icon="pi pi-arrow-left" iconPos="left" (onClick)="activateCallback(page - 1)" />
+    }
+    @else {
+      <div></div>
+    }
+    @if(page < 3){
+      <p-button label="Next" [disabled]="!canContinue" icon="pi pi-arrow-right" iconPos="right" (onClick)="activateCallback(page + 1)" />
+    }
+  </div>
+</ng-template>
+
+<div style="max-width: 900px;">
+  <p-stepper [value]="1" class="basis-[50rem]">
+    <p-step-list>
+      <p-step [value]="1">Logo & Info</p-step>
+      <p-step [value]="2">Socials</p-step>
+      <p-step [value]="3">Settings</p-step>
+    </p-step-list>
+    <p-step-panels>
+      <p-step-panel [value]="1">
+          <ng-template #content let-activateCallback="activateCallback">
+              <div>
+                  <div
+                      class="border-2 border-dashed border-surface-200 dark:border-surface-700 rounded bg-surface-50 dark:bg-surface-950 flex-auto flex justify-center items-center font-medium"
+                  >
+                      Content I
+                  </div>
+
+                  <div [ngTemplateOutlet]="continueButton" [ngTemplateOutletContext]="{ page: 1, canContinue: true, activateCallback }"></div>
+              </div>
+          </ng-template>
+      </p-step-panel>
+  
+      <p-step-panel [value]="2">
+          <ng-template #content let-activateCallback="activateCallback">
+              <div class="flex flex-col h-48">
+                  <div
+                      class="border-2 border-dashed border-surface-200 dark:border-surface-700 rounded bg-surface-50 dark:bg-surface-950 flex-auto flex justify-center items-center font-medium"
+                  >
+                      Content II
+                  </div>
+              </div>
+              <div [ngTemplateOutlet]="continueButton" [ngTemplateOutletContext]="{ page: 2, canContinue: true, activateCallback }"></div>
+          </ng-template>
+      </p-step-panel>
+  
+      <p-step-panel [value]="3">
+          <ng-template #content let-activateCallback="activateCallback">
+              <div class="flex flex-col h-48">
+                  <div
+                      class="border-2 border-dashed border-surface-200 dark:border-surface-700 rounded bg-surface-50 dark:bg-surface-950 flex-auto flex justify-center items-center font-medium"
+                  >
+                      Content III
+                  </div>
+              </div>
+              <div [ngTemplateOutlet]="continueButton" [ngTemplateOutletContext]="{ page: 3, canContinue: true, activateCallback }"></div>
+          </ng-template>
+      </p-step-panel>
+  </p-step-panels>
+  </p-stepper>
+</div>

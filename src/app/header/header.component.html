@@ -28,26 +28,30 @@
 <div [ngTemplateOutlet]="headerTemplate" [ngTemplateOutletContext]="{ fixed: true }"></div>
 <div [ngTemplateOutlet]="headerTemplate" [ngTemplateOutletContext]="{ fixed: false }"></div> -->
 
-<header class="w-full flex justify-content-center items-center" style="background-color: transparent;">
-  <div class="flex justify-content-between gap-4" style="width: 1024px;">
+<header class="w-full flex justify-content-center items-center pt-2 pb-2" style="background-color: transparent;">
+  <div class="flex justify-content-between gap-4" style="width: 70%; min-width: 1024px; max-width: 1280px;"> <!-- TODO responsive --> 
+    <app-network-switch></app-network-switch>
     <nav class="flex justify-content-between gap-3">
-      <p-button label="Home" variant="text" [raised]="true">
+      <a routerLink="/" class="p-button p-button-text no-underline">
         <span class="material-symbols-outlined">home</span>
-      </p-button>
-
-      <p-button label="Create Token" variant="text" [raised]="true">
-        <span class="material-symbols-outlined">add_circle</span>
-      </p-button>
-
-      <p-button label="Trending Tokens" variant="text" [raised]="true">
-        <span class="material-symbols-outlined">trending_up</span>
-      </p-button>
+        Home
+      </a>
   
-      <a href="https://raydium.io/liquidity/portfolio" target="_blank" rel="noopener noreferrer" class="p-button p-button-text p-button-raised no-underline">
+      <a routerLink="/create-token" class="p-button p-button-text no-underline">
+        <span class="material-symbols-outlined">add_circle</span>
+        Create Token
+      </a>
+  
+      <a routerLink="/trending-tokens" class="p-button p-button-text no-underline">
+        <span class="material-symbols-outlined">trending_up</span>
+        Trending Tokens
+      </a>
+  
+      <a href="https://raydium.io/portfolio" target="_blank" rel="noopener noreferrer" class="p-button p-button-text no-underline">
         <span class="material-symbols-outlined">water_drop</span>
         Manage Liquidity
       </a>
     </nav>
-    <app-network-switch></app-network-switch>
+    <app-wallet></app-wallet>
   </div>
 </header>

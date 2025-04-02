@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { MainComponent } from './main/main.component';
-import { AboutComponent } from './about/about.component';
+import { CreateTokenComponent } from './create-token/create-token.component';
+import { TrendingTokensComponent } from './trending-tokens/trending-tokens.component';
 
 export const routes: Routes = [
   {
@@ -8,7 +9,15 @@ export const routes: Routes = [
     component: MainComponent,
   },
   {
-    path: 'about',
-    component: AboutComponent,
-  }
+    path: 'create-token',
+    component: CreateTokenComponent,
+  },
+  {
+    path: 'trending-tokens',
+    component: TrendingTokensComponent,
+  },
+  {
+    path: '**',
+    redirectTo: '/'
+  },
 ];
