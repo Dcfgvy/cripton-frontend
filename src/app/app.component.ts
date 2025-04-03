@@ -24,6 +24,6 @@ export class AppComponent implements OnInit {
 
   ngOnInit(): void {
     this.settingsService.init();
-    this.walletService.init();
+    // this.walletService.init();
   }
 }

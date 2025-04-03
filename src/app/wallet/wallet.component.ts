@@ -1,18 +1,13 @@
 import { Component } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
-import { NgIf } from '@angular/common';
-import { BrowserModule } from '@angular/platform-browser';
-import { HdWalletAdapterModule } from '@heavy-duty/wallet-adapter';
+import { CommonModule } from '@angular/common';
 import { WalletService } from './wallet.service';
 
 @Component({
   selector: 'app-wallet',
-  standalone: true,
   imports: [
     ButtonModule,
-    NgIf,
-    BrowserModule,
-    HdWalletAdapterModule,
+    CommonModule,
   ],
   templateUrl: './wallet.component.html',
   styleUrl: './wallet.component.scss'
@@ -21,4 +16,12 @@ export class WalletComponent {
 	constructor(
     public readonly walletService: WalletService,
 	) {}
+
+  connect(walletName: string): void {
+    this.walletService.connect(walletName).catch(console.error);
+  }
+
+  disconnect(): void {
+    this.walletService.disconnect().catch(console.error);
+  }
 }

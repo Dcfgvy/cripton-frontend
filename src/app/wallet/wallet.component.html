@@ -1,4 +1,4 @@
-<p-button label="Connect Wallet"></p-button>
+<!-- <p-button label="Connect Wallet"></p-button> -->
 <!-- <div *ngIf="!walletService.connected; else connectedState">
   <h3>Connect Wallet</h3>
   <button 
@@ -18,3 +18,9 @@
     <button (click)="disconnect()">Disconnect</button>
   </div>
 </ng-template> -->
+<div>
+  <button (click)="connect('Phantom')">Connect Phantom</button>
+  <button (click)="connect('Solflare')">Connect Solflare</button>
+  <button (click)="disconnect()" *ngIf="walletService.publicKey">Disconnect</button>
+  <p *ngIf="walletService.publicKey">Connected: {{ walletService.publicKey?.toBase58() }}</p>
+</div>

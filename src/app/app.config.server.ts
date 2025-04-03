@@ -10,8 +10,6 @@ const serverConfig: ApplicationConfig = {
   providers: [
     provideServerRendering(),
     provideServerRoutesConfig(serverRoutes),
-    provideHttpClient(),
-    AppSettingsService,
   ],
 };
 
