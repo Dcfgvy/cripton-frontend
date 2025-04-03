@@ -12,7 +12,7 @@ const serverConfig: ApplicationConfig = {
     provideServerRoutesConfig(serverRoutes),
     provideHttpClient(),
     AppSettingsService,
-  ]
+  ],
 };
 
 export const config = mergeApplicationConfig(appConfig, serverConfig);

@@ -1,1 +1,20 @@
 <p-button label="Connect Wallet"></p-button>
+<!-- <div *ngIf="!walletService.connected; else connectedState">
+  <h3>Connect Wallet</h3>
+  <button 
+    *ngFor="let wallet of walletService.wallets" 
+    (click)="connect(wallet)"
+    [disabled]="wallet.readyState !== 'Installed'"
+  >
+    {{ wallet.name }}
+    <span *ngIf="wallet.readyState !== 'Installed'">(Not Installed)</span>
+  </button>
+</div>
+
+<ng-template #connectedState>
+  <div>
+    <h3>Connected Wallet</h3>
+    <p>Address: {{ walletService.publicKey?.toBase58() }}</p>
+    <button (click)="disconnect()">Disconnect</button>
+  </div>
+</ng-template> -->

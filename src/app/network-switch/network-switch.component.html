@@ -9,7 +9,7 @@
   </div>
 </ng-template>
 
-<p-select [options]="networks" [(ngModel)]="selectedNetwork" optionLabel="name">
+<p-select [options]="networkSwitchService.networks" [(ngModel)]="networkSwitchService.selectedNetwork" optionLabel="name">
   <ng-template #selectedItem let-selectedOption>
       <div [ngTemplateOutlet]="networkTemplate" [ngTemplateOutletContext]="{ $implicit: selectedOption }"></div>
   </ng-template>
