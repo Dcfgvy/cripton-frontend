@@ -10,7 +10,7 @@ import { WalletComponent } from "../wallet/wallet.component";
     ButtonModule,
     NetworkSwitchComponent,
     RouterLink,
-    WalletComponent
+    WalletComponent,
 ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss'

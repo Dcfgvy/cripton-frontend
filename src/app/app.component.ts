@@ -2,8 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { AppSettingsService } from './app-settings/app-settings.service';
 import { HeaderComponent } from './header/header.component';
-import { NetworkSwitchService } from './network-switch/network-switch.service';
-import { WalletService } from './wallet/wallet.service';
+// import { NetworkSwitchService } from './network-switch/network-switch.service';
+// import { WalletService } from './wallet/wallet.service';
 
 @Component({
   selector: 'app-root',
@@ -19,7 +19,6 @@ export class AppComponent implements OnInit {
 
   constructor(
     private settingsService: AppSettingsService,
-		private readonly walletService: WalletService,
   ) {}
 
   ngOnInit(): void {

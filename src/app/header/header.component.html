@@ -29,7 +29,7 @@
 <div [ngTemplateOutlet]="headerTemplate" [ngTemplateOutletContext]="{ fixed: false }"></div> -->
 
 <header class="w-full flex justify-content-center items-center pt-2 pb-2" style="background-color: transparent;">
-  <div class="flex justify-content-between gap-4" style="width: 70%; min-width: 1024px; max-width: 1280px;"> <!-- TODO responsive --> 
+  <div class="flex justify-content-between gap-4" style="width: 70%; min-width: 1100px; max-width: 1280px;"> <!-- TODO responsive --> 
     <app-network-switch></app-network-switch>
     <nav class="flex justify-content-between gap-3">
       <a routerLink="/" class="p-button p-button-text no-underline">
@@ -53,5 +53,6 @@
       </a>
     </nav>
     <app-wallet></app-wallet>
+    <!-- <div></div> -->
   </div>
 </header>

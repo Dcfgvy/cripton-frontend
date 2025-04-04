@@ -20,6 +20,19 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
+            "allowedCommonJsDependencies": [
+              "bs58",
+              "bn.js",
+              "borsh",
+              "@solana/buffer-layout",
+              "bigint-buffer",
+              "jayson/lib/client/browser",
+              "whatwg-url",
+              "encoding",
+              "bufferutil",
+              "utf-8-validate",
+              "eventemitter3"
+            ],
             "outputPath": "dist/solana-token-generator-frontend",
             "index": "src/index.html",
             "browser": "src/main.ts",
@@ -101,7 +114,9 @@
               }
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.scss",
+              "node_modules/primeflex/primeflex.css",
+              "node_modules/primeicons/primeicons.css"
             ],
             "scripts": []
           }

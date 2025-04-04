@@ -1,26 +1,58 @@
-<!-- <p-button label="Connect Wallet"></p-button> -->
-<!-- <div *ngIf="!walletService.connected; else connectedState">
-  <h3>Connect Wallet</h3>
-  <button 
-    *ngFor="let wallet of walletService.wallets" 
-    (click)="connect(wallet)"
-    [disabled]="wallet.readyState !== 'Installed'"
-  >
-    {{ wallet.name }}
-    <span *ngIf="wallet.readyState !== 'Installed'">(Not Installed)</span>
-  </button>
-</div>
-
-<ng-template #connectedState>
-  <div>
-    <h3>Connected Wallet</h3>
-    <p>Address: {{ walletService.publicKey?.toBase58() }}</p>
-    <button (click)="disconnect()">Disconnect</button>
-  </div>
+<!-- <ng-template #detectedWallet let-wallet="wallet" let-callback="callback">
+  
 </ng-template> -->
-<div>
-  <button (click)="connect('Phantom')">Connect Phantom</button>
-  <button (click)="connect('Solflare')">Connect Solflare</button>
-  <button (click)="disconnect()" *ngIf="walletService.publicKey">Disconnect</button>
-  <p *ngIf="walletService.publicKey">Connected: {{ walletService.publicKey?.toBase58() }}</p>
-</div>
+<p-toast />
+
+<p-dialog header="Connect your Wallet" [modal]="true" [(visible)]="dialogOpened" [style]="{ width: '25rem' }">
+  <span class="p-text-secondary block mb-4">Select the preferrable wallet on Solana:</span>
+  <div class="w-full flex flex-column gap-3">
+    @for (wallet of walletService.getAvailableWalletes(); track $index) {
+      <button pButton class="w-full" severity="secondary" (click)="connect(wallet.name)">
+        <div class="w-full grid -mb-2">
+          <div class="col-8">
+            <div class="flex flex-row items-center gap-2">
+              <div class="wallet-icon-container">
+                <img [src]="wallet.icon" class="wallet-icon">
+              </div>
+              <span class="font-medium">{{ wallet.name }}</span>
+            </div>
+          </div>
+          <div class="col-4">
+            <span class="text-color-secondary">Detected</span>
+          </div>
+        </div>
+      </button>
+    }
+  </div>
+</p-dialog>
+
+
+@if (walletService.selectedWallet == null) {
+  <p-button label="Connect Wallet" (onClick)="dialogOpened = true"></p-button>
+}
+@else {
+  <button pButton (click)="op.toggle($event)" [style]="{ width: '10rem' }">
+    <div class="wallet-icon-container">
+      <img [src]="walletService.selectedWallet.icon" class="wallet-icon">
+    </div>
+    <span class="white-space-nowrap">
+      {{ walletService.selectedWallet.publicKey?.toBase58()?.slice(0, 4) }}..{{ walletService.selectedWallet.publicKey?.toBase58()?.slice(-4) }}
+    </span>
+  </button>
+  <p-popover #op [style]="{ width: '15rem' }">
+    <div class="flex flex-column gap-2">
+      <button pButton class="w-full" severity="secondary" (click)="copyAddress()">
+        <!-- <span class="material-symbols-outlined">content_copy</span> -->
+        {{ addressCopiedState ? 'Copied!' : 'Copy addreess' }}
+      </button>
+      <button pButton class="w-full" severity="secondary" (click)="dialogOpened = true">
+        <!-- <span class="material-symbols-outlined">swap_horiz</span> -->
+        Change wallet
+      </button>
+      <button pButton class="w-full" severity="secondary" (click)="disconnect()">
+        <!-- <span class="material-symbols-outlined">power_settings_new</span> -->
+        Disconnect
+      </button>
+    </div>
+  </p-popover>
+}
