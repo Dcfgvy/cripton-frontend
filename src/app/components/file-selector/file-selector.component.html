@@ -1,0 +1,21 @@
+<div class="w-full">
+  <p-toast />
+  <div
+    class="upload-wrapper border-round-2xl border-2 border-dashed border-primary p-5 text-center cursor-pointer"
+    [ngClass]="{ 'surface-800': isDragging }"
+    (drop)="onFileDropped($event)"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave()"
+    (click)="fileInput.click()"
+  >
+    @if (isFileSelected) {
+      <img [src]="fileSelected()" class="w-10rem h-10rem border-round-md border-2 surface-border object-cover mx-auto ">
+    } @else {
+      <i class="pi pi-upload text-4xl mb-3"></i><br>
+      <span class="text-white font-medium">Drop your 500 x 500 token logo here</span><br>
+      <span class="text-sm text-color-secondary">PNG, JPG, WEBP, GIF up to {{ maxFileSizeMB }} MB</span><br>
+    }
+    <input type="file" class="hidden" #fileInput (change)="onFileSelected($event)" [accept]="allowedTypes.join(',')" />
+    <button pButton type="button" label="Choose File" icon="pi pi-folder-open" class="mt-3" (click)="fileInput.click()"></button>
+  </div>
+</div>

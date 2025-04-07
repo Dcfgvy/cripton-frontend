@@ -1,3 +1,7 @@
+// polyfills, otherwise the app will crash during SSR
+globalThis.__filename = fileURLToPath(import.meta.url);
+globalThis.__dirname = path.dirname(__filename);
+
 import {
   AngularNodeAppEngine,
   createNodeRequestHandler,
@@ -5,7 +9,7 @@ import {
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
 import express from 'express';
-import { dirname, resolve } from 'node:path';
+import path, { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createClient } from 'redis';
 import { environment } from './environments/environment';

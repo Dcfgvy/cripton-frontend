@@ -1,0 +1,37 @@
+<div class="w-full flex flex-column">
+  <!-- TODO margins get added even when no content exists -->
+  <div class="w-full flex flex-row gap-3 justify-content-between items-center">
+    <div class="flex items-center">
+      <div>
+        <p-toggleswitch [(ngModel)]="_checked" (onChange)="onValueChange($event)" size="small" class="mr-2" />
+      </div>
+      <ng-content select="[title]"></ng-content>
+      <div class="text-sm">
+        @if(tag().length > 0){
+          <p-tag class="ml-2" [style]="{'margin-top': '-2px'}" severity="warn" [value]="tag()" />
+        }
+      </div>
+    </div>
+    <div class="text-sm">
+      @if (cost() === 0) {
+        <span class="font-medium">
+          <span>Fee:</span>
+          @if(isFree()){
+            <span class="line-through text-color-secondary ml-1">{{ usualCost() }} {{ currency() }}</span>
+          }
+          <span class="ml-1 font-semibold">FREE</span>
+        </span>
+      } @else {
+        <span class="font-medium">Fee: {{ cost() }} {{ currency() }}</span>
+      }
+    </div>
+  </div>
+  <span class="text-sm text-color-secondary" style="width: 90%;">
+    <ng-content select="[description]"></ng-content>
+  </span>
+  @if(_checked){
+    <div class="w-full mt-2">
+      <ng-content #content></ng-content>
+    </div>
+  }
+</div>

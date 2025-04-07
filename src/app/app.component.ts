@@ -16,7 +16,7 @@ export class AppComponent implements OnInit {
   title = 'Solana Token Generator';
 
   constructor(
-    private settingsService: AppSettingsService
+    private settingsService: AppSettingsService,
   ) {}
 
   ngOnInit(): void {

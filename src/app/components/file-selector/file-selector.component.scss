@@ -1,0 +1,17 @@
+// :host {
+//   display: block;
+//   width: 100%;
+// }
+
+.upload-wrapper {
+  background-color: var(--p-inputtext-background);
+}
+
+input[type='file'] {
+  display: none;
+}
+
+button {
+  visibility: hidden;
+  display: none;
+}

@@ -2,12 +2,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
-
-interface Network {
-  name: string;
-  code: string;
-  isTest: boolean;
-}
+import { NetworkSwitchService } from './network-switch.service';
 
 @Component({
   selector: 'app-network-switch',
@@ -16,18 +11,7 @@ interface Network {
   styleUrl: './network-switch.component.scss'
 })
 export class NetworkSwitchComponent {
-  networks: Network[] = [
-    {
-      name: 'Mainnet',
-      code: 'mainnet-beta',
-      isTest: false
-    },
-    {
-      name: 'Devnet',
-      code: 'devnet',
-      isTest: true
-    }
-  ]
-
-  selectedNetwork: Network = this.networks[0];
+  constructor(
+    public networkSwitchService: NetworkSwitchService
+  ) {}
 }
