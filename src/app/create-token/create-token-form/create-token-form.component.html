@@ -1,64 +1,272 @@
 <ng-template #continueButton let-page="page" let-canContinue="canContinue" let-activateCallback="activateCallback">
-  <div class="w-full flex pt-4 justify-content-between">
+  <div class="w-full flex px-2 justify-content-between align-items-center">
     @if(page > 1){
       <p-button label="Back" severity="secondary" icon="pi pi-arrow-left" iconPos="left" (onClick)="activateCallback(page - 1)" />
     }
     @else {
-      <div></div>
+      <div style="visibility: hidden;">
+        <p-button label="Back" severity="secondary" icon="pi pi-arrow-left" iconPos="left" [disabled]="true" />
+      </div>
     }
     @if(page < 3){
+      <span>
+        Total cost:
+        <span class="line-through text-color-secondary mx-1">{{ (totalCost() * 2).toFixed(2) }} SOL</span>
+        <span class="font-semibold">{{ totalCost().toFixed(2) }} SOL</span>
+      </span>
       <p-button label="Next" [disabled]="!canContinue" icon="pi pi-arrow-right" iconPos="right" (onClick)="activateCallback(page + 1)" />
     }
   </div>
 </ng-template>
 
 <div style="max-width: 900px;">
-  <p-stepper [value]="1" class="basis-[50rem]">
+  <p-stepper [value]="1" class="basis-[50rem]" [linear]="false"> <!-- TODO: set to true -->
     <p-step-list>
       <p-step [value]="1">Logo & Info</p-step>
       <p-step [value]="2">Socials</p-step>
       <p-step [value]="3">Settings</p-step>
     </p-step-list>
     <p-step-panels>
-      <p-step-panel [value]="1">
+      <p-card>
+        <p-step-panel [value]="1">
           <ng-template #content let-activateCallback="activateCallback">
-              <div>
-                  <div
-                      class="border-2 border-dashed border-surface-200 dark:border-surface-700 rounded bg-surface-50 dark:bg-surface-950 flex-auto flex justify-center items-center font-medium"
-                  >
-                      Content I
+            <div class="page">
+              <form
+              [formGroup]="infoForm"
+                class="p-2 pt-0 font-medium"
+              >
+              <span class="text-3xl text-center font-semibold">Provide basic information</span>
+                <div class="formgrid grid mt-3">
+                  <div class="field col-12 md:col-6">
+                    <label for="tokenname">Token Name (max 30)</label>
+                    <input id="tokenname" name="Token Name" placeholder="Solar Token" type="text" pInputText formControlName="name" required [minlength]="1" [maxlength]="30">
                   </div>
+                  <div class="field col-12 md:col-6">
+                    <label for="symbol">Symbol (max 10)</label>
+                    <input id="symbol" name="Symbol" placeholder="SOLR" style="text-transform: uppercase" type="text" pInputText formControlName="symbol" required [minlength]="1" [maxlength]="10">
+                  </div>
+                  <div class="field col-12 md:col-6">
+                    <label for="decimals">Decimals</label>
+                    <p-inputnumber id="decimals" name="Decimals" formControlName="decimals" required [min]="0" [max]="9"/>
+                    <small id="symbol-help">Most tokens use 6 decimals</small>
+                  </div>
+                  <div class="field col-12 md:col-6">
+                    <label for="supply">Initial Supply</label>
+                    <p-inputgroup>
+                      <p-inputnumber id="supply" name="Initial Supply" formControlName="supply" required [min]="1" [maxlength]="MAX_SUPPLY_WITH_DECIMALS_LENGTH" [max]="MAX_SUPPLY_WITH_DECIMALS_NUMBER"/>
+                      @if(infoForm.get('symbol')?.value){
+                        <p-inputgroup-addon>
+                          {{ infoForm.get('symbol')?.value?.toLocaleUpperCase() || 'SOLR' }}
+                        </p-inputgroup-addon>
+                      }
+                    </p-inputgroup>
+                    <small id="symbol-help">Most tokens use 1 billion</small>
+                  </div>
+                  <div class="field col-12">
+                    <label for="logo-image">Logo</label>
+                    <app-file-selector id="logo-image" [(fileSelected)]="imageFile"></app-file-selector>
+                  </div>
+                  <div class="field col-12">
+                    <label for="description">Description</label>
+                    <textarea id="description" pTextarea [autoResize]="true" [maxLength]="1000" formControlName="description" placeholder="Provide a short and catchy description of your token. At least 10 symbols" rows="5"></textarea>
+                  </div>
+                </div>
+              </form>
 
-                  <div [ngTemplateOutlet]="continueButton" [ngTemplateOutletContext]="{ page: 1, canContinue: true, activateCallback }"></div>
-              </div>
+              <div [ngTemplateOutlet]="continueButton" [ngTemplateOutletContext]="{
+                page: 1,
+                canContinue: infoFormValid && imageFile.length > 0,
+                activateCallback
+                }"></div>
+            </div>
           </ng-template>
-      </p-step-panel>
+        </p-step-panel>
+    
+        <p-step-panel [value]="2">
+            <ng-template #content let-activateCallback="activateCallback">
+              <div class="page">
+                <form
+                [formGroup]="socialsForm"
+                  class="p-2 pt-0 font-medium"
+                >
+                  <span class="text-3xl text-center font-semibold">Connect token socials</span>
+                  <div class="formgrid grid mt-3">
+                    <ng-container>
+                      <!-- FIELD -->
+                      <div class="field col-12 md:col-6">
+                        <label for="website-link" class="flex items-center">
+                          <div class="-mb-1" style="margin-top: 2px;">
+                            <span style="font-size: 1.3rem;" class="material-symbols-outlined">language</span>
+                            <!-- <i class="bi bi-globe"></i> -->
+                          </div>
+                          <span class="ml-2">Website</span>
+                        </label>
+                        <input id="website-link" name="Website" placeholder="https://..." type="text" pInputText formControlName="website" [maxlength]="1000">
+                      </div>
+                      <!-- FIELD -->
+                      <div class="field col-12 md:col-6">
+                        <label for="twitter" class="flex items-center">
+                          <div>
+                            <i class="bi bi-twitter"></i>
+                          </div>
+                          <span class="ml-2">Twitter</span>
+                        </label>
+                        <input id="twitter" name="Twitter" placeholder="https://twitter.com/..." type="text" pInputText formControlName="twitter" [maxlength]="1000">
+                      </div>
+                      <!-- FIELD -->
+                      <div class="field col-12 md:col-6">
+                        <label for="telegram" class="flex items-center">
+                          <div>
+                            <i class="bi bi-telegram"></i>
+                          </div>
+                          <span class="ml-2">Telegram</span>
+                        </label>
+                        <input id="telegram" name="Telegram" placeholder="https://t.me/..." type="text" pInputText formControlName="telegram" [maxlength]="1000">
+                      </div>
+                      <!-- FIELD -->
+                      <div class="field col-12 md:col-6">
+                        <label for="discord" class="flex items-center">
+                          <div>
+                            <i class="bi bi-discord"></i>
+                          </div>
+                          <span class="ml-2">Discord</span>
+                        </label>
+                        <input id="discord" name="Discord" placeholder="https://discord.gg/..." type="text" pInputText formControlName="discord" [maxlength]="1000">
+                      </div>
+                      @if(socials_extended){
+                        <!-- FIELD -->
+                        <div class="field col-12 md:col-6">
+                          <label for="youtube" class="flex items-center">
+                            <div>
+                              <i class="bi bi-youtube"></i>
+                            </div>
+                            <span class="ml-2">Youtube</span>
+                          </label>
+                          <input id="youtube" name="Youtube" placeholder="https://youtube.com/..." type="text" pInputText formControlName="youtube" [maxlength]="1000">
+                        </div>
+                        <!-- FIELD -->
+                        <div class="field col-12 md:col-6">
+                          <label for="medium" class="flex items-center">
+                            <div>
+                              <i class="bi bi-medium"></i>
+                            </div>
+                            <span class="ml-2">Medium</span>
+                          </label>
+                          <input id="medium" name="Medium" placeholder="https://medium.com/..." type="text" pInputText formControlName="medium" [maxlength]="1000">
+                        </div>
+                        <!-- FIELD -->
+                        <div class="field col-12 md:col-6">
+                          <label for="github" class="flex items-center">
+                            <div>
+                              <i class="bi bi-github"></i>
+                            </div>
+                            <span class="ml-2">Github</span>
+                          </label>
+                          <input id="github" name="Github" placeholder="https://github.com/..." type="text" pInputText formControlName="github" [maxlength]="1000">
+                        </div>
+                        <!-- FIELD -->
+                        <div class="field col-12 md:col-6">
+                          <label for="instagram" class="flex items-center">
+                            <div>
+                              <i class="bi bi-instagram"></i>
+                            </div>
+                            <span class="ml-2">Instagram</span>
+                          </label>
+                          <input id="instagram" name="Instagram" placeholder="https://instagram.com/..." type="text" pInputText formControlName="instagram" [maxlength]="1000">
+                        </div>
+                        <!-- FIELD -->
+                        <div class="field col-12 md:col-6">
+                          <label for="reddit" class="flex items-center">
+                            <div>
+                              <i class="bi bi-reddit"></i>
+                            </div>
+                            <span class="ml-2">Reddit</span>
+                          </label>
+                          <input id="reddit" name="Reddit" placeholder="https://reddit.com/..." type="text" pInputText formControlName="reddit" [maxlength]="1000">
+                        </div>
+                        <!-- FIELD -->
+                        <div class="field col-12 md:col-6">
+                          <label for="facebook" class="flex items-center">
+                            <div>
+                              <i class="bi bi-facebook"></i>
+                            </div>
+                            <span class="ml-2">Facebook</span>
+                          </label>
+                          <input id="facebook" name="Facebook" placeholder="https://facebook.com/..." type="text" pInputText formControlName="facebook" [maxlength]="1000">
+                        </div>
+                      }
+                      <p-button class="ml-2 -mt-2 mb-2" variant="text" size="small" (onClick)="socials_extended = !socials_extended">
+                        @if(socials_extended){
+                          Show less
+                          <span class="material-symbols-outlined">keyboard_arrow_up</span>
+                        } @else {
+                          Show more
+                          <span class="material-symbols-outlined">keyboard_arrow_down</span>
+                        }
+                      </p-button>
+                    </ng-container>
   
-      <p-step-panel [value]="2">
-          <ng-template #content let-activateCallback="activateCallback">
-              <div class="flex flex-col h-48">
-                  <div
-                      class="border-2 border-dashed border-surface-200 dark:border-surface-700 rounded bg-surface-50 dark:bg-surface-950 flex-auto flex justify-center items-center font-medium"
-                  >
-                      Content II
-                  </div>
-              </div>
-              <div [ngTemplateOutlet]="continueButton" [ngTemplateOutletContext]="{ page: 2, canContinue: true, activateCallback }"></div>
-          </ng-template>
-      </p-step-panel>
+                    <div class="field col-12">
+                      <span class="text-xl">Tags</span><br>
+                      <span class="text-sm text-color-secondary">You can add up to 3 tags that are most associated with your project</span>
+                      <input
+                      class="w-full mt-1" pInputText id="tags-input" name="Tags input field" placeholder="Start typing... (e.g. NFT, Meme, Airdrop)" [maxLength]="31"
+                      [(ngModel)]="tagsInput"
+                      [ngModelOptions]="{standalone:true}"
+                      (keypress)="onTagInputKeyPress($event)"
+                      >
+                      <div class="mt-2 flex items-center gap-2 flex-wrap">
+                        @for (tag of socialsForm.get('tags')?.value; track tag) {
+                          <p-chip [label]="tag" [removable]="true" (onRemove)="removeTag(tag)" />
+                        }
+                      </div>
+                    </div>
   
-      <p-step-panel [value]="3">
-          <ng-template #content let-activateCallback="activateCallback">
-              <div class="flex flex-col h-48">
-                  <div
-                      class="border-2 border-dashed border-surface-200 dark:border-surface-700 rounded bg-surface-50 dark:bg-surface-950 flex-auto flex justify-center items-center font-medium"
-                  >
-                      Content III
+                    <div class="field col-12">
+                      <app-add-on [(added)]="addOns['customCreatorInfo'].added" [isFree]="addOns['customCreatorInfo'].isFree">
+                        <div title>Custom Creator's Info</div>
+                        <div description>Change information about token creator in token metadata. By default it's {{ DEFAULT_CREATOR_NAME }}</div>
+  
+                        <div class="w-full formgrid grid" [formGroup]="creatorInfoForm">
+                          <div class="field col-12 md:col-6">
+                            <label for="creator-name">Creator Name</label>
+                            <input id="creator-name" name="Creator Name" [placeholder]="DEFAULT_CREATOR_NAME" type="text" pInputText formControlName="name" required [maxlength]="100">
+                          </div>
+                          <div class="field col-12 md:col-6">
+                            <label for="creator-website">Creator Website</label>
+                            <input id="creator-website" name="Creator Website" [placeholder]="DEFAULT_CREATOR_WEBSITE" type="text" pInputText formControlName="website" required [maxlength]="1000">
+                          </div>
+                          <div class="-my-2 field col-12 flex flex-row">
+                            <p-checkbox formControlName="remove" value="Remove creator data" inputId="removeCreatorData" (onChange)="onRemoveCreatorDataChange($event)" />
+                            <label for="removeCreatorData" class="ml-2">Remove creator data</label>
+                          </div>
+                        </div>
+                      </app-add-on>
+                    </div>
                   </div>
+                </form>
+                <div [ngTemplateOutlet]="continueButton" [ngTemplateOutletContext]="{
+                  page: 2,
+                  canContinue: socialsFormValid,
+                  activateCallback
+                  }"></div>
               </div>
-              <div [ngTemplateOutlet]="continueButton" [ngTemplateOutletContext]="{ page: 3, canContinue: true, activateCallback }"></div>
-          </ng-template>
-      </p-step-panel>
+            </ng-template>
+        </p-step-panel>
+    
+        <p-step-panel [value]="3">
+            <ng-template #content let-activateCallback="activateCallback">
+                <div class="flex flex-col h-48">
+                    <div
+                        class="border-2 border-dashed border-surface-200 dark:border-surface-700 rounded bg-surface-50 dark:bg-surface-950 flex-auto flex justify-center items-center font-medium"
+                    >
+                        Content III
+                    </div>
+                </div>
+                <div [ngTemplateOutlet]="continueButton" [ngTemplateOutletContext]="{ page: 3, canContinue: true, activateCallback }"></div>
+            </ng-template>
+        </p-step-panel>
+      </p-card>
   </p-step-panels>
   </p-stepper>
 </div>

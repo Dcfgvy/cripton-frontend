@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { afterNextRender, Injectable } from '@angular/core';
 import { WalletAdapterNetwork, WalletReadyState } from '@solana/wallet-adapter-base';
 import { Connection, clusterApiUrl } from '@solana/web3.js';
 import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom';
@@ -25,7 +25,19 @@ export class WalletService {
 		this.connection = new Connection(clusterApiUrl(
 			this.networkSwitchService.selectedNetwork.code as ('mainnet-beta' | 'devnet' | 'testnet') // TODO: update network when user changes it
 		));
+
+    afterNextRender(async () => {
+      const walletName = localStorage.getItem('wallet');
+      if(walletName !== null && walletName !== ''){
+        try {
+          await this.connect(walletName);
+        } catch(err) {
+          localStorage.removeItem('wallet');
+        }
+      }
+    })
 	}
+
 
   getAvailableWalletes(): WalletAdapter[] {
     let res: WalletAdapter[] = [];
@@ -55,10 +67,12 @@ export class WalletService {
       }
     }
     await wallet.connect();
+    localStorage.setItem('wallet', walletName);
     this.selectedWallet = wallet;
   }
 
   async disconnect(): Promise<void> {
+    localStorage.removeItem('wallet');
     if(this.selectedWallet){
       await this.selectedWallet.disconnect();
       this.selectedWallet = null;

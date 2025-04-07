@@ -1,0 +1,17 @@
+.field>input,
+.field>textarea,
+.field>p-inputnumber{
+  width: 100%;
+}
+
+.field>label{
+  display: block;
+}
+
+textarea{
+  resize: vertical;
+}
+
+// .page {
+//   transition: 500ms;
+// }

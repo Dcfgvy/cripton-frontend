@@ -6,7 +6,7 @@
 <p-dialog header="Connect your Wallet" [modal]="true" [(visible)]="dialogOpened" [style]="{ width: '25rem' }">
   <span class="p-text-secondary block mb-4">Select the preferrable wallet on Solana:</span>
   <div class="w-full flex flex-column gap-3">
-    @for (wallet of walletService.getAvailableWalletes(); track $index) {
+    @for (wallet of walletService.getAvailableWalletes(); track wallet) {
       <button pButton class="w-full" severity="secondary" (click)="connect(wallet.name)">
         <div class="w-full grid -mb-2">
           <div class="col-8">
@@ -31,11 +31,11 @@
   <p-button label="Connect Wallet" (onClick)="dialogOpened = true"></p-button>
 }
 @else {
-  <button pButton (click)="op.toggle($event)" [style]="{ width: '10rem' }">
+  <button pButton (click)="op.toggle($event)" class="px-3">
     <div class="wallet-icon-container">
       <img [src]="walletService.selectedWallet.icon" class="wallet-icon">
     </div>
-    <span class="white-space-nowrap">
+    <span class="font-medium white-space-nowrap">
       {{ walletService.selectedWallet.publicKey?.toBase58()?.slice(0, 4) }}..{{ walletService.selectedWallet.publicKey?.toBase58()?.slice(-4) }}
     </span>
   </button>
