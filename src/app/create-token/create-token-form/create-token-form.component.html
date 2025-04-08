@@ -8,19 +8,24 @@
         <p-button label="Back" severity="secondary" icon="pi pi-arrow-left" iconPos="left" [disabled]="true" />
       </div>
     }
+    <span>
+      <span class="hidden md:inline">Total fees:</span>
+      <span class="line-through text-color-secondary ml-1">{{ (totalCost() * 3).toFixed(2) }} SOL</span>
+      <span class="font-semibold ml-1">{{ totalCost().toFixed(2) }} SOL</span>
+    </span>
     @if(page < 3){
-      <span>
-        Total cost:
-        <span class="line-through text-color-secondary mx-1">{{ (totalCost() * 2).toFixed(2) }} SOL</span>
-        <span class="font-semibold">{{ totalCost().toFixed(2) }} SOL</span>
-      </span>
       <p-button label="Next" [disabled]="!canContinue" icon="pi pi-arrow-right" iconPos="right" (onClick)="activateCallback(page + 1)" />
+    } @else {
+      <p-button [disabled]="!canContinue" (onClick)="createToken()" >
+        <span class="font-semibold">Create ${{infoForm.get('symbol')?.value}}</span>
+        <span class="material-symbols-outlined">open_in_new</span>
+      </p-button>
     }
   </div>
 </ng-template>
 
 <div style="max-width: 900px;">
-  <p-stepper [value]="1" class="basis-[50rem]" [linear]="false"> <!-- TODO: set to true -->
+  <p-stepper [value]="3" class="basis-[50rem]" [linear]="false"> <!-- TODO: set to 1; true -->
     <p-step-list>
       <p-step [value]="1">Logo & Info</p-step>
       <p-step [value]="2">Socials</p-step>
@@ -38,20 +43,20 @@
               <span class="text-3xl text-center font-semibold">Provide basic information</span>
                 <div class="formgrid grid mt-3">
                   <div class="field col-12 md:col-6">
-                    <label for="tokenname">Token Name (max 30)</label>
+                    <label for="tokenname">Token Name (max 30) <app-required/></label>
                     <input id="tokenname" name="Token Name" placeholder="Solar Token" type="text" pInputText formControlName="name" required [minlength]="1" [maxlength]="30">
                   </div>
                   <div class="field col-12 md:col-6">
-                    <label for="symbol">Symbol (max 10)</label>
+                    <label for="symbol">Symbol (max 10) <app-required/></label>
                     <input id="symbol" name="Symbol" placeholder="SOLR" style="text-transform: uppercase" type="text" pInputText formControlName="symbol" required [minlength]="1" [maxlength]="10">
                   </div>
                   <div class="field col-12 md:col-6">
-                    <label for="decimals">Decimals</label>
+                    <label for="decimals">Decimals <app-required/></label>
                     <p-inputnumber id="decimals" name="Decimals" formControlName="decimals" required [min]="0" [max]="9"/>
                     <small id="symbol-help">Most tokens use 6 decimals</small>
                   </div>
                   <div class="field col-12 md:col-6">
-                    <label for="supply">Initial Supply</label>
+                    <label for="supply">Initial Supply <app-required/></label>
                     <p-inputgroup>
                       <p-inputnumber id="supply" name="Initial Supply" formControlName="supply" required [min]="1" [maxlength]="MAX_SUPPLY_WITH_DECIMALS_LENGTH" [max]="MAX_SUPPLY_WITH_DECIMALS_NUMBER"/>
                       @if(infoForm.get('symbol')?.value){
@@ -62,13 +67,13 @@
                     </p-inputgroup>
                     <small id="symbol-help">Most tokens use 1 billion</small>
                   </div>
-                  <div class="field col-12">
-                    <label for="logo-image">Logo</label>
+                  <div class="field col-12 md:col-6">
+                    <label for="logo-image">Logo <app-required/></label>
                     <app-file-selector id="logo-image" [(fileSelected)]="imageFile"></app-file-selector>
                   </div>
-                  <div class="field col-12">
+                  <div class="field col-12 md:col-6">
                     <label for="description">Description</label>
-                    <textarea id="description" pTextarea [autoResize]="true" [maxLength]="1000" formControlName="description" placeholder="Provide a short and catchy description of your token. At least 10 symbols" rows="5"></textarea>
+                    <textarea id="description" pTextarea [autoResize]="true" [maxLength]="1000" formControlName="description" placeholder="Provide a short and catchy description of your token" rows="6"></textarea>
                   </div>
                 </div>
               </form>
@@ -208,7 +213,7 @@
   
                     <div class="field col-12">
                       <span class="text-xl">Tags</span><br>
-                      <span class="text-sm text-color-secondary">You can add up to 3 tags that are most associated with your project</span>
+                      <span class="text-sm text-color-secondary">You can add up to 5 tags that are most associated with your project</span>
                       <input
                       class="w-full mt-1" pInputText id="tags-input" name="Tags input field" placeholder="Start typing... (e.g. NFT, Meme, Airdrop)" [maxLength]="31"
                       [(ngModel)]="tagsInput"
@@ -224,7 +229,7 @@
   
                     <div class="field col-12">
                       <app-add-on [(added)]="addOns['customCreatorInfo'].added" [isFree]="addOns['customCreatorInfo'].isFree">
-                        <div title>Custom Creator's Info</div>
+                        <div title>Custom Creator Info</div>
                         <div description>Change information about token creator in token metadata. By default it's {{ DEFAULT_CREATOR_NAME }}</div>
   
                         <div class="w-full formgrid grid" [formGroup]="creatorInfoForm">
@@ -255,16 +260,171 @@
         </p-step-panel>
     
         <p-step-panel [value]="3">
-            <ng-template #content let-activateCallback="activateCallback">
-                <div class="flex flex-col h-48">
-                    <div
-                        class="border-2 border-dashed border-surface-200 dark:border-surface-700 rounded bg-surface-50 dark:bg-surface-950 flex-auto flex justify-center items-center font-medium"
-                    >
-                        Content III
+          <ng-template #content let-activateCallback="activateCallback">
+            <div class="page">
+              <form
+              [formGroup]="settingsForm"
+                class="p-2 pt-0 font-medium"
+              >
+              <span class="text-3xl text-center font-semibold">Additional Settings</span>
+                <div class="formgrid grid mt-3">
+                  <div class="field col-12 mb-4">
+                    <app-add-on [(added)]="addOns['customAddress'].added" [isFree]="addOns['customAddress'].isFree" tag="New">
+                      <div title>Custom Token Address</div>
+                      <div description>Personalize your token contract address by customizing the beginning or end</div>
+
+                      <div class="w-full formgrid grid">
+                        <div class="field col-12 md:col-6">
+                          <label for="address-prefix">Prefix (max {{ MAX_CUSTOM_ADDRESS_PREFIX_LENGTH }})</label>
+                          <input id="address-prefix" name="Address Prefix" placeholder="PUMP..." type="text" pInputText formControlName="customAddressBeginning" [maxlength]="MAX_CUSTOM_ADDRESS_PREFIX_LENGTH" (input)="onCustomAddressInput(true)">
+                        </div>
+                        <div class="field col-12 md:col-6">
+                          <label for="address-suffix">Suffix (max {{ MAX_CUSTOM_ADDRESS_PREFIX_LENGTH }})</label>
+                          <input id="address-suffix" name="Address Suffix" placeholder="...PUMP" type="text" pInputText formControlName="customAddressEnd" [maxlength]="MAX_CUSTOM_ADDRESS_PREFIX_LENGTH" (input)="onCustomAddressInput(false)">
+                        </div>
+                        <div class="-mt-2 field col-12 flex flex-row">
+                          <p-checkbox formControlName="customAddressCaseSensitive" value="Case-sensitive" inputId="customAddressCaseSensitive" />
+                          <label for="customAddressCaseSensitive" class="ml-2">Case-sensitive (will increase search time significantly)</label>
+                        </div>
+                        <div class="-mt-3 field col-12 flex flex-row flex-wrap align-items-center justify-content-between mb-0">
+                          <div class="-ml-2 col-12 lg:col-9 flex flex-row align-items-center">
+                            <span class="hidden md:inline">Current Address:</span>
+                            <div class="col-12 md:11 lg:col-9 ml-2 border-1 border-300 p-1 pr-2 border-round-md text-center">
+                              @if (mintSuffix === '') {
+                                <span class="font-semibold">{{ mintPublicKey.slice(0, MAX_CUSTOM_ADDRESS_PREFIX_LENGTH) }}</span>
+                                <span class="text-color-secondary">{{ mintPublicKey.slice(MAX_CUSTOM_ADDRESS_PREFIX_LENGTH) }}</span>
+                              }
+                              @else if(mintPrefix === ''){
+                                <span class="text-color-secondary">{{ mintPublicKey.slice(0, mintPublicKey.length - MAX_CUSTOM_ADDRESS_PREFIX_LENGTH) }}</span>
+                                <span class="font-semibold">{{ mintPublicKey.slice(mintPublicKey.length - MAX_CUSTOM_ADDRESS_PREFIX_LENGTH) }}</span>
+                              }
+                              @else {
+                                <span class="font-semibold">{{ mintPublicKey.slice(0, mintPrefix.length) }}</span>
+                                <span class="text-color-secondary">{{ mintPublicKey.slice(mintPrefix.length, mintPublicKey.length - mintSuffix.length) }}</span>
+                                <span class="font-semibold">{{ mintPublicKey.slice(mintPublicKey.length - mintSuffix.length) }}</span>
+                              }
+                            </div>
+                          </div>
+                          @if(addressGenerationInProgress){
+                            <p-button variant="outlined" severity="contrast" (onClick)="terminateAddressGeneration()">
+                              <span>Stop {{ addressGenerationTimeSpent }}</span>
+                              <i class="pi pi-spinner pi-spin ml-1"></i>
+                            </p-button>
+                          } @else {
+                            <p-button label="Regenerate" variant="outlined" icon="pi pi-sync" severity="contrast" [loading]="addressGenerationInProgress" (onClick)="regenerateAddress()" />
+                          }
+                        </div>
+                      </div>
+                    </app-add-on>
+                  </div>
+
+
+                  <div class="field col-12">
+                    <app-add-on [onAdded]="setInitialUserWalletSupply" [(added)]="addOns['multiWalletDistribution'].added" [isFree]="addOns['multiWalletDistribution'].isFree" tag="Advanced" tagSeverity="info">
+                      <div title>Multi-Wallet Supply Distribution</div>
+                      <div description>Distribute the supply of your token across different wallets within creation (max 10 wallets)</div>
+
+                      <div formArrayName="supplyDistribution">
+                        @for (wallet of supplyDistributions.controls; track $index + '&&' + wallet.get('address')!.value; let i = $index) {
+                          <div class="formgrid grid" [formGroupName]="i">
+                            <div class="field col-8">
+                              <p-inputgroup>
+                                <p-inputgroup-addon>
+                                  <span class="px-2">Address:</span>
+                                </p-inputgroup-addon>
+                                <input class="w-full" pInputText required formControlName="address" placeholder="Paste address here">
+                              </p-inputgroup>
+                            </div>
+                            
+                            <div class="field col-4 flex align-items-center gap-3">
+                              <p-inputgroup>
+                                <input pInputText required formControlName="share">
+                                <p-inputgroup-addon>
+                                  %
+                                </p-inputgroup-addon>
+                              </p-inputgroup>
+                              <p-button [disabled]="i === 0" icon="pi pi-trash" severity="danger" (onClick)="removeDistribution(i)" />
+                            </div>
+                          </div>
+                        }
+                      </div>
+                      <button
+                      class="w-full p-button-text" pButton icon="pi pi-plus" type="button" label="Add Wallet"
+                      (click)="addDistribution()"
+                      [disabled]="supplyDistributions.controls.length === MAX_WALLETS_SUPPLY_DISTRIBUTION"></button>
+                    </app-add-on>
+                  </div>
+
+                  <p-divider class="mt-1"></p-divider>
+
+                  <ng-container>
+                    <div class="field col-12">
+                      <span class="text-xl">Authorities</span><br>
+                      <span class="text-sm text-color-secondary">Solana Tokens have 3 authorities: Freeze Authority, Mint Authority, and Update Authority.<br>Revoke them to attract more investors</span>
                     </div>
+                    <!-- FREEZE -->
+                    <div class="field col-12 flex">
+                      <div class="pr-2"><i class="bi bi-snow text-3xl" ></i></div>
+                      <app-add-on class="flex-grow-1" [(added)]="addOns['freezeAuthority'].added" [isFree]="addOns['freezeAuthority'].isFree">
+                        <div title>Revoke or Transfer Freeze</div>
+                        <div description>Revoking Freeze authority will prevent anyone from freezing holders' accounts in the future</div>
+  
+                        <div>
+                          <span>If you want to transfer the Freeze Authority, paste another Solana address below:</span>
+                          <input class="w-full mt-1" name="Transfer Freeze Authority" placeholder="Paste address here" type="text" pInputText pSize="small" formControlName="freezeAuthority" [maxlength]="50">
+                        </div>
+                      </app-add-on>
+                    </div>
+                    <!-- MINT -->
+                    <div class="field col-12 flex">
+                      <div class="pr-2"><i class="bi bi-boxes text-3xl" ></i></div>
+                      <app-add-on class="flex-grow-1" [(added)]="addOns['mintAuthority'].added" [isFree]="addOns['mintAuthority'].isFree">
+                        <div title>Revoke or Transfer Mint</div>
+                        <div description>Revoking Mint authority shows that the supply is fixed and cannot grow </div>
+  
+                        <div>
+                          <span>If you want to transfer the Mint Authority, paste another Solana address below:</span>
+                          <input class="w-full mt-1" name="Transfer Mint Authority" placeholder="Paste address here" type="text" pInputText pSize="small" formControlName="mintAuthority" [maxlength]="50">
+                        </div>
+                      </app-add-on>
+                    </div>
+                    <!-- UPDATE -->
+                    <div class="field col-12 flex">
+                      <div style="padding-right: 0.8rem;"><i class="bi bi-pen text-2xl" ></i></div>
+                      <app-add-on class="flex-grow-1" [(added)]="addOns['updateAuthority'].added" [isFree]="addOns['updateAuthority'].isFree">
+                        <div title>Revoke or Transfer Update</div>
+                        <div description>Revoking Update authority means token metadata cannot be updated by anyone </div>
+                      
+                        <div>
+                          <span>If you want to transfer the Update Authority, paste another Solana address below:</span>
+                          <input class="w-full mt-1" name="Transfer Update Authority" placeholder="Paste address here" type="text" pInputText pSize="small" formControlName="updateAuthority" [maxlength]="50">
+                        </div>
+                        <p-button variant="text" size="small" (onClick)="pastePumpFunUpdateAddress()">Paste PUMP.FUN Update Authority address</p-button>
+                      </app-add-on>
+                    </div>
+                  </ng-container>
+                  
+
+                  <!-- <div class="flex align-items-center p-3 border-round-xl border-left-3 border-yellow-500" 
+                      style="background-color: #FFF9EB;">
+                    <span class="material-symbols-outlined mr-3 text-yellow-500" style="font-size: 2.5rem;">
+                      verified_user
+                      </span>
+                    <div class="flex-column">
+                      <div class="font-bold text-yellow-700 mb-1">Recommended!</div>
+                      <div class="text-gray-800">Revoke right to mint new coins, this shows buyer of your coin that supply is fixed and cannot grow. DEX scanners will mark your coin as safe.</div>
+                    </div>
+                  </div> -->
                 </div>
-                <div [ngTemplateOutlet]="continueButton" [ngTemplateOutletContext]="{ page: 3, canContinue: true, activateCallback }"></div>
-            </ng-template>
+              </form>
+
+              <div [ngTemplateOutlet]="continueButton" [ngTemplateOutletContext]="{
+                page: 3,
+                canContinue: settingsFormValid,
+                activateCallback
+                }"></div>
+            </div>
+          </ng-template>
         </p-step-panel>
       </p-card>
   </p-step-panels>

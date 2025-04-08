@@ -27,6 +27,8 @@ export class AddOnComponent implements OnInit {
   isFree = input<boolean>(false);
   currency = input<string>('SOL');
   tag = input<string>('');
+  tagSeverity = input<"warn" | "success" | "secondary" | "info" | "danger" | "contrast">('warn');
+  onAdded = input<() => void>(() => {});
 
   constructor(
     private readonly settingsService: AppSettingsService
@@ -34,7 +36,11 @@ export class AddOnComponent implements OnInit {
 
   protected _checked = false;
   protected onValueChange(event: any){
-    this.added.set(event.checked as boolean);
+    const status = event.checked as boolean;
+    if(status === true){
+      this.onAdded()();
+    }
+    this.added.set(status);
   }
   ngOnInit(): void {
     this._checked = this.added();

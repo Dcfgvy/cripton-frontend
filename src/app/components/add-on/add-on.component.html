@@ -8,7 +8,7 @@
       <ng-content select="[title]"></ng-content>
       <div class="text-sm">
         @if(tag().length > 0){
-          <p-tag class="ml-2" [style]="{'margin-top': '-2px'}" severity="warn" [value]="tag()" />
+          <p-tag class="ml-2" [style]="{'margin-top': '-2px'}" [severity]="tagSeverity()" [value]="tag()" />
         }
       </div>
     </div>
