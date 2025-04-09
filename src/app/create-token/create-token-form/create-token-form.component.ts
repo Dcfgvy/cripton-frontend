@@ -17,8 +17,13 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { ChipModule } from 'primeng/chip';
 import { FileSelectorComponent } from "../../components/file-selector/file-selector.component";
 import { DividerModule } from 'primeng/divider';
+import { ToastModule } from 'primeng/toast';
 import { formatElapsedTime } from '../../utils/functions';
 import { RequiredComponent } from "../../components/required/required.component";
+import { MessageService } from 'primeng/api';
+import { ErrorComponent } from '../../components/error/error.component';
+import { urlValidator } from '../../utils/url.validator';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 
 // u64 max value: 18,446,744,073,709,551,615 (2^64-1)
 // Our limit: 10,000,000,000,000,000,000 (10 * 10^18)
@@ -26,6 +31,7 @@ const MAX_SUPPLY_WITH_DECIMALS = 10_000_000_000_000_000_000n;
 const ONE_BYTE_SYMBOLS = /^[a-zA-Z0-9 _.!$?]+$/;
 const ADDRESS_SYMBOLS = /^[1-9A-HJ-NP-Za-km-z]+$/;
 const PUMP_FUN_MINT_AUTHORITY = "TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM";
+const SOLANA_ADDRESS_PATTERN = /^[1-9A-HJ-NP-Za-km-z]{32,44}$|^$/;
 
 export function supplyValidator(): ValidatorFn {
   return (control: AbstractControl) => {
@@ -55,12 +61,6 @@ export function supplyValidator(): ValidatorFn {
   };
 }
 
-export function urlValidator(): ValidatorFn {
-  return Validators.pattern(
-    /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/
-  );
-}
-
 @Component({
   selector: 'app-create-token-form',
   imports: [
@@ -80,10 +80,14 @@ export function urlValidator(): ValidatorFn {
     FormsModule,
     FileSelectorComponent,
     DividerModule,
-    RequiredComponent
+    RequiredComponent,
+    ToastModule,
+    ErrorComponent,
+    ToggleSwitchModule,
 ],
   templateUrl: './create-token-form.component.html',
-  styleUrl: './create-token-form.component.scss'
+  styleUrl: './create-token-form.component.scss',
+  providers: [MessageService]
 })
 export class CreateTokenFormComponent {
   addOns: Record<string, AddOn> = {
@@ -123,6 +127,7 @@ export class CreateTokenFormComponent {
   constructor(
     private walletService: WalletService,
     private settingsService: AppSettingsService,
+    private messageService: MessageService,
   ) {}
 
   baseCost = computed<number>(() => {
@@ -135,6 +140,16 @@ export class CreateTokenFormComponent {
     let total = this.baseCost();
     for(const addon of Object.values(this.addOns)){
       if(addon.added() && !addon.isFree){
+        total += this.addOnsCost();
+      }
+    }
+    return total;
+  });
+  totalCostWithoutDiscounts = computed<number>(() => {
+    let total = this.baseCost();
+    console.log(this.addOns);
+    for(const addon of Object.values(this.addOns)){
+      if(addon.added()){
         total += this.addOnsCost();
       }
     }
@@ -163,26 +178,22 @@ export class CreateTokenFormComponent {
       Validators.required,
       Validators.min(1),
       Validators.maxLength(this.MAX_SUPPLY_WITH_DECIMALS_LENGTH),
-      Validators.max(this.MAX_SUPPLY_WITH_DECIMALS_NUMBER), // TODO: revalidate when decimals change
+      Validators.max(this.MAX_SUPPLY_WITH_DECIMALS_NUMBER),
       supplyValidator(),
+    ]),
+    useImageUrl: new FormControl<boolean>(false),
+    imageUrl: new FormControl('', [
+      urlValidator(),
+      Validators.maxLength(1000),
     ]),
     description: new FormControl('', [
       Validators.maxLength(1000),
     ]),
-  },
-  {
-    validators: [
-      // Add cross-field validation to re-check when decimals change
-      (group: AbstractControl) => {
-        const supplyControl = group.get('supply');
-        if(supplyControl === null) return null;
-        const errors = supplyValidator()(supplyControl);
-        return errors;
-      }
-    ]
-  }
-  );
+  });
   imageFile: string = '';
+  validateSupplyWithDecimals(){
+    this.infoForm.get('supply')?.updateValueAndValidity();
+  }
 
   socialsForm = new FormGroup({
     creatorInfo: new FormGroup({
@@ -199,39 +210,39 @@ export class CreateTokenFormComponent {
     ]),
     twitter: new FormControl('', [
       Validators.maxLength(1000),
-      urlValidator()
+      urlValidator('https://x.com', 'https://twitter.com')
     ]),
     telegram: new FormControl('', [
       Validators.maxLength(1000),
-      urlValidator()
+      urlValidator('https://t.me')
     ]),
     discord: new FormControl('', [
       Validators.maxLength(1000),
-      urlValidator()
+      urlValidator('https://discord.gg', 'https://discord.com')
     ]),
     youtube: new FormControl('', [
       Validators.maxLength(1000),
-      urlValidator()
+      urlValidator('https://youtube.com', 'https://youtu.be')
     ]),
     medium: new FormControl('', [
       Validators.maxLength(1000),
-      urlValidator()
+      urlValidator('https://medium.com')
     ]),
     github: new FormControl('', [
       Validators.maxLength(1000),
-      urlValidator()
+      urlValidator('https://github.com')
     ]),
     instagram: new FormControl('', [
       Validators.maxLength(1000),
-      urlValidator()
+      urlValidator('https://instagram.com')
     ]),
     reddit: new FormControl('', [
       Validators.maxLength(1000),
-      urlValidator()
+      urlValidator('https://reddit.com', 'https://redd.it')
     ]),
     facebook: new FormControl('', [
       Validators.maxLength(1000),
-      urlValidator()
+      urlValidator('https://facebook.com', 'https://fb.com')
     ])
   });
   socials_extended = false;
@@ -284,16 +295,14 @@ export class CreateTokenFormComponent {
 
     supplyDistribution: new FormArray([], [
       Validators.maxLength(10),
-      (formArray: AbstractControl) => { // TODO: show "Must sum up to 100%" error
-        if(!this.addOns['multiWalletDistribution'].added) return null;
+      (formArray: AbstractControl) => {
+        if(this.addOns['multiWalletDistribution'].added() === false) return null;
         if(formArray.value.length === 0) return null;
         
         let percentsSum = 0;
         for(const control of formArray.value){
-          console.log(Number(control.share));
           percentsSum += Number(control.share) || 0;
         }
-        console.log(percentsSum !== 100);
         if(percentsSum !== 100){
           return { supplyDistributionPercentsFailure: true };
         }
@@ -302,19 +311,14 @@ export class CreateTokenFormComponent {
     ]),
 
     freezeAuthority: new FormControl('', [
-      Validators.maxLength(50),
+      Validators.pattern(SOLANA_ADDRESS_PATTERN)
     ]),
     mintAuthority: new FormControl('', [
-      Validators.maxLength(50),
+      Validators.pattern(SOLANA_ADDRESS_PATTERN)
     ]),
     updateAuthority: new FormControl('', [
-      Validators.maxLength(50),
+      Validators.pattern(SOLANA_ADDRESS_PATTERN)
     ]),
-  }, {
-    validators: [
-      // Add cross-field validation to check multiwallet percentage share sum
-      
-    ]
   }) 
   pastePumpFunUpdateAddress(){
     this.settingsForm.get('updateAuthority')?.setValue(PUMP_FUN_MINT_AUTHORITY);
@@ -340,19 +344,26 @@ export class CreateTokenFormComponent {
   }
 
   // Supply distribution
-  addDistribution(address: string = '', share: number = 10, disabled: boolean = false): void {
+  addDistribution(address: string = '', share: number = 0, disabled: boolean = false): void {
     if (this.supplyDistributions.length >= this.MAX_WALLETS_SUPPLY_DISTRIBUTION) return;
   
     this.supplyDistributions.push(
       new FormGroup({
-        address: new FormControl({ value: address, disabled }, [Validators.required, Validators.pattern(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/)]), // Solana address pattern
-        share: new FormControl(share, [Validators.required, Validators.pattern(/^[0-9]*$/), Validators.min(1), Validators.max(100)]) // number pattern
+        address: new FormControl({ value: address, disabled }, [
+          Validators.pattern(SOLANA_ADDRESS_PATTERN)
+        ]),
+        share: new FormControl(share, [Validators.pattern(/^[0-9]*$/), Validators.min(0), Validators.max(100)]) // number pattern
       })
     );
   }
   setInitialUserWalletSupply = () => {
     if(this.supplyDistributions.length > 0) return;
-    this.addDistribution(this.walletService.selectedWallet?.publicKey?.toBase58(), 100, true);
+    if(!this.walletService.selectedWallet?.publicKey){
+      this.addOns['multiWalletDistribution'].added.set(false);
+      this.messageService.add({ severity: 'error', summary: 'No Wallet Connected', detail: 'Please reconnect your wallet to proceed' });
+      return;
+    }
+    this.addDistribution(this.walletService.selectedWallet?.publicKey?.toBase58(), 100);
   }
   removeDistribution(index: number): void {
     if(this.supplyDistributions.length >= index + 1){

@@ -3,7 +3,7 @@
 </ng-template> -->
 <p-toast />
 
-<p-dialog header="Connect your Wallet" [modal]="true" [(visible)]="dialogOpened" [style]="{ width: '25rem' }">
+<p-dialog header="Connect your Wallet" [modal]="true" [draggable]="false" [(visible)]="dialogOpened" [style]="{ width: '25rem' }">
   <span class="p-text-secondary block mb-4">Select the preferrable wallet on Solana:</span>
   <div class="w-full flex flex-column gap-3">
     @for (wallet of walletService.getAvailableWalletes(); track wallet) {

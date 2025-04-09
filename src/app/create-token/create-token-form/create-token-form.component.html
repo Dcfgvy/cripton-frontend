@@ -10,7 +10,7 @@
     }
     <span>
       <span class="hidden md:inline">Total fees:</span>
-      <span class="line-through text-color-secondary ml-1">{{ (totalCost() * 3).toFixed(2) }} SOL</span>
+      <span class="line-through text-color-secondary ml-1">{{ (totalCostWithoutDiscounts() * 3).toFixed(2) }} SOL</span>
       <span class="font-semibold ml-1">{{ totalCost().toFixed(2) }} SOL</span>
     </span>
     @if(page < 3){
@@ -24,7 +24,9 @@
   </div>
 </ng-template>
 
+
 <div style="max-width: 900px;">
+  <p-toast/>
   <p-stepper [value]="3" class="basis-[50rem]" [linear]="false"> <!-- TODO: set to 1; true -->
     <p-step-list>
       <p-step [value]="1">Logo & Info</p-step>
@@ -40,7 +42,7 @@
               [formGroup]="infoForm"
                 class="p-2 pt-0 font-medium"
               >
-              <span class="text-3xl text-center font-semibold">Provide basic information</span>
+              <span class="text-3xl text-center font-semibold">Provide basic Information</span>
                 <div class="formgrid grid mt-3">
                   <div class="field col-12 md:col-6">
                     <label for="tokenname">Token Name (max 30) <app-required/></label>
@@ -52,7 +54,7 @@
                   </div>
                   <div class="field col-12 md:col-6">
                     <label for="decimals">Decimals <app-required/></label>
-                    <p-inputnumber id="decimals" name="Decimals" formControlName="decimals" required [min]="0" [max]="9"/>
+                    <p-inputnumber id="decimals" name="Decimals" formControlName="decimals" required [min]="0" [max]="9" (onInput)="validateSupplyWithDecimals()"/>
                     <small id="symbol-help">Most tokens use 6 decimals</small>
                   </div>
                   <div class="field col-12 md:col-6">
@@ -67,20 +69,34 @@
                     </p-inputgroup>
                     <small id="symbol-help">Most tokens use 1 billion</small>
                   </div>
-                  <div class="field col-12 md:col-6">
-                    <label for="logo-image">Logo <app-required/></label>
-                    <app-file-selector id="logo-image" [(fileSelected)]="imageFile"></app-file-selector>
+                  <div class="field col-12">
+                    <div class="w-full flex flex-row justify-content-between mb-1">
+                      <label for="logo-image">Logo <app-required/></label>
+                      <div class="flex flex-row items-center ">
+                        <p-toggleswitch formControlName="useImageUrl"></p-toggleswitch>
+                        <span class="ml-2" style="font-size: .9rem; margin-top: 1px;">Enter logo URL</span>
+                      </div>
+                    </div>
+                    @if(infoForm.get('useImageUrl')?.value){
+                      <input type="text" placeholder="Enter the image URL" pInputText formControlName="imageUrl" [maxlength]="1000">
+                    } @else {
+                      <app-file-selector id="logo-image" [(fileSelected)]="imageFile"></app-file-selector>
+                    }
                   </div>
-                  <div class="field col-12 md:col-6">
+                  <div class="field col-12">
                     <label for="description">Description</label>
-                    <textarea id="description" pTextarea [autoResize]="true" [maxLength]="1000" formControlName="description" placeholder="Provide a short and catchy description of your token" rows="6"></textarea>
+                    <textarea id="description" pTextarea [autoResize]="true" [maxLength]="1000" formControlName="description" placeholder="Provide a short and catchy description of your token" rows="5"></textarea>
                   </div>
                 </div>
               </form>
 
               <div [ngTemplateOutlet]="continueButton" [ngTemplateOutletContext]="{
                 page: 1,
-                canContinue: infoFormValid && imageFile.length > 0,
+                canContinue: infoFormValid && (
+                  infoForm.get('useImageUrl')?.value
+                  ? (infoForm.get('imageUrl')?.value?.length || 0) > 0
+                  : imageFile.length > 0
+                ),
                 activateCallback
                 }"></div>
             </div>
@@ -94,7 +110,7 @@
                 [formGroup]="socialsForm"
                   class="p-2 pt-0 font-medium"
                 >
-                  <span class="text-3xl text-center font-semibold">Connect token socials</span>
+                  <span class="text-3xl text-center font-semibold">Connect token Socials</span>
                   <div class="formgrid grid mt-3">
                     <ng-container>
                       <!-- FIELD -->
@@ -322,7 +338,7 @@
                   <div class="field col-12">
                     <app-add-on [onAdded]="setInitialUserWalletSupply" [(added)]="addOns['multiWalletDistribution'].added" [isFree]="addOns['multiWalletDistribution'].isFree" tag="Advanced" tagSeverity="info">
                       <div title>Multi-Wallet Supply Distribution</div>
-                      <div description>Distribute the supply of your token across different wallets within creation (max 10 wallets)</div>
+                      <div description>Distribute the supply of your token across different wallets within the creation (max 10 wallets)</div>
 
                       <div formArrayName="supplyDistribution">
                         @for (wallet of supplyDistributions.controls; track $index + '&&' + wallet.get('address')!.value; let i = $index) {
@@ -332,13 +348,13 @@
                                 <p-inputgroup-addon>
                                   <span class="px-2">Address:</span>
                                 </p-inputgroup-addon>
-                                <input class="w-full" pInputText required formControlName="address" placeholder="Paste address here">
+                                <input class="w-full" pInputText formControlName="address" placeholder="Paste address here">
                               </p-inputgroup>
                             </div>
                             
                             <div class="field col-4 flex align-items-center gap-3">
                               <p-inputgroup>
-                                <input pInputText required formControlName="share">
+                                <input pInputText placeholder="Share in %" formControlName="share">
                                 <p-inputgroup-addon>
                                   %
                                 </p-inputgroup-addon>
@@ -348,6 +364,7 @@
                           </div>
                         }
                       </div>
+                      <app-error [showIf]="supplyDistributions.errors ? supplyDistributions.errors['supplyDistributionPercentsFailure'] : false">Shares must sum up to 100%</app-error>
                       <button
                       class="w-full p-button-text" pButton icon="pi pi-plus" type="button" label="Add Wallet"
                       (click)="addDistribution()"
@@ -391,7 +408,7 @@
                     <!-- UPDATE -->
                     <div class="field col-12 flex">
                       <div style="padding-right: 0.8rem;"><i class="bi bi-pen text-2xl" ></i></div>
-                      <app-add-on class="flex-grow-1" [(added)]="addOns['updateAuthority'].added" [isFree]="addOns['updateAuthority'].isFree">
+                      <app-add-on class="flex-grow-1" [(added)]="addOns['updateAuthority'].added" [isFree]="addOns['updateAuthority'].isFree" tag="Use PUMP.FUN Authority" tagSeverity="success">
                         <div title>Revoke or Transfer Update</div>
                         <div description>Revoking Update authority means token metadata cannot be updated by anyone </div>
                       
