@@ -4,7 +4,7 @@ import { Connection, clusterApiUrl } from '@solana/web3.js';
 import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom';
 import { SolflareWalletAdapter } from '@solana/wallet-adapter-solflare';
 import { BraveWalletAdapter } from '@solana/wallet-adapter-brave';
-import { NetworkSwitchService } from '../network-switch/network-switch.service';
+import { NetworkService } from '../network-switch/network-switch.service';
 
 export type WalletAdapter = PhantomWalletAdapter | SolflareWalletAdapter | BraveWalletAdapter;
 
@@ -20,10 +20,10 @@ export class WalletService {
   public selectedWallet: WalletAdapter | null = null;
 
 	constructor(
-		private readonly networkSwitchService: NetworkSwitchService,
+		private readonly networkService: NetworkService,
 	){
 		this.connection = new Connection(clusterApiUrl(
-			this.networkSwitchService.selectedNetwork.code as ('mainnet-beta' | 'devnet' | 'testnet') // TODO: update network when user changes it
+			this.networkService.selectedNetwork.code as ('mainnet-beta' | 'devnet' | 'testnet') // TODO: update network when user changes it
 		));
 
     afterNextRender(async () => {

@@ -13,7 +13,7 @@ import { ToastModule } from 'primeng/toast';
 export class FileSelectorComponent implements OnInit {
   @Input() allowedTypes: string[] = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif'];
   @Input() maxFileSizeMB: number = 5;
-  fileSelected = model.required<string>();
+  fileSelected = model.required<File | null>();
 
   constructor(private messageService: MessageService) {}
   isDragging = false;
@@ -22,7 +22,10 @@ export class FileSelectorComponent implements OnInit {
   imagePreviewUrl: string | null = null;
 
   ngOnInit(): void {
-    this.isFileSelected = this.fileSelected().length > 0;
+    this.isFileSelected = this.fileSelected() !== null;
+    if(this.isFileSelected){
+      this.generatePreview();
+    }
   }
 
   onFileDropped(event: DragEvent) {
@@ -38,6 +41,14 @@ export class FileSelectorComponent implements OnInit {
     this.validateAndEmit(file);
   }
 
+  generatePreview(){
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.imagePreviewUrl = reader.result as string;
+    };
+    reader.readAsDataURL(this.fileSelected()!);
+  }
+
   validateAndEmit(file: File | undefined) {
     if (!file) return;
     if (!this.allowedTypes.includes(file.type)) {
@@ -49,14 +60,9 @@ export class FileSelectorComponent implements OnInit {
       return;
     }
     
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.imagePreviewUrl = reader.result as string;
-      this.fileSelected.set(reader.result as string);
-      this.isFileSelected = true;
-    };
-    reader.readAsDataURL(file);
-
+    this.fileSelected.set(file);
+    this.isFileSelected = true;
+    this.generatePreview();
   }
 
   onDragOver(event: DragEvent) {

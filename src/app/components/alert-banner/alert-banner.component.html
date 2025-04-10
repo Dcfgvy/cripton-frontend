@@ -1,0 +1,15 @@
+<div class="flex align-items-center p-3 mt-2 border-left-3 border-yellow-500 surface-50">
+  <span class="material-symbols-outlined mr-3 text-yellow-500" style="font-size: 2.5rem;">
+    verified_user
+    </span>
+  <div class="flex-column">
+    <div class="font-bold text-yellow-500 mb-1">
+      <ng-content select="[title]">
+        Attention!
+      </ng-content>
+    </div>
+    <div class="text-gray-800 text-color">
+      <ng-content></ng-content>
+    </div>
+  </div>
+</div>

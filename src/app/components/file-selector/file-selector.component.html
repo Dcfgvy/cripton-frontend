@@ -9,7 +9,7 @@
     (click)="fileInput.click()"
   >
     @if (isFileSelected) {
-      <img [src]="fileSelected()" class="w-10rem h-10rem border-round-md border-2 surface-border object-cover mx-auto ">
+      <img [src]="imagePreviewUrl" class="w-10rem h-10rem border-round-md border-2 surface-border object-cover mx-auto ">
     } @else {
       <i class="pi pi-upload text-4xl mb-3"></i><br>
       <span class="text-white font-medium">Drop your 500 x 500 token logo here</span><br>

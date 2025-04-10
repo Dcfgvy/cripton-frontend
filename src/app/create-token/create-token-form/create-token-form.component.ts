@@ -1,6 +1,6 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, computed, Signal, signal } from '@angular/core';
-import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
+import { Component, computed, signal } from '@angular/core';
+import { AbstractControl, FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { StepperModule } from 'primeng/stepper';
 import { CardModule } from 'primeng/card';
@@ -24,6 +24,9 @@ import { MessageService } from 'primeng/api';
 import { ErrorComponent } from '../../components/error/error.component';
 import { urlValidator } from '../../utils/url.validator';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { AlertBannerComponent } from "../../components/alert-banner/alert-banner.component";
+import { TokenCreationService, TokenUploadMetadata, TokenImageData } from '../../token-creation/token-creation.service';
+import { catchError, of, tap } from 'rxjs';
 
 // u64 max value: 18,446,744,073,709,551,615 (2^64-1)
 // Our limit: 10,000,000,000,000,000,000 (10 * 10^18)
@@ -84,10 +87,11 @@ export function supplyValidator(): ValidatorFn {
     ToastModule,
     ErrorComponent,
     ToggleSwitchModule,
+    AlertBannerComponent
 ],
   templateUrl: './create-token-form.component.html',
   styleUrl: './create-token-form.component.scss',
-  providers: [MessageService]
+  providers: [MessageService, TokenCreationService]
 })
 export class CreateTokenFormComponent {
   addOns: Record<string, AddOn> = {
@@ -128,6 +132,7 @@ export class CreateTokenFormComponent {
     private walletService: WalletService,
     private settingsService: AppSettingsService,
     private messageService: MessageService,
+    private tokenCreationService: TokenCreationService,
   ) {}
 
   baseCost = computed<number>(() => {
@@ -147,7 +152,6 @@ export class CreateTokenFormComponent {
   });
   totalCostWithoutDiscounts = computed<number>(() => {
     let total = this.baseCost();
-    console.log(this.addOns);
     for(const addon of Object.values(this.addOns)){
       if(addon.added()){
         total += this.addOnsCost();
@@ -190,7 +194,7 @@ export class CreateTokenFormComponent {
       Validators.maxLength(1000),
     ]),
   });
-  imageFile: string = '';
+  imageFile: File | null = null;
   validateSupplyWithDecimals(){
     this.infoForm.get('supply')?.updateValueAndValidity();
   }
@@ -279,7 +283,6 @@ export class CreateTokenFormComponent {
     let tags = [...(this.socialsForm.get('tags')?.value || [])];
     tags = tags.filter((v) => v != tag)
     this.socialsForm.get('tags')?.setValue(tags);
-    console.log(this.socialsForm.get('tags')?.value);
   }
 
   settingsForm = new FormGroup({
@@ -446,7 +449,66 @@ export class CreateTokenFormComponent {
   }
 
   // Create Token
-  createToken(){
+  private uploadMetadata(){
+    let metadata: Partial<TokenUploadMetadata> = {}
+    // mint
+    if(this.addOns['customAddress'].added()){
+      metadata.mint = this.mintKeypair.publicKey.toBase58();
+    } else {
+      metadata.mint = this.defaultMintKeypair.publicKey.toBase58();
+    }
+    // creator info
+    if(this.addOns['customCreatorInfo'].added()){
+      const info = this.socialsForm.get('creatorInfo')?.value;
+      if(!(info?.remove)){
+        metadata.creatorName = info?.name || '';
+        metadata.creatorWebsite = info?.website || '';
+      }
+    } else {
+      metadata.creatorName = this.DEFAULT_CREATOR_NAME;
+      metadata.creatorWebsite = this.DEFAULT_CREATOR_WEBSITE;
+    }
+    metadata.name = this.infoForm.get('name')!.value!;
+    metadata.symbol = this.infoForm.get('symbol')!.value!;
+    metadata.description = this.infoForm.get('description')!.value!;
+    metadata.tags = this.socialsForm.get('tags')!.value || [];
+    metadata.tokenSocials = {
+      website: this.socialsForm.get('website')?.value || undefined,
+      twitter: this.socialsForm.get('twitter')?.value || undefined,
+      telegram: this.socialsForm.get('telegram')?.value || undefined,
+      discord: this.socialsForm.get('discord')?.value || undefined,
+      youtube: this.socialsForm.get('youtube')?.value || undefined,
+      medium: this.socialsForm.get('medium')?.value || undefined,
+      github: this.socialsForm.get('github')?.value || undefined,
+      instagram: this.socialsForm.get('instagram')?.value || undefined,
+      reddit: this.socialsForm.get('reddit')?.value || undefined,
+      facebook: this.socialsForm.get('facebook')?.value || undefined,
+    }
 
+    let imageData: TokenImageData = {};
+    if(this.infoForm.get('useImageUrl')?.value){
+      imageData.imageUrl = this.infoForm.get('imageUrl')!.value!;
+    } else {
+      imageData.imageData = this.imageFile!;
+    }
+    return this.tokenCreationService.uploadMetadata(metadata as TokenUploadMetadata, imageData);
+  }
+
+  private createCreateTokenTx(uri: string){
+    // TODO 
+  }
+
+  createToken(){
+    this.uploadMetadata().pipe(
+      tap((response: any) => {
+        console.log('Success!', response);
+        const metadataUri = response.uri;
+        this.createCreateTokenTx(metadataUri);
+      }),
+      catchError(error => {
+        console.error('Error occurred:', error);
+        return of(null);
+      })
+    ).subscribe();
   }
 }

@@ -27,7 +27,7 @@
 
 <div style="max-width: 900px;">
   <p-toast/>
-  <p-stepper [value]="3" class="basis-[50rem]" [linear]="false"> <!-- TODO: set to 1; true -->
+  <p-stepper [value]="1" class="basis-[50rem]" [linear]="false"> <!-- TODO: set to 1; true -->
     <p-step-list>
       <p-step [value]="1">Logo & Info</p-step>
       <p-step [value]="2">Socials</p-step>
@@ -95,7 +95,7 @@
                 canContinue: infoFormValid && (
                   infoForm.get('useImageUrl')?.value
                   ? (infoForm.get('imageUrl')?.value?.length || 0) > 0
-                  : imageFile.length > 0
+                  : imageFile !== null
                 ),
                 activateCallback
                 }"></div>
@@ -383,11 +383,11 @@
                     <div class="field col-12 flex">
                       <div class="pr-2"><i class="bi bi-snow text-3xl" ></i></div>
                       <app-add-on class="flex-grow-1" [(added)]="addOns['freezeAuthority'].added" [isFree]="addOns['freezeAuthority'].isFree">
-                        <div title>Revoke or Transfer Freeze</div>
+                        <div title>Revoke Freeze</div>
                         <div description>Revoking Freeze authority will prevent anyone from freezing holders' accounts in the future</div>
   
                         <div>
-                          <span>If you want to transfer the Freeze Authority, paste another Solana address below:</span>
+                          <span class="text-sm">If you want to transfer the Freeze Authority, paste another Solana address below:</span>
                           <input class="w-full mt-1" name="Transfer Freeze Authority" placeholder="Paste address here" type="text" pInputText pSize="small" formControlName="freezeAuthority" [maxlength]="50">
                         </div>
                       </app-add-on>
@@ -396,11 +396,11 @@
                     <div class="field col-12 flex">
                       <div class="pr-2"><i class="bi bi-boxes text-3xl" ></i></div>
                       <app-add-on class="flex-grow-1" [(added)]="addOns['mintAuthority'].added" [isFree]="addOns['mintAuthority'].isFree">
-                        <div title>Revoke or Transfer Mint</div>
+                        <div title>Revoke Mint</div>
                         <div description>Revoking Mint authority shows that the supply is fixed and cannot grow </div>
   
                         <div>
-                          <span>If you want to transfer the Mint Authority, paste another Solana address below:</span>
+                          <span class="text-sm">If you want to transfer the Mint Authority, paste another Solana address below:</span>
                           <input class="w-full mt-1" name="Transfer Mint Authority" placeholder="Paste address here" type="text" pInputText pSize="small" formControlName="mintAuthority" [maxlength]="50">
                         </div>
                       </app-add-on>
@@ -408,30 +408,22 @@
                     <!-- UPDATE -->
                     <div class="field col-12 flex">
                       <div style="padding-right: 0.8rem;"><i class="bi bi-pen text-2xl" ></i></div>
-                      <app-add-on class="flex-grow-1" [(added)]="addOns['updateAuthority'].added" [isFree]="addOns['updateAuthority'].isFree" tag="Use PUMP.FUN Authority" tagSeverity="success">
-                        <div title>Revoke or Transfer Update</div>
+                      <app-add-on class="flex-grow-1" [(added)]="addOns['updateAuthority'].added" [isFree]="addOns['updateAuthority'].isFree" tag="Or use PUMP.FUN Authority" tagSeverity="success">
+                        <div title>Revoke Update</div>
                         <div description>Revoking Update authority means token metadata cannot be updated by anyone </div>
                       
                         <div>
-                          <span>If you want to transfer the Update Authority, paste another Solana address below:</span>
+                          <span class="text-sm">If you want to transfer the Update Authority, paste another Solana address below:</span>
                           <input class="w-full mt-1" name="Transfer Update Authority" placeholder="Paste address here" type="text" pInputText pSize="small" formControlName="updateAuthority" [maxlength]="50">
                         </div>
                         <p-button variant="text" size="small" (onClick)="pastePumpFunUpdateAddress()">Paste PUMP.FUN Update Authority address</p-button>
+
+                        <app-alert-banner>
+                          If you transfer the Update Authority to Pump.Fun, token metadata will become immutable. That means Pump.Fun address will be displayed in the metadata, but nobody will be able to change it, just like if your token was created on Pump.Fun
+                        </app-alert-banner>
                       </app-add-on>
                     </div>
                   </ng-container>
-                  
-
-                  <!-- <div class="flex align-items-center p-3 border-round-xl border-left-3 border-yellow-500" 
-                      style="background-color: #FFF9EB;">
-                    <span class="material-symbols-outlined mr-3 text-yellow-500" style="font-size: 2.5rem;">
-                      verified_user
-                      </span>
-                    <div class="flex-column">
-                      <div class="font-bold text-yellow-700 mb-1">Recommended!</div>
-                      <div class="text-gray-800">Revoke right to mint new coins, this shows buyer of your coin that supply is fixed and cannot grow. DEX scanners will mark your coin as safe.</div>
-                    </div>
-                  </div> -->
                 </div>
               </form>
 

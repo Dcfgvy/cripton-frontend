@@ -5,13 +5,13 @@ import { Inject, Injectable, makeStateKey, PLATFORM_ID, TransferState } from '@a
 import { BehaviorSubject } from 'rxjs';
 import { environment } from '../../environments/environment';
 
-const EXAMPLE_DATA_KEY = makeStateKey<AppSettings>('appSettings');
+const EXAMPLE_DATA_KEY = makeStateKey<IAppSettings>('appSettings');
 
 @Injectable({
   providedIn: 'root'
 })
 export class AppSettingsService {
-  private _settings = new BehaviorSubject<AppSettings|null>(null);
+  private _settings = new BehaviorSubject<IAppSettings|null>(null);
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
@@ -20,7 +20,7 @@ export class AppSettingsService {
   ) {}
 
   settings$ = this._settings.asObservable();
-  get currentSettings(): AppSettings | null {
+  get currentSettings(): IAppSettings | null {
     return this._settings.value;
   }
 
@@ -47,7 +47,7 @@ export class AppSettingsService {
     } else {
       // Client-side fallback fetch
       console.log('Client-side fetch initiated');
-      this.http.get<AppSettings>(`${environment.apiUrl}/api/settings`).subscribe(data => {
+      this.http.get<IAppSettings>(`${environment.apiUrl}/api/settings`).subscribe(data => {
         console.log('Client-side fetch completed', data);
         this._settings.next(data);
       });
@@ -55,7 +55,7 @@ export class AppSettingsService {
   }
 }
 
-export interface AppSettings {
+export interface IAppSettings {
   solanaAddress: string;
   baseTokenCreationCost: number;
   additionalOptionsCost: number;

@@ -2,7 +2,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SelectModule } from 'primeng/select';
-import { NetworkSwitchService } from './network-switch.service';
+import { NetworkService } from './network-switch.service';
 
 @Component({
   selector: 'app-network-switch',
@@ -12,6 +12,6 @@ import { NetworkSwitchService } from './network-switch.service';
 })
 export class NetworkSwitchComponent {
   constructor(
-    public networkSwitchService: NetworkSwitchService
+    public networkService: NetworkService
   ) {}
 }
