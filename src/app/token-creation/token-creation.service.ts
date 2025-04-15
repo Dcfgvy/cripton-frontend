@@ -17,7 +17,7 @@ import {
   getAssociatedTokenAddressSync,
 } from '@solana/spl-token';
 
-import { createCreateMetadataAccountV3Instruction, DataV2 } from "@metaplex-foundation/mpl-token-metadata";
+import { createCreateMetadataAccountV3Instruction, createUpdateMetadataAccountV2Instruction, DataV2 } from "@metaplex-foundation/mpl-token-metadata";
 // import { createTokenMetadataInstructionsTest } from './metadata-creation';
 
 export interface TokenSocials {
@@ -106,7 +106,7 @@ export class TokenCreationService {
       creators: [{
         address: userPublicKey,
         share: 100,
-        verified: true, // TODO try to set to true
+        verified: true,
       }],
       collection: null,
       uses: null
@@ -123,25 +123,65 @@ export class TokenCreationService {
     );
 
     const metadataPDA = metadataPDAAndBump[0];
-    const createMetadataAccountInstruction =
-      createCreateMetadataAccountV3Instruction(
-        {
-          metadata: metadataPDA,
-          mint: data.mint.publicKey,
-          mintAuthority: userPublicKey,
-          payer: userPublicKey,
-          updateAuthority: updateAuthority,
-        },
-        {
-          createMetadataAccountArgsV3: {
-            collectionDetails: null,
-            data: metadataData,
-            isMutable: true,
-          },
-        }
-      );
     
-    return [createMetadataAccountInstruction];
+    let instructions: TransactionInstruction[] = [];
+    // if update authority is on of the signers
+    if(updateAuthority === userPublicKey || updateAuthority === data.mint.publicKey){
+      const createInstruction =
+        createCreateMetadataAccountV3Instruction(
+          {
+            metadata: metadataPDA,
+            mint: data.mint.publicKey,
+            mintAuthority: userPublicKey,
+            payer: userPublicKey,
+            updateAuthority: updateAuthority,
+          },
+          {
+            createMetadataAccountArgsV3: {
+              collectionDetails: null,
+              data: metadataData,
+              isMutable: data.isMutable,
+            },
+          }
+        );
+      instructions.push(createInstruction);
+    } else {
+      // initial update authority is user, then transfer it
+      const createInstruction =
+        createCreateMetadataAccountV3Instruction(
+          {
+            metadata: metadataPDA,
+            mint: data.mint.publicKey,
+            mintAuthority: userPublicKey,
+            payer: userPublicKey,
+            updateAuthority: userPublicKey,
+          },
+          {
+            createMetadataAccountArgsV3: {
+              collectionDetails: null,
+              data: metadataData,
+              isMutable: true,
+            },
+          }
+        );
+      const transferInstruction = createUpdateMetadataAccountV2Instruction(
+          {
+            metadata: metadataPDA,
+            updateAuthority: userPublicKey
+          },
+          {
+            updateMetadataAccountArgsV2: {
+              data: null, // Keep same data
+              updateAuthority: updateAuthority,
+              primarySaleHappened: null,
+              isMutable: data.isMutable,
+            }
+          }
+        );
+      instructions.push(createInstruction, transferInstruction);
+    }
+    
+    return instructions;
   }
   
   private async buildRawTokenCreationTx(data: CreateTokenData, userPublicKey: PublicKey, mintRent: number, blockhash: string): Promise<Transaction> {
@@ -177,7 +217,8 @@ export class TokenCreationService {
 
 
     // Convert update authority if provided
-    let updateAuthority = userPublicKey;
+    let updateAuthority: PublicKey = userPublicKey;
+    // TODO fix with pump.fun authority
     if (data.updateAuthority) {
       updateAuthority = new PublicKey(data.updateAuthority);
     }
@@ -448,9 +489,11 @@ export class TokenCreationService {
     if (!developerAddress) throw new Error('Internal error');
   
     // Create connection to the network
-    const connection = new Connection(this.networkService.selectedNetwork.url);
+    const connection = new Connection(this.networkService.selectedNetwork.url, 'confirmed');
     const mintRent = await connection.getMinimumBalanceForRentExemption(MintLayout.span);
     const { blockhash } = await connection.getLatestBlockhash();
+    const accountInfo = await connection.getAccountInfo(userPublicKey);
+    if(!(accountInfo?.lamports) || (accountInfo.lamports < data.totalCost * LAMPORTS_PER_SOL)) throw new Error('Insufficient balance');
 
     const transaction = await this.buildRawTokenCreationTx(data, userPublicKey, mintRent, blockhash);
     const txCost = await this.getTokenCreationCost(data, connection, userPublicKey, mintRent, blockhash);

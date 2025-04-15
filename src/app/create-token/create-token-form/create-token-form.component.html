@@ -10,7 +10,7 @@
     }
     <span>
       <span class="hidden md:inline">Total fees:</span>
-      <span class="line-through text-color-secondary ml-1">{{ (totalCostWithoutDiscounts() * 3).toFixed(2) }} SOL</span>
+      <span class="font-semibold line-through text-color-secondary ml-1">{{ (totalCostWithoutDiscounts() * 3).toFixed(2) }} SOL</span>
       <span class="font-semibold ml-1">{{ totalCost().toFixed(2) }} SOL</span>
     </span>
     @if(page < 3){
@@ -27,7 +27,7 @@
 
 <div style="max-width: 900px;">
   <p-toast/>
-  <p-stepper [value]="1" class="basis-[50rem]" [linear]="false">
+  <p-stepper [value]="1" class="basis-[50rem]" [linear]="true">
     <p-step-list>
       <p-step [value]="1">Logo & Info</p-step>
       <p-step [value]="2">Socials</p-step>
@@ -334,11 +334,11 @@
                     </app-add-on>
                   </div>
 
-
                   <div class="field col-12">
+                    <!-- TODO: generate wallet addresses -->
                     <app-add-on [(added)]="addOns['multiWalletDistribution'].added" [isFree]="addOns['multiWalletDistribution'].isFree" tag="Advanced" tagSeverity="info">
                       <div title>Multi-Wallet Supply Distribution</div>
-                      <div description>Distribute the supply of your token across different wallets within the creation (max 10 wallets)</div>
+                      <div description>Distribute the supply of your token across different wallets within the creation (max 10 wallets).<br><span class="font-semibold">DEX scanners will mark your coin as safe</span></div>
 
                       <div formArrayName="supplyDistribution">
                         @for (wallet of supplyDistributions.controls; track $index + '&&' + wallet.get('address')!.value; let i = $index) {

@@ -35,7 +35,7 @@ import { solanaAddressValidator } from '../../utils/solana.validator';
 const MAX_SUPPLY_WITH_DECIMALS = 10_000_000_000_000_000_000n;
 const ONE_BYTE_SYMBOLS = /^[a-zA-Z0-9 _.!$?]+$/;
 const ADDRESS_SYMBOLS = /^[1-9A-HJ-NP-Za-km-z]+$/;
-const PUMP_FUN_MINT_AUTHORITY = "TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM";
+export const PUMP_FUN_MINT_AUTHORITY = "TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM";
 
 export function supplyValidator(): ValidatorFn {
   return (control: AbstractControl) => {
@@ -500,7 +500,7 @@ export class CreateTokenFormComponent {
       metadata.creatorWebsite = this.DEFAULT_CREATOR_WEBSITE;
     }
     metadata.name = this.infoForm.get('name')!.value!;
-    metadata.symbol = this.infoForm.get('symbol')!.value!;
+    metadata.symbol = this.infoForm.get('symbol')!.value!.toLocaleUpperCase();
     metadata.description = this.infoForm.get('description')!.value!;
     metadata.tags = this.socialsForm.get('tags')!.value || [];
     metadata.tokenSocials = {
@@ -529,7 +529,7 @@ export class CreateTokenFormComponent {
     try{
       const data: Partial<CreateTokenData> = {};
       data.name = this.infoForm.get('name')!.value!;
-      data.symbol = this.infoForm.get('symbol')!.value!;
+      data.symbol = this.infoForm.get('symbol')!.value!.toLocaleUpperCase();
       data.decimals = this.infoForm.get('decimals')!.value!;
       data.supply = this.infoForm.get('supply')!.value!;
       data.metadataUri = uri;
@@ -582,6 +582,8 @@ export class CreateTokenFormComponent {
           data.updateAuthority = inputed;
           if(inputed === PUMP_FUN_MINT_AUTHORITY){
             data.isMutable = false;
+          } else {
+            data.isMutable = true;
           }
         } else {
           data.updateAuthority = userPublicKey.toBase58();

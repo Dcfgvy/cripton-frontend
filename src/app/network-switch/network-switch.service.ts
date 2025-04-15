@@ -1,5 +1,6 @@
 import { afterNextRender, Injectable } from '@angular/core';
 import { clusterApiUrl } from '@solana/web3.js';
+import { environment } from '../../environments/environment';
 
 export interface Network {
   name: string;
@@ -16,7 +17,7 @@ export class NetworkService {
     {
       name: 'Mainnet',
       code: 'mainnet-beta',
-      url: 'https://lb.drpc.org/ogrpc?network=solana&dkey=AnwthBMQyk6Nn04E_iyiffZOTHAXDV4R8LjOjk6iId46', // TODO: clusterApiUrl('mainnet-beta')
+      url: environment.mainnetUrls.solana,
       isTest: false
     },
     {
