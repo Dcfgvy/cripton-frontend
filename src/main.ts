@@ -1,4 +1,4 @@
-import './buffer-polyfill';
+import './polyfills';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
 import { AppComponent } from './app/app.component';
@@ -6,4 +6,4 @@ import { AppComponent } from './app/app.component';
 bootstrapApplication(AppComponent, appConfig)
   .catch((err) => console.error(err));
 
-// TODO fix bundle size
+// TODO fix bundle size (styles, @metaplex-foundation/mpl-token-metadata, wallet adapters)

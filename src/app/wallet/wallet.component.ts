@@ -40,7 +40,6 @@ export class WalletComponent {
   }
 
   connect(walletName: string): void {
-    console.log('efe');
     this.walletService.connect(walletName)
     .then(() => {
       this.dialogOpened = false;
