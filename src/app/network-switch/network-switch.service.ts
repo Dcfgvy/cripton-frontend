@@ -16,7 +16,7 @@ export class NetworkService {
     {
       name: 'Mainnet',
       code: 'mainnet-beta',
-      url: clusterApiUrl('mainnet-beta'),
+      url: 'https://lb.drpc.org/ogrpc?network=solana&dkey=AnwthBMQyk6Nn04E_iyiffZOTHAXDV4R8LjOjk6iId46', // TODO: clusterApiUrl('mainnet-beta')
       isTest: false
     },
     {

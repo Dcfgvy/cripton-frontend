@@ -7,8 +7,9 @@ export function urlValidator(...requiredPatterns: string[]): ValidatorFn {
       return null;
     }
     
-    // Base URL regex pattern
-    const urlRegex = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+    // Better URL regex pattern that handles query parameters and special characters
+    // This avoids catastrophic backtracking with nested quantifiers
+    const urlRegex = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w\.-]|[?&=%+,])*\/?$/i;
     
     // Check if the URL format is valid at all
     if (!urlRegex.test(control.value)) {
@@ -20,29 +21,37 @@ export function urlValidator(...requiredPatterns: string[]): ValidatorFn {
       return null;
     }
     
-    // Parse the input value
-    const valueMatch = control.value.match(/^(https?:\/\/)?([\da-z\.-]+\.[a-z\.]{2,6})/i);
+    // Parse the input value - using a simpler extraction to get the domain
+    let valueDomain;
+    try {
+      // Using URL constructor for safer parsing
+      const url = new URL(control.value.startsWith('http') ? control.value : `https://${control.value}`);
+      valueDomain = url.hostname;
+    } catch (e) {
+      // Fallback to regex if URL constructor fails
+      const valueMatch = control.value.match(/^(?:https?:\/\/)?([\da-z\.-]+\.[a-z\.]{2,6})/i);
+      valueDomain = valueMatch ? valueMatch[1] : null;
+    }
     
-    if (!valueMatch) {
+    if (!valueDomain) {
       return { invalidUrl: true };
     }
     
-    const [, valueProtocol, valueDomain] = valueMatch;
-    
     // Check against each pattern
     for (const pattern of requiredPatterns) {
-      const patternMatch = pattern.match(/^(https?:\/\/)?([\da-z\.-]+\.[a-z\.]{2,6})/i);
+      let requiredDomain;
       
-      if (!patternMatch) {
-        continue; // Skip invalid patterns
+      try {
+        // Extract domain from pattern
+        const url = new URL(pattern.startsWith('http') ? pattern : `https://${pattern}`);
+        requiredDomain = url.hostname;
+      } catch (e) {
+        // Fallback to regex if URL constructor fails
+        const patternMatch = pattern.match(/^(?:https?:\/\/)?([\da-z\.-]+\.[a-z\.]{2,6})/i);
+        requiredDomain = patternMatch ? patternMatch[1] : null;
       }
       
-      const [, requiredProtocol, requiredDomain] = patternMatch;
-      
-      // Check protocol if specified in this pattern
-      if (requiredProtocol && (!valueProtocol || valueProtocol.toLowerCase() !== requiredProtocol.toLowerCase())) {
-        continue; // Protocol doesn't match this pattern, try next one
-      }
+      if (!requiredDomain) continue;
       
       // Check domain for this pattern
       if (valueDomain.toLowerCase() === requiredDomain.toLowerCase()) {
@@ -55,8 +64,13 @@ export function urlValidator(...requiredPatterns: string[]): ValidatorFn {
       invalidDomain: { 
         actual: valueDomain,
         allowedDomains: requiredPatterns.map(pattern => {
-          const match = pattern.match(/^(?:https?:\/\/)?([\da-z\.-]+\.[a-z\.]{2,6})/i);
-          return match ? match[1] : pattern;
+          try {
+            const url = new URL(pattern.startsWith('http') ? pattern : `https://${pattern}`);
+            return url.hostname;
+          } catch (e) {
+            const match = pattern.match(/^(?:https?:\/\/)?([\da-z\.-]+\.[a-z\.]{2,6})/i);
+            return match ? match[1] : pattern;
+          }
         })
       } 
     };

@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import { AbstractControl, FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { StepperModule } from 'primeng/stepper';
@@ -10,7 +10,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { WalletService } from '../../wallet/wallet.service';
-import { Keypair } from '@solana/web3.js';
+import { Keypair, PublicKey } from '@solana/web3.js';
 import { AddOn, AddOnComponent } from '../../components/add-on/add-on.component';
 import { AppSettingsService } from '../../app-settings/app-settings.service';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -25,8 +25,9 @@ import { ErrorComponent } from '../../components/error/error.component';
 import { urlValidator } from '../../utils/url.validator';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { AlertBannerComponent } from "../../components/alert-banner/alert-banner.component";
-import { TokenCreationService, TokenUploadMetadata, TokenImageData } from '../../token-creation/token-creation.service';
+import { TokenCreationService, TokenUploadMetadata, TokenImageData, CreateTokenData, SupplyDistributionArray } from '../../token-creation/token-creation.service';
 import { catchError, of, tap } from 'rxjs';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 // u64 max value: 18,446,744,073,709,551,615 (2^64-1)
 // Our limit: 10,000,000,000,000,000,000 (10 * 10^18)
@@ -133,7 +134,17 @@ export class CreateTokenFormComponent {
     private settingsService: AppSettingsService,
     private messageService: MessageService,
     private tokenCreationService: TokenCreationService,
-  ) {}
+  ) {
+    // Supply distribution validation
+    toObservable(this.addOns['multiWalletDistribution'].added).subscribe((value) => {
+      if(value){
+        this.supplyDistributions.enable();
+        this.setInitialUserWalletSupply();
+      } else {
+        this.supplyDistributions.disable();
+      }
+    });
+  }
 
   baseCost = computed<number>(() => {
     return this.settingsService.currentSettings?.baseTokenCreationCost || 0;
@@ -299,15 +310,27 @@ export class CreateTokenFormComponent {
     supplyDistribution: new FormArray([], [
       Validators.maxLength(10),
       (formArray: AbstractControl) => {
-        if(this.addOns['multiWalletDistribution'].added() === false) return null;
-        if(formArray.value.length === 0) return null;
-        
         let percentsSum = 0;
         for(const control of formArray.value){
           percentsSum += Number(control.share) || 0;
         }
         if(percentsSum !== 100){
           return { supplyDistributionPercentsFailure: true };
+        }
+        return null;
+      },
+      (formArray: AbstractControl) => {
+        let addresses = new Set();
+        let emptyCounter = 0;
+        for(const control of formArray.value){
+          if(control.address === ''){
+            emptyCounter++;
+          } else {
+            addresses.add(control.address);
+          }
+        }
+        if(addresses.size + emptyCounter !== formArray.value.length){
+          return { dublicateWalletAddress: true };
         }
         return null;
       }
@@ -353,19 +376,26 @@ export class CreateTokenFormComponent {
     this.supplyDistributions.push(
       new FormGroup({
         address: new FormControl({ value: address, disabled }, [
+          Validators.required,
           Validators.pattern(SOLANA_ADDRESS_PATTERN)
         ]),
-        share: new FormControl(share, [Validators.pattern(/^[0-9]*$/), Validators.min(0), Validators.max(100)]) // number pattern
+        share: new FormControl(share, [
+          Validators.required,
+          Validators.pattern(/^[0-9]*$/),
+          Validators.min(0),
+          Validators.max(100)
+        ]) // number pattern
       })
     );
   }
   setInitialUserWalletSupply = () => {
-    if(this.supplyDistributions.length > 0) return;
+    if(this.supplyDistributions.length > 1) return;
     if(!this.walletService.selectedWallet?.publicKey){
       this.addOns['multiWalletDistribution'].added.set(false);
       this.messageService.add({ severity: 'error', summary: 'No Wallet Connected', detail: 'Please reconnect your wallet to proceed' });
       return;
     }
+    this.supplyDistributions.clear();
     this.addDistribution(this.walletService.selectedWallet?.publicKey?.toBase58(), 100);
   }
   removeDistribution(index: number): void {
@@ -450,7 +480,7 @@ export class CreateTokenFormComponent {
 
   // Create Token
   private uploadMetadata(){
-    let metadata: Partial<TokenUploadMetadata> = {}
+    const metadata: Partial<TokenUploadMetadata> = {}
     // mint
     if(this.addOns['customAddress'].added()){
       metadata.mint = this.mintKeypair.publicKey.toBase58();
@@ -485,7 +515,7 @@ export class CreateTokenFormComponent {
       facebook: this.socialsForm.get('facebook')?.value || undefined,
     }
 
-    let imageData: TokenImageData = {};
+    const imageData: TokenImageData = {};
     if(this.infoForm.get('useImageUrl')?.value){
       imageData.imageUrl = this.infoForm.get('imageUrl')!.value!;
     } else {
@@ -494,16 +524,87 @@ export class CreateTokenFormComponent {
     return this.tokenCreationService.uploadMetadata(metadata as TokenUploadMetadata, imageData);
   }
 
-  private createCreateTokenTx(uri: string){
-    // TODO 
+  private async createCreateTokenTx(uri: string, userPublicKey: PublicKey){
+    try{
+      const data: Partial<CreateTokenData> = {};
+      data.name = this.infoForm.get('name')!.value!;
+      data.symbol = this.infoForm.get('symbol')!.value!;
+      data.decimals = this.infoForm.get('decimals')!.value!;
+      data.supply = this.infoForm.get('supply')!.value!;
+      data.metadataUri = uri;
+      data.totalCost = this.totalCost();
+
+      // mint
+      if(this.addOns['customAddress'].added()){
+        data.mint = this.mintKeypair;
+      } else {
+        data.mint = this.defaultMintKeypair;
+      }
+      // supply distribution
+      if(this.addOns['multiWalletDistribution'].added()){
+        let supplyDistribution: SupplyDistributionArray = [];
+        for(const distribution of this.supplyDistributions.controls){
+          supplyDistribution.push({
+            address: distribution.get('address')!.value! as string,
+            share: distribution.get('share')!.value! as number,
+          });
+        }
+        data.supplyDistribution = supplyDistribution;
+      } else {
+        data.supplyDistribution = [{
+          address: userPublicKey.toBase58(),
+          share: 100
+        }];
+      }
+      // Freeze Authority
+      if(this.addOns['freezeAuthority'].added()){
+        const inputed = this.settingsForm.get('freezeAuthority')?.value || '';
+        if(inputed){
+          data.freezeAuthority = inputed;
+        }
+      } else {
+        data.freezeAuthority = userPublicKey.toBase58();
+      }
+      // Mint Authority
+      if(this.addOns['mintAuthority'].added()){
+        const inputed = this.settingsForm.get('mintAuthority')?.value || '';
+        if(inputed){
+          data.mintAuthority = inputed;
+        }
+      } else {
+        data.mintAuthority = userPublicKey.toBase58();
+      }
+      // Update Authority
+      if(this.addOns['updateAuthority'].added()){
+        const inputed = this.settingsForm.get('updateAuthority')?.value || '';
+        if(inputed){
+          data.updateAuthority = inputed;
+          if(inputed === PUMP_FUN_MINT_AUTHORITY){
+            data.isMutable = false;
+          }
+        } else {
+          data.updateAuthority = userPublicKey.toBase58();
+          data.isMutable = false;
+        }
+      } else {
+        data.updateAuthority = userPublicKey.toBase58();
+        data.isMutable = true;
+      }
+
+      await this.tokenCreationService.createToken(data as CreateTokenData, userPublicKey);
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   createToken(){
+    const userPublicKey = this.walletService.selectedWallet?.publicKey;
+    if(!userPublicKey) throw new Error('User wallet disconnected');
     this.uploadMetadata().pipe(
       tap((response: any) => {
         console.log('Success!', response);
         const metadataUri = response.uri;
-        this.createCreateTokenTx(metadataUri);
+        this.createCreateTokenTx(metadataUri, userPublicKey);
       }),
       catchError(error => {
         console.error('Error occurred:', error);

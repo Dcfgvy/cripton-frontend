@@ -336,7 +336,7 @@
 
 
                   <div class="field col-12">
-                    <app-add-on [onAdded]="setInitialUserWalletSupply" [(added)]="addOns['multiWalletDistribution'].added" [isFree]="addOns['multiWalletDistribution'].isFree" tag="Advanced" tagSeverity="info">
+                    <app-add-on [(added)]="addOns['multiWalletDistribution'].added" [isFree]="addOns['multiWalletDistribution'].isFree" tag="Advanced" tagSeverity="info">
                       <div title>Multi-Wallet Supply Distribution</div>
                       <div description>Distribute the supply of your token across different wallets within the creation (max 10 wallets)</div>
 
@@ -365,6 +365,7 @@
                         }
                       </div>
                       <app-error [showIf]="supplyDistributions.errors ? supplyDistributions.errors['supplyDistributionPercentsFailure'] : false">Shares must sum up to 100%</app-error>
+                      <app-error [showIf]="supplyDistributions.errors ? supplyDistributions.errors['dublicateWalletAddress'] : false">Duplicate addresses found</app-error>
                       <button
                       class="w-full p-button-text" pButton icon="pi pi-plus" type="button" label="Add Wallet"
                       (click)="addDistribution()"

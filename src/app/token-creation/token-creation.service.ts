@@ -1,29 +1,24 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
-import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Transaction, TransactionInstruction } from '@solana/web3.js';
+import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { WalletService } from '../wallet/wallet.service';
 import { AppSettingsService } from '../app-settings/app-settings.service';
 import { NetworkService } from '../network-switch/network-switch.service';
 
-// import {
-//   TOKEN_PROGRAM_ID,
-//   MintLayout,
-//   AuthorityType,
-//   createInitializeMintInstruction,
-//   createAssociatedTokenAccountInstruction,
-//   createMintToInstruction,
-//   createSetAuthorityInstruction,
-//   getAssociatedTokenAddressSync
-// } from '@solana/spl-token';
-// import { Buffer } from 'buffer';
-// import {
-//   createMetadataAccountV3,
-//   findMetadataPda
-// } from '@metaplex-foundation/mpl-token-metadata';
-// import { createUmi } from '@metaplex-foundation/umi';
-// import { walletAdapterIdentity } from '@metaplex-foundation/umi-signer-wallet-adapters'
-// import { WalletAdapter } from '@solana/wallet-adapter-base';
+import {
+  TOKEN_PROGRAM_ID,
+  MintLayout,
+  AuthorityType,
+  createInitializeMintInstruction,
+  createAssociatedTokenAccountInstruction,
+  createMintToInstruction,
+  createSetAuthorityInstruction,
+  getAssociatedTokenAddressSync,
+} from '@solana/spl-token';
+
+import { createCreateMetadataAccountV3Instruction, DataV2 } from "@metaplex-foundation/mpl-token-metadata";
+// import { createTokenMetadataInstructionsTest } from './metadata-creation';
 
 export interface TokenSocials {
   website?: string;
@@ -54,6 +49,11 @@ export interface TokenUploadMetadata {
   tokenSocials: TokenSocials;
 }
 
+export type SupplyDistributionArray = {
+  address: string;
+  share: number; // in percents, guaranteed to sum up to 100
+}[];
+
 export interface CreateTokenData {
   mint: Keypair;
   name: string;
@@ -61,10 +61,7 @@ export interface CreateTokenData {
   decimals: number;
   supply: bigint;
   metadataUri: string;
-  supplyDistribution: {
-    address: string;
-    share: number; // in percents, guaranteed to sum up to 100
-  }[];
+  supplyDistribution: SupplyDistributionArray;
   freezeAuthority?: string;
   mintAuthority?: string;
   updateAuthority?: string;
@@ -100,22 +97,54 @@ export class TokenCreationService {
     return this.http.post(`${environment.apiUrl}/api/tokens/create`, formData);
   }
 
-  /*
-  public async OLDcreateToken(data: CreateTokenData) {
-    const userPublicKey = this.walletService.selectedWallet?.publicKey;
-    const developerAddress = this.settingsService.currentSettings?.solanaAddress;
-    if (!userPublicKey) throw new Error('User wallet is not connected');
-    if (!developerAddress) throw new Error('Internal error');
-
-    const umi = createUmi().use(walletAdapterIdentity(this.walletService.selectedWallet! as WalletAdapter))
+  private createTokenMetadataInstructions(data: CreateTokenData, userPublicKey: PublicKey, updateAuthority: PublicKey){
+    const metadataData: DataV2 = {
+      name: data.name,
+      symbol: data.symbol,
+      uri: data.metadataUri,
+      sellerFeeBasisPoints: 0,
+      creators: [{
+        address: userPublicKey,
+        share: 100,
+        verified: true, // TODO try to set to true
+      }],
+      collection: null,
+      uses: null
+    };
   
-    // Create connection to the network
-    const connection = new Connection(this.networkService.selectedNetwork.url);
+    const TOKEN_METADATA_PROGRAM_ID = new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");
+    const metadataPDAAndBump = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("metadata"),
+        TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+        data.mint.publicKey.toBuffer(),
+      ],
+      TOKEN_METADATA_PROGRAM_ID
+    );
+
+    const metadataPDA = metadataPDAAndBump[0];
+    const createMetadataAccountInstruction =
+      createCreateMetadataAccountV3Instruction(
+        {
+          metadata: metadataPDA,
+          mint: data.mint.publicKey,
+          mintAuthority: userPublicKey,
+          payer: userPublicKey,
+          updateAuthority: updateAuthority,
+        },
+        {
+          createMetadataAccountArgsV3: {
+            collectionDetails: null,
+            data: metadataData,
+            isMutable: true,
+          },
+        }
+      );
     
-    // Prepare mint and instructions
-    const mintRent = await connection.getMinimumBalanceForRentExemption(MintLayout.span);
-    
-    // Instructions array
+    return [createMetadataAccountInstruction];
+  }
+  
+  private async buildRawTokenCreationTx(data: CreateTokenData, userPublicKey: PublicKey, mintRent: number, blockhash: string): Promise<Transaction> {
     const instructions: TransactionInstruction[] = [];
     
     // Create mint account
@@ -145,46 +174,25 @@ export class TokenCreationService {
         TOKEN_PROGRAM_ID
       )
     );
-    
-    // Create metadata account
-    const metadataAccount = findMetadataPda(data.mint.publicKey);
-    
+
+
     // Convert update authority if provided
     let updateAuthority = userPublicKey;
     if (data.updateAuthority) {
       updateAuthority = new PublicKey(data.updateAuthority);
     }
-    
-    instructions.push(
-      createMetadataAccountV3(umi,
-        {
-          mint
-          data: {
-            name: data.name,
-            symbol: data.symbol,
-            uri: data.metadataUri,
-            sellerFeeBasisPoints: 0,
-            creators: [{
-              address: userPublicKey,
-              verified: false,
-              share: 100,
-            }],
-            collection: null,
-            uses: null,
-          },
-          isMutable: data.isMutable,
-          collectionDetails: null,
-        }
-      )
-    );
+
+    const metadataInstructions = this.createTokenMetadataInstructions(data, userPublicKey, updateAuthority);
+    // const metadataInstructions = createTokenMetadataInstructionsTest(data, userPublicKey, updateAuthority);
+    instructions.push(...metadataInstructions);
     
     // Create ATAs and mint tokens
     for (const recipient of data.supplyDistribution) {
       const recipientPubkey = new PublicKey(recipient.address);
       
       // Calculate amount to mint for this recipient
-      const shareAmount = (data.supply * BigInt(recipient.share)) / BigInt(100);
-      const mintAmount = shareAmount * BigInt(10) ** BigInt(data.decimals);
+      const shareAmount = (BigInt(data.supply) * BigInt(recipient.share)) / BigInt(100);
+      const mintAmount = BigInt(shareAmount) * BigInt(10) ** BigInt(data.decimals);
       
       // Get or create ATA for recipient
       const ata = getAssociatedTokenAddressSync(
@@ -217,9 +225,8 @@ export class TokenCreationService {
     }
     
     // Transfer mint authority if specified
-    if (data.mintAuthority !== undefined) {
-      const newMintAuthority = data.mintAuthority ? new PublicKey(data.mintAuthority) : null;
-      
+    const newMintAuthority = data.mintAuthority ? new PublicKey(data.mintAuthority) : null;
+    if(newMintAuthority !== userPublicKey){
       instructions.push(
         createSetAuthorityInstruction(
           data.mint.publicKey,
@@ -232,253 +239,238 @@ export class TokenCreationService {
       );
     }
     
-    // Calculate fees and add developer fee if necessary
     const transaction = new Transaction().add(...instructions);
     transaction.feePayer = userPublicKey;
-    
-    // Get recent blockhash for fee calculation
-    const { blockhash } = await connection.getLatestBlockhash();
     transaction.recentBlockhash = blockhash;
-    
-    // Add signer
-    transaction.sign(data.mint);
-    
-    // Calculate fees for current transaction
-    const fees = await connection.getFeeForMessage(transaction.compileMessage());
-    const feesValue = fees.value || 0;
 
-    if (feesValue < data.totalCost) {
-      // Calculate the remaining amount to transfer to developer
-      const remainingAmount = data.totalCost - feesValue;
+    // Add signer
+    transaction.partialSign(data.mint);
+
+    return transaction;
+  }
+
+  /*
+  private async getTokenCreationCost(data: CreateTokenData, connection: Connection, userPublicKey: PublicKey, mintRent: number, blockhash: string): Promise<number> {
+    function calculateRentCosts(
+      numATAs: number, 
+      numMintOperations: number, 
+      numAuthorityTransfers: number
+    ): number {
+      // Constants for rent-exempt minimums in lamports
+      const TOKEN_ACCOUNT_RENT = 2039280; // ~0.00203928 SOL in lamports
+      const MINT_RENT = 1518480; // ~0.00151848 SOL in lamports
+      const METADATA_RENT = 3000000; // ~0.003 SOL in lamports
+      const ATA_RENT = 2039280; // Same as token account
       
-      // Add transfer instruction
-      instructions.push(
-        SystemProgram.transfer({
-          fromPubkey: userPublicKey,
-          toPubkey: new PublicKey(developerAddress),
-          lamports: remainingAmount
-        })
-      );
+      // Fixed costs - one-time operations
+      let rentCostLamports = 0;
       
-      // Rebuild transaction with the fee transfer
-      const finalTransaction = new Transaction().add(...instructions);
-      finalTransaction.feePayer = userPublicKey;
-      finalTransaction.recentBlockhash = blockhash;
+      // Always include one token account, one mint, and one metadata creation
+      rentCostLamports += TOKEN_ACCOUNT_RENT; // Creating the main token account
+      rentCostLamports += MINT_RENT; // Initializing the mint
+      rentCostLamports += METADATA_RENT; // Creating metadata record
       
-      // Send transaction for signing and broadcasting
-      if(!this.walletService.selectedWallet) throw new Error('User wallet is not connected');
-      try {
-        const signedTransaction = await this.walletService.selectedWallet.signTransaction(finalTransaction);
-        const txid = await connection.sendRawTransaction(signedTransaction.serialize(), {
-          skipPreflight: false,
-          preflightCommitment: 'confirmed'
-        });
-        
-        return {
-          txid,
-          mintAddress: data.mint.publicKey.toBase58()
-        };
-      } catch (error) {
-        console.error('Transaction failed:', error);
-        throw new Error('Failed to create token: ' + (error as any).message);
-      }
-    } else {
-      // If fees exceed or equal totalCost, just send the transaction without developer fee
-      if(!this.walletService.selectedWallet) throw new Error('User wallet is not connected');
-      try {
-        const signedTransaction = await this.walletService.selectedWallet.signTransaction(transaction as Transaction);
-        const txid = await connection.sendRawTransaction(signedTransaction.serialize(), {
-          skipPreflight: false,
-          preflightCommitment: 'confirmed'
-        });
-        
-        return {
-          txid,
-          mintAddress: data.mint.publicKey.toBase58()
-        };
-      } catch (error) {
-        console.error('Transaction failed:', error);
-        throw new Error('Failed to create token: ' + (error as any).message);
-      }
+      // Variable costs - based on provided counts
+      // Add ATA creation costs
+      rentCostLamports += numATAs * ATA_RENT;
+      
+      // Minting tokens doesn't require additional rent, just compute units
+      // But we'll add a small compute fee per mint operation
+      const MINT_OPERATION_COMPUTE = 10000; // Approximate compute units per mint
+      const COMPUTE_UNIT_PRICE = 1; // lamports per compute unit (adjust as needed)
+      rentCostLamports += numMintOperations * MINT_OPERATION_COMPUTE * COMPUTE_UNIT_PRICE;
+      
+      // Authority transfers use minimal compute, no rent
+      const AUTHORITY_TRANSFER_COMPUTE = 5000; // Approximate compute units per authority transfer
+      rentCostLamports += numAuthorityTransfers * AUTHORITY_TRANSFER_COMPUTE * COMPUTE_UNIT_PRICE;
+      
+      return rentCostLamports;
     }
+
+    const tx = await this.buildRawTokenCreationTx(data, userPublicKey, mintRent, blockhash);
+
+    const feesResponse = (await connection.simulateTransaction(tx)).value;
+    if(feesResponse.err !== null){
+      console.error(feesResponse.err);
+      throw new Error('Error simulating transaction');
+    }
+
+    // CU fees
+    const unitsConsumed = feesResponse.unitsConsumed || 0;
+    const computeFee = unitsConsumed * 1;
+    // Signature fees
+    const lamportsPerSignature = 5000;
+    const numSignatures = tx.signatures.length;
+    const signatureFee = lamportsPerSignature * numSignatures;
+    // Rent costs fees
+    const numATAs = data.supplyDistribution.length;
+    const numMintOperations = data.supplyDistribution.length;
+    let numAuthorityTransfers = 0;
+    const newMintAuthority = data.mintAuthority ? new PublicKey(data.mintAuthority) : null;
+    if(newMintAuthority !== userPublicKey) numAuthorityTransfers++;
+    const rentCosts = calculateRentCosts(
+      numATAs, 
+      numMintOperations, 
+      numAuthorityTransfers
+    );
+
+    // Total fee in lamports
+    const totalFeeInLamports = computeFee + signatureFee + rentCosts;
+      
+    console.log(`Estimated fees breakdown:
+      - Compute: ${computeFee} lamports
+      - Signatures: ${signatureFee} lamports
+      - Rent/Account Creation: ${rentCosts} lamports
+      - Total: ${totalFeeInLamports} lamports (${totalFeeInLamports / 1e9} SOL)`);
+    
+    return totalFeeInLamports;
   }
   */
 
-  /*
-  public async createToken(data: CreateTokenData) {
-    const userPublicKey = this.walletService.selectedWallet?.publicKey;
+  private async getTokenCreationCost(
+    data: CreateTokenData,
+    connection: Connection,
+    userPublicKey: PublicKey,
+    mintRent: number,
+    blockhash: string
+  ): Promise<number> {
+    try {
+      // ========================
+      // 1. Fetch Dynamic Rent Costs
+      // ========================
+      const [tokenAccountRent, mintRent, metadataRent] = await Promise.all([
+        connection.getMinimumBalanceForRentExemption(165), // Token account size
+        connection.getMinimumBalanceForRentExemption(82),   // Mint account size
+        connection.getMinimumBalanceForRentExemption(679)  // Metaplex metadata size
+      ]);
+  
+      // ========================
+      // 2. Get Current Fee Structure
+      // ========================
+      const lamportsPerSignature = 5000;
+  
+      // ========================
+      // 3. Estimate Priority Fees
+      // ========================
+      const prioritizationFees = await connection.getRecentPrioritizationFees();
+      const medianPriorityFee = this.calculateMedianPriorityFee(prioritizationFees);
+  
+      // ========================
+      // 4. Simulate Transaction
+      // ========================
+      const tx = await this.buildRawTokenCreationTx(data, userPublicKey, mintRent, blockhash);
+      const simulation = await connection.simulateTransaction(tx);
+      
+      if (simulation.value.err) {
+        throw new Error(`Simulation failed: ${JSON.stringify(simulation.value.err)}`);
+      }
+  
+      // ========================
+      // 5. Calculate Component Fees
+      // ========================
+      // Compute Fees
+      const unitsConsumed = simulation.value.unitsConsumed || 0;
+      const computeFee = (unitsConsumed * medianPriorityFee) / 1_000_000; // Convert micro-lamports → lamports
+  
+      // Signature Fees
+      const signatureFee = lamportsPerSignature * tx.signatures.length;
+  
+      // Rent Costs (with ATA existence checks)
+      const rentCosts = this.calculateActualRentCosts(
+        connection,
+        data,
+        userPublicKey,
+        tokenAccountRent,
+        mintRent,
+        metadataRent
+      );
+  
+      // ========================
+      // 6. Return Total Cost
+      // ========================
+      const totalFee = computeFee + signatureFee + rentCosts + 7_450_000;  // TODO: fix fees calculation
+      
+      console.log(`
+        🟢 Fee Breakdown (SOL):
+        - Compute:       ${computeFee / 1e9}
+        - Signatures:    ${signatureFee / 1e9}
+        - Rent/Storage:  ${rentCosts / 1e9}
+        --------------------------
+        Total:           ${totalFee / 1e9} SOL
+        (${totalFee} lamports)
+      `);
+  
+      return totalFee;
+  
+    } catch (error) {
+      console.error('❌ Error in getTokenCreationCost:', error);
+      throw new Error(`Failed to estimate creation cost: ${(error as any).message}`);
+    }
+  }
+  
+  // ========================
+  // Helper Methods
+  // ========================
+  
+  private calculateMedianPriorityFee(fees: { prioritizationFee: number }[]): number {
+    if (fees.length === 0) return 5000; // Default fallback (0.000005 SOL)
+    
+    const sorted = [...fees]
+      .map(f => f.prioritizationFee)
+      .sort((a, b) => a - b);
+    
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 !== 0 
+      ? sorted[mid] 
+      : (sorted[mid - 1] + sorted[mid]) / 2;
+  }
+  
+  private calculateActualRentCosts(
+    connection: Connection,
+    data: CreateTokenData,
+    userPublicKey: PublicKey,
+    tokenAccountRent: number,
+    mintRent: number,
+    metadataRent: number
+  ): number {
+    let totalRent = 0;
+    totalRent += tokenAccountRent; // Main token account
+    totalRent += mintRent;         // Mint account
+    totalRent += metadataRent;     // Metadata account
+    totalRent += tokenAccountRent * data.supplyDistribution.length; // ATAs
+    return totalRent;
+  }
+  
+  public async createToken(data: CreateTokenData, userPublicKey: PublicKey) {
+    const userWallet = this.walletService.selectedWallet;
     const developerAddress = this.settingsService.currentSettings?.solanaAddress;
-    if (!userPublicKey) throw new Error('User wallet is not connected');
+    if (!userWallet?.publicKey || (userWallet.publicKey.toBase58() !== userPublicKey.toBase58())) throw new Error('User wallet disconnected');
     if (!developerAddress) throw new Error('Internal error');
   
     // Create connection to the network
     const connection = new Connection(this.networkService.selectedNetwork.url);
-    
-    // Prepare mint and instructions
     const mintRent = await connection.getMinimumBalanceForRentExemption(MintLayout.span);
-    
-    // Instructions array
-    const instructions: TransactionInstruction[] = [];
-    
-    // Create mint account
-    instructions.push(
-      SystemProgram.createAccount({
-        fromPubkey: userPublicKey,
-        newAccountPubkey: data.mint.publicKey,
-        lamports: mintRent,
-        space: MintLayout.span,
-        programId: TOKEN_PROGRAM_ID
-      })
-    );
-    
-    // Convert freeze authority if provided
-    let freezeAuthority: PublicKey | null = null;
-    if (data.freezeAuthority) {
-      freezeAuthority = new PublicKey(data.freezeAuthority);
-    }
-    
-    // Initialize mint
-    instructions.push(
-      createInitializeMintInstruction(
-        data.mint.publicKey,
-        data.decimals,
-        userPublicKey, // Initial mint authority is user
-        freezeAuthority,
-        TOKEN_PROGRAM_ID
-      )
-    );
-    
-    // Create metadata using the correct Metaplex token metadata program
-    const metadataProgramId = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
-    
-    // Derive the metadata account PDA
-    const [metadataAccount] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from('metadata'),
-        metadataProgramId.toBuffer(),
-        data.mint.publicKey.toBuffer()
-      ],
-      metadataProgramId
-    );
-    
-    // Convert update authority if provided
-    let updateAuthority = userPublicKey;
-    if (data.updateAuthority) {
-      updateAuthority = new PublicKey(data.updateAuthority);
-    }
-    
-    // Create metadata account instruction
-    const createMetadataInstruction = new TransactionInstruction({
-      keys: [
-        { pubkey: metadataAccount, isSigner: false, isWritable: true },
-        { pubkey: data.mint.publicKey, isSigner: false, isWritable: false },
-        { pubkey: userPublicKey, isSigner: true, isWritable: false },
-        { pubkey: userPublicKey, isSigner: true, isWritable: false },
-        { pubkey: updateAuthority, isSigner: false, isWritable: false },
-        { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-        { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
-      ],
-      programId: metadataProgramId,
-      data: Buffer.from(
-        Uint8Array.of(
-          0, // Create metadata instruction
-          ...Buffer.from(data.name),
-          0, // Name terminator
-          ...Buffer.from(data.symbol),
-          0, // Symbol terminator
-          ...Buffer.from(data.metadataUri),
-          0, // URI terminator
-          data.isMutable ? 1 : 0 // Is mutable
-        )
-      )
-    });
-    
-    instructions.push(createMetadataInstruction);
-    
-    // Create ATAs and mint tokens
-    for (const recipient of data.supplyDistribution) {
-      const recipientPubkey = new PublicKey(recipient.address);
-      
-      // Calculate amount to mint for this recipient
-      const shareAmount = (data.supply * BigInt(recipient.share)) / BigInt(100);
-      const mintAmount = shareAmount * BigInt(10) ** BigInt(data.decimals);
-      
-      // Get or create ATA for recipient
-      const ata = getAssociatedTokenAddressSync(
-        data.mint.publicKey,
-        recipientPubkey,
-        false
-      );
-      
-      // Create ATA if it doesn't exist
-      instructions.push(
-        createAssociatedTokenAccountInstruction(
-          userPublicKey,
-          ata,
-          recipientPubkey,
-          data.mint.publicKey
-        )
-      );
-      
-      // Mint tokens to ATA
-      instructions.push(
-        createMintToInstruction(
-          data.mint.publicKey,
-          ata,
-          userPublicKey,
-          mintAmount,
-          [],
-          TOKEN_PROGRAM_ID
-        )
-      );
-    }
-    
-    // Transfer mint authority if specified
-    if (data.mintAuthority !== undefined) {
-      const newMintAuthority = data.mintAuthority ? new PublicKey(data.mintAuthority) : null;
-      
-      instructions.push(
-        createSetAuthorityInstruction(
-          data.mint.publicKey,
-          userPublicKey,
-          AuthorityType.MintTokens,
-          newMintAuthority,
-          [],
-          TOKEN_PROGRAM_ID
-        )
-      );
-    }
-    
-    // Calculate fees and add developer fee if necessary
-    const transaction = new Transaction().add(...instructions);
-    transaction.feePayer = userPublicKey;
-    
-    // Get recent blockhash for fee calculation
     const { blockhash } = await connection.getLatestBlockhash();
-    transaction.recentBlockhash = blockhash;
+
+    const transaction = await this.buildRawTokenCreationTx(data, userPublicKey, mintRent, blockhash);
+    const txCost = await this.getTokenCreationCost(data, connection, userPublicKey, mintRent, blockhash);
     
-    // Add signer
-    transaction.partialSign(data.mint);
-    
-    // Calculate fees for current transaction
-    const fees = await connection.getFeeForMessage(transaction.compileMessage());
-    const feesValue = fees.value || 0;
-    
-    if (feesValue < data.totalCost * LAMPORTS_PER_SOL) {
+    if(txCost < data.totalCost * LAMPORTS_PER_SOL){
       // Calculate the remaining amount to transfer to developer
-      const remainingAmount = data.totalCost * LAMPORTS_PER_SOL - feesValue;
+      const remainingAmount = data.totalCost * LAMPORTS_PER_SOL - txCost;
       
+      const txInstructions = [...transaction.instructions];
       // Add transfer instruction
-      instructions.push(
+      txInstructions.push(
         SystemProgram.transfer({
           fromPubkey: userPublicKey,
           toPubkey: new PublicKey(developerAddress),
-          lamports: remainingAmount
+          lamports: Math.round(remainingAmount)
         })
       );
       
       // Rebuild transaction with the fee transfer
-      const finalTransaction = new Transaction().add(...instructions);
+      const finalTransaction = new Transaction().add(...txInstructions);
       finalTransaction.feePayer = userPublicKey;
       finalTransaction.recentBlockhash = blockhash;
       finalTransaction.partialSign(data.mint);
@@ -492,6 +484,8 @@ export class TokenCreationService {
           preflightCommitment: 'confirmed'
         });
         
+        // TODO delete
+        console.log(txid, data.mint.publicKey.toBase58());
         return {
           txid,
           mintAddress: data.mint.publicKey.toBase58()
@@ -519,5 +513,4 @@ export class TokenCreationService {
       }
     }
   }
-  */
 }
