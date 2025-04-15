@@ -17,7 +17,7 @@
       <p-button label="Next" [disabled]="!canContinue" icon="pi pi-arrow-right" iconPos="right" (onClick)="activateCallback(page + 1)" />
     } @else {
       <p-button [disabled]="!canContinue" (onClick)="createToken()" >
-        <span class="font-semibold">Create ${{infoForm.get('symbol')?.value}}</span>
+        <span class="font-semibold">Create ${{infoForm.get('symbol')?.value?.toLocaleUpperCase()}}</span>
         <span class="material-symbols-outlined">open_in_new</span>
       </p-button>
     }
@@ -27,7 +27,7 @@
 
 <div style="max-width: 900px;">
   <p-toast/>
-  <p-stepper [value]="1" class="basis-[50rem]" [linear]="false"> <!-- TODO: set to 1; true -->
+  <p-stepper [value]="1" class="basis-[50rem]" [linear]="false">
     <p-step-list>
       <p-step [value]="1">Logo & Info</p-step>
       <p-step [value]="2">Socials</p-step>
@@ -383,7 +383,9 @@
                     <!-- FREEZE -->
                     <div class="field col-12 flex">
                       <div class="pr-2"><i class="bi bi-snow text-3xl" ></i></div>
-                      <app-add-on class="flex-grow-1" [(added)]="addOns['freezeAuthority'].added" [isFree]="addOns['freezeAuthority'].isFree">
+                      <app-add-on class="flex-grow-1" [(added)]="addOns['freezeAuthority'].added" [isFree]="addOns['freezeAuthority'].isFree"
+                      formName="freezeAuthority"
+                      >
                         <div title>Revoke Freeze</div>
                         <div description>Revoking Freeze authority will prevent anyone from freezing holders' accounts in the future</div>
   
@@ -396,7 +398,8 @@
                     <!-- MINT -->
                     <div class="field col-12 flex">
                       <div class="pr-2"><i class="bi bi-boxes text-3xl" ></i></div>
-                      <app-add-on class="flex-grow-1" [(added)]="addOns['mintAuthority'].added" [isFree]="addOns['mintAuthority'].isFree">
+                      <app-add-on class="flex-grow-1" [(added)]="addOns['mintAuthority'].added" [isFree]="addOns['mintAuthority'].isFree"
+                      formName="mintAuthority">
                         <div title>Revoke Mint</div>
                         <div description>Revoking Mint authority shows that the supply is fixed and cannot grow </div>
   
@@ -409,7 +412,8 @@
                     <!-- UPDATE -->
                     <div class="field col-12 flex">
                       <div style="padding-right: 0.8rem;"><i class="bi bi-pen text-2xl" ></i></div>
-                      <app-add-on class="flex-grow-1" [(added)]="addOns['updateAuthority'].added" [isFree]="addOns['updateAuthority'].isFree" tag="Or use PUMP.FUN Authority" tagSeverity="success">
+                      <app-add-on class="flex-grow-1" [(added)]="addOns['updateAuthority'].added" [isFree]="addOns['updateAuthority'].isFree" tag="Or use PUMP.FUN Authority" tagSeverity="success"
+                      formName="updateAuthority">
                         <div title>Revoke Update</div>
                         <div description>Revoking Update authority means token metadata cannot be updated by anyone </div>
                       

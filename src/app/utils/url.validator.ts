@@ -7,9 +7,9 @@ export function urlValidator(...requiredPatterns: string[]): ValidatorFn {
       return null;
     }
     
-    // Better URL regex pattern that handles query parameters and special characters
-    // This avoids catastrophic backtracking with nested quantifiers
-    const urlRegex = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w\.-]|[?&=%+,])*\/?$/i;
+    // Improved URL regex pattern that includes @ and other valid URL characters
+    // This regex supports more valid URL formats while avoiding catastrophic backtracking
+    const urlRegex = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w\.-]|[?&=%+,@~:#!])*\/?$/i;
     
     // Check if the URL format is valid at all
     if (!urlRegex.test(control.value)) {
@@ -60,8 +60,8 @@ export function urlValidator(...requiredPatterns: string[]): ValidatorFn {
     }
     
     // No valid pattern matches found
-    return { 
-      invalidDomain: { 
+    return {
+      invalidDomain: {
         actual: valueDomain,
         allowedDomains: requiredPatterns.map(pattern => {
           try {
@@ -72,7 +72,7 @@ export function urlValidator(...requiredPatterns: string[]): ValidatorFn {
             return match ? match[1] : pattern;
           }
         })
-      } 
+      }
     };
   };
 }

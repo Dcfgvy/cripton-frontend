@@ -1,7 +1,7 @@
-import { Component, computed, ContentChild, input, model, OnInit, TemplateRef, WritableSignal } from '@angular/core';
+import { Component, computed, ContentChild, input, model, OnInit, Optional, output, TemplateRef, WritableSignal } from '@angular/core';
 import { AppSettingsService } from '../../app-settings/app-settings.service';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { FormsModule } from '@angular/forms';
+import { ControlContainer, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TagModule } from 'primeng/tag';
 
 // For parent components' use
@@ -12,7 +12,7 @@ export interface AddOn {
 
 @Component({
   selector: 'app-add-on',
-  imports: [ToggleSwitchModule, FormsModule, TagModule],
+  imports: [ToggleSwitchModule, FormsModule, TagModule, ReactiveFormsModule],
   templateUrl: './add-on.component.html',
   styleUrl: './add-on.component.scss'
 })
@@ -28,22 +28,30 @@ export class AddOnComponent implements OnInit {
   currency = input<string>('SOL');
   tag = input<string>('');
   tagSeverity = input<"warn" | "success" | "secondary" | "info" | "danger" | "contrast">('warn');
-  onAdded = input<() => void>(() => {});
+
+  formName = input<string | undefined>();
+  onAdded = output();
+  onRemoved = output();
 
   constructor(
-    private readonly settingsService: AppSettingsService
+    private readonly settingsService: AppSettingsService,
+    @Optional() private controlContainer: ControlContainer
   ) {}
 
   protected _checked = false;
   protected onValueChange(event: any){
     const status = event.checked as boolean;
     if(status === true){
-      this.onAdded()();
+      this.onAdded.emit();
+    } else {
+      this.onRemoved.emit();
     }
+    this.setControlState(status);
     this.added.set(status);
   }
   ngOnInit(): void {
     this._checked = this.added();
+    this.setControlState(this.added());
   }
 
   usualCost = computed<number>(() => {
@@ -53,4 +61,25 @@ export class AddOnComponent implements OnInit {
     if(this.isFree()) return 0;
     return this.usualCost();
   })
+
+  private setControlState(enable: boolean) {
+    if(!this.formName()) return;
+    if (!this.controlContainer || !this.formName) {
+      console.warn('No form control or formControlName provided');
+      return;
+    }
+    
+    const control = this.controlContainer.control?.get(this.formName()!);
+    
+    if (!control) {
+      console.warn(`Control with name '${this.formName()}' not found in form group`);
+      return;
+    }
+    
+    if (enable) {
+      control.enable();
+    } else {
+      control.disable();
+    }
+  }
 }

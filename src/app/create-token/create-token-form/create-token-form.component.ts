@@ -28,6 +28,7 @@ import { AlertBannerComponent } from "../../components/alert-banner/alert-banner
 import { TokenCreationService, TokenUploadMetadata, TokenImageData, CreateTokenData, SupplyDistributionArray } from '../../token-creation/token-creation.service';
 import { catchError, of, tap } from 'rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
+import { solanaAddressValidator } from '../../utils/solana.validator';
 
 // u64 max value: 18,446,744,073,709,551,615 (2^64-1)
 // Our limit: 10,000,000,000,000,000,000 (10 * 10^18)
@@ -35,7 +36,6 @@ const MAX_SUPPLY_WITH_DECIMALS = 10_000_000_000_000_000_000n;
 const ONE_BYTE_SYMBOLS = /^[a-zA-Z0-9 _.!$?]+$/;
 const ADDRESS_SYMBOLS = /^[1-9A-HJ-NP-Za-km-z]+$/;
 const PUMP_FUN_MINT_AUTHORITY = "TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM";
-const SOLANA_ADDRESS_PATTERN = /^[1-9A-HJ-NP-Za-km-z]{32,44}$|^$/;
 
 export function supplyValidator(): ValidatorFn {
   return (control: AbstractControl) => {
@@ -276,7 +276,8 @@ export class CreateTokenFormComponent {
   }
   tagsInput = '';
   onTagInputKeyPress(event: KeyboardEvent){
-    if(event.key === 'Enter' || event.key === ' '){
+    if(event.key === 'Enter' || event.key === ' ' || event.key === ','){
+      event.preventDefault();
       const trimmedVal = this.tagsInput.trim();
       if(trimmedVal.length > 0 && trimmedVal.length <= 30){
         const tags = this.socialsForm.get('tags')?.value || [];
@@ -337,13 +338,13 @@ export class CreateTokenFormComponent {
     ]),
 
     freezeAuthority: new FormControl('', [
-      Validators.pattern(SOLANA_ADDRESS_PATTERN)
+      solanaAddressValidator()
     ]),
     mintAuthority: new FormControl('', [
-      Validators.pattern(SOLANA_ADDRESS_PATTERN)
+      solanaAddressValidator()
     ]),
     updateAuthority: new FormControl('', [
-      Validators.pattern(SOLANA_ADDRESS_PATTERN)
+      solanaAddressValidator()
     ]),
   }) 
   pastePumpFunUpdateAddress(){
@@ -377,7 +378,7 @@ export class CreateTokenFormComponent {
       new FormGroup({
         address: new FormControl({ value: address, disabled }, [
           Validators.required,
-          Validators.pattern(SOLANA_ADDRESS_PATTERN)
+          solanaAddressValidator()
         ]),
         share: new FormControl(share, [
           Validators.required,
