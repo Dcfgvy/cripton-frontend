@@ -492,8 +492,6 @@ export class TokenCreationService {
     const connection = new Connection(this.networkService.selectedNetwork.url, 'confirmed');
     const mintRent = await connection.getMinimumBalanceForRentExemption(MintLayout.span);
     const { blockhash } = await connection.getLatestBlockhash();
-    const accountInfo = await connection.getAccountInfo(userPublicKey);
-    if(!(accountInfo?.lamports) || (accountInfo.lamports < data.totalCost * LAMPORTS_PER_SOL)) throw new Error('Insufficient balance');
 
     const transaction = await this.buildRawTokenCreationTx(data, userPublicKey, mintRent, blockhash);
     const txCost = await this.getTokenCreationCost(data, connection, userPublicKey, mintRent, blockhash);
@@ -520,40 +518,29 @@ export class TokenCreationService {
       
       // Send transaction for signing and broadcasting
       if(!this.walletService.selectedWallet) throw new Error('User wallet is not connected');
-      try {
-        // Use the correct type for signTransaction
-        const txid = await this.walletService.selectedWallet.sendTransaction(finalTransaction, connection, {
-          skipPreflight: false,
-          preflightCommitment: 'confirmed'
-        });
-        
-        // TODO delete
-        console.log(txid, data.mint.publicKey.toBase58());
-        return {
-          txid,
-          mintAddress: data.mint.publicKey.toBase58()
-        };
-      } catch (error) {
-        console.error('Transaction failed:', error);
-        throw new Error('Failed to create token: ' + (error as Error).message);
-      }
+      
+      const txid = await this.walletService.selectedWallet.sendTransaction(finalTransaction, connection, {
+        skipPreflight: false,
+        preflightCommitment: 'confirmed'
+      });
+      // TODO delete
+      console.log(txid, data.mint.publicKey.toBase58());
+      return {
+        txid,
+        mintAddress: data.mint.publicKey.toBase58()
+      };
     } else {
       // If fees exceed or equal totalCost, just send the transaction without developer fee
       if(!this.walletService.selectedWallet) throw new Error('User wallet is not connected');
-      try {
-        const txid = await this.walletService.selectedWallet.sendTransaction(transaction, connection, {
-          skipPreflight: false,
-          preflightCommitment: 'confirmed'
-        });
-        
-        return {
-          txid,
-          mintAddress: data.mint.publicKey.toBase58()
-        };
-      } catch (error) {
-        console.error('Transaction failed:', error);
-        throw new Error('Failed to create token: ' + (error as Error).message);
-      }
+
+      const txid = await this.walletService.selectedWallet.sendTransaction(transaction, connection, {
+        skipPreflight: false,
+        preflightCommitment: 'confirmed'
+      });
+      return {
+        txid,
+        mintAddress: data.mint.publicKey.toBase58()
+      };
     }
   }
 }

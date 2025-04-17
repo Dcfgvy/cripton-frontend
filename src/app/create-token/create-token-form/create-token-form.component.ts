@@ -1,5 +1,5 @@
-import { NgTemplateOutlet } from '@angular/common';
-import { Component, computed, input, signal } from '@angular/core';
+import { AsyncPipe, CommonModule, NgTemplateOutlet } from '@angular/common';
+import { Component, computed, signal } from '@angular/core';
 import { AbstractControl, FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { StepperModule } from 'primeng/stepper';
@@ -10,7 +10,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { WalletService } from '../../wallet/wallet.service';
-import { Keypair, PublicKey } from '@solana/web3.js';
+import { Keypair, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
 import { AddOn, AddOnComponent } from '../../components/add-on/add-on.component';
 import { AppSettingsService } from '../../app-settings/app-settings.service';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -29,6 +29,8 @@ import { TokenCreationService, TokenUploadMetadata, TokenImageData, CreateTokenD
 import { catchError, of, tap } from 'rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { solanaAddressValidator } from '../../utils/solana.validator';
+import { Dialog } from 'primeng/dialog';
+import { NetworkService } from '../../network-switch/network-switch.service';
 
 // u64 max value: 18,446,744,073,709,551,615 (2^64-1)
 // Our limit: 10,000,000,000,000,000,000 (10 * 10^18)
@@ -88,7 +90,9 @@ export function supplyValidator(): ValidatorFn {
     ToastModule,
     ErrorComponent,
     ToggleSwitchModule,
-    AlertBannerComponent
+    AlertBannerComponent,
+    Dialog,
+    CommonModule,
 ],
   templateUrl: './create-token-form.component.html',
   styleUrl: './create-token-form.component.scss',
@@ -134,6 +138,7 @@ export class CreateTokenFormComponent {
     private settingsService: AppSettingsService,
     private messageService: MessageService,
     private tokenCreationService: TokenCreationService,
+    public readonly networkService: NetworkService,
   ) {
     // Supply distribution validation
     toObservable(this.addOns['multiWalletDistribution'].added).subscribe((value) => {
@@ -206,6 +211,7 @@ export class CreateTokenFormComponent {
     ]),
   });
   imageFile: File | null = null;
+  imageDataURL: string = '';
   validateSupplyWithDecimals(){
     this.infoForm.get('supply')?.updateValueAndValidity();
   }
@@ -525,94 +531,121 @@ export class CreateTokenFormComponent {
     return this.tokenCreationService.uploadMetadata(metadata as TokenUploadMetadata, imageData);
   }
 
-  private async createCreateTokenTx(uri: string, userPublicKey: PublicKey){
-    try{
-      const data: Partial<CreateTokenData> = {};
-      data.name = this.infoForm.get('name')!.value!;
-      data.symbol = this.infoForm.get('symbol')!.value!.toLocaleUpperCase();
-      data.decimals = this.infoForm.get('decimals')!.value!;
-      data.supply = this.infoForm.get('supply')!.value!;
-      data.metadataUri = uri;
-      data.totalCost = this.totalCost();
+  private createCreateTokenTx(uri: string, userPublicKey: PublicKey): CreateTokenData {
+    const data: Partial<CreateTokenData> = {};
+    data.name = this.infoForm.get('name')!.value!;
+    data.symbol = this.infoForm.get('symbol')!.value!.toLocaleUpperCase();
+    data.decimals = this.infoForm.get('decimals')!.value!;
+    data.supply = this.infoForm.get('supply')!.value!;
+    data.metadataUri = uri;
+    data.totalCost = this.totalCost();
 
-      // mint
-      if(this.addOns['customAddress'].added()){
-        data.mint = this.mintKeypair;
-      } else {
-        data.mint = this.defaultMintKeypair;
+    // mint
+    if(this.addOns['customAddress'].added()){
+      data.mint = this.mintKeypair;
+    } else {
+      data.mint = this.defaultMintKeypair;
+    }
+    // supply distribution
+    if(this.addOns['multiWalletDistribution'].added()){
+      let supplyDistribution: SupplyDistributionArray = [];
+      for(const distribution of this.supplyDistributions.controls){
+        supplyDistribution.push({
+          address: distribution.get('address')!.value! as string,
+          share: distribution.get('share')!.value! as number,
+        });
       }
-      // supply distribution
-      if(this.addOns['multiWalletDistribution'].added()){
-        let supplyDistribution: SupplyDistributionArray = [];
-        for(const distribution of this.supplyDistributions.controls){
-          supplyDistribution.push({
-            address: distribution.get('address')!.value! as string,
-            share: distribution.get('share')!.value! as number,
-          });
-        }
-        data.supplyDistribution = supplyDistribution;
-      } else {
-        data.supplyDistribution = [{
-          address: userPublicKey.toBase58(),
-          share: 100
-        }];
+      data.supplyDistribution = supplyDistribution;
+    } else {
+      data.supplyDistribution = [{
+        address: userPublicKey.toBase58(),
+        share: 100
+      }];
+    }
+    // Freeze Authority
+    if(this.addOns['freezeAuthority'].added()){
+      const inputed = this.settingsForm.get('freezeAuthority')?.value || '';
+      if(inputed){
+        data.freezeAuthority = inputed;
       }
-      // Freeze Authority
-      if(this.addOns['freezeAuthority'].added()){
-        const inputed = this.settingsForm.get('freezeAuthority')?.value || '';
-        if(inputed){
-          data.freezeAuthority = inputed;
-        }
-      } else {
-        data.freezeAuthority = userPublicKey.toBase58();
+    } else {
+      data.freezeAuthority = userPublicKey.toBase58();
+    }
+    // Mint Authority
+    if(this.addOns['mintAuthority'].added()){
+      const inputed = this.settingsForm.get('mintAuthority')?.value || '';
+      if(inputed){
+        data.mintAuthority = inputed;
       }
-      // Mint Authority
-      if(this.addOns['mintAuthority'].added()){
-        const inputed = this.settingsForm.get('mintAuthority')?.value || '';
-        if(inputed){
-          data.mintAuthority = inputed;
-        }
-      } else {
-        data.mintAuthority = userPublicKey.toBase58();
-      }
-      // Update Authority
-      if(this.addOns['updateAuthority'].added()){
-        const inputed = this.settingsForm.get('updateAuthority')?.value || '';
-        if(inputed){
-          data.updateAuthority = inputed;
-          if(inputed === PUMP_FUN_MINT_AUTHORITY){
-            data.isMutable = false;
-          } else {
-            data.isMutable = true;
-          }
-        } else {
-          data.updateAuthority = userPublicKey.toBase58();
+    } else {
+      data.mintAuthority = userPublicKey.toBase58();
+    }
+    // Update Authority
+    if(this.addOns['updateAuthority'].added()){
+      const inputed = this.settingsForm.get('updateAuthority')?.value || '';
+      if(inputed){
+        data.updateAuthority = inputed;
+        if(inputed === PUMP_FUN_MINT_AUTHORITY){
           data.isMutable = false;
+        } else {
+          data.isMutable = true;
         }
       } else {
         data.updateAuthority = userPublicKey.toBase58();
-        data.isMutable = true;
+        data.isMutable = false;
       }
+    } else {
+      data.updateAuthority = userPublicKey.toBase58();
+      data.isMutable = true;
+    }
 
-      await this.tokenCreationService.createToken(data as CreateTokenData, userPublicKey);
-    } catch (err) {
-      console.error(err);
+    return data as CreateTokenData;
+  }
+
+  private async sendCreateTokenTx(uri: string, userPublicKey: PublicKey): Promise<boolean> { // true if an error occured
+    const data = this.createCreateTokenTx(uri, userPublicKey);
+    try{
+      const { mintAddress } = await this.tokenCreationService.createToken(data, userPublicKey);
+      return false;
+    } catch(err) {
+      const error = err as Error;
+      console.error(error);
+      this.messageService.add({ severity: 'error', summary: error.message });
+      return true;
     }
   }
 
+  confirmationWindowOpened: boolean = false;
+  tokenLaunchLoading: boolean = false;
   createToken(){
+    this.confirmationWindowOpened = true;
+  }
+  async launchToken(){
+    this.tokenLaunchLoading = true;
+
+    const balance = await this.walletService.getBalanceLamports();
+    if(balance < this.totalCost() * LAMPORTS_PER_SOL){
+      this.messageService.add({ severity: 'error', summary: 'Insufficient balance', detail: `You must have at least ${this.totalCost()} SOL` });
+      this.tokenLaunchLoading = false;
+      return;
+    }
+
     const userPublicKey = this.walletService.selectedWallet?.publicKey;
     if(!userPublicKey) throw new Error('User wallet disconnected');
     this.uploadMetadata().pipe(
-      tap((response: any) => {
-        console.log('Success!', response);
+      tap(async (response: any) => {
         const metadataUri = response.uri;
-        this.createCreateTokenTx(metadataUri, userPublicKey);
+        const errorOccured = await this.sendCreateTokenTx(metadataUri, userPublicKey);
+        this.tokenLaunchLoading = false;
+        if(!errorOccured){
+          this.confirmationWindowOpened = false;
+        }
       }),
       catchError(error => {
         console.error('Error occurred:', error);
+        this.tokenLaunchLoading = false;
         return of(null);
-      })
+      }),
     ).subscribe();
   }
 }

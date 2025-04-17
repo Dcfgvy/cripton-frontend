@@ -14,4 +14,8 @@ export class NetworkSwitchComponent {
   constructor(
     public networkService: NetworkService
   ) {}
+
+  onNetworkChange(){
+    this.networkService.updateData();
+  }
 }

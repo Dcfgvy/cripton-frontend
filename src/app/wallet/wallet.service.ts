@@ -1,6 +1,6 @@
 import { afterNextRender, Injectable } from '@angular/core';
 import { WalletAdapterNetwork, WalletReadyState } from '@solana/wallet-adapter-base';
-import { Connection, clusterApiUrl } from '@solana/web3.js';
+import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js';
 import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom';
 import { SolflareWalletAdapter } from '@solana/wallet-adapter-solflare';
 import { BraveWalletAdapter } from '@solana/wallet-adapter-brave';
@@ -11,20 +11,22 @@ export type WalletAdapter = PhantomWalletAdapter | SolflareWalletAdapter | Brave
 @Injectable({ providedIn: 'root' })
 export class WalletService {
   private connection: Connection;
-  // IMPORTANT: some wallet adapters like for Keystone require React, so we can't use them
+  // IMPORTANT: some wallet adapters like the one for Keystone require React, so we can't use them
   private wallets: WalletAdapter[] = [
     new PhantomWalletAdapter(),
     new BraveWalletAdapter(),
     new SolflareWalletAdapter(),
   ];
   public selectedWallet: WalletAdapter | null = null;
+  sub: any;
 
 	constructor(
 		private readonly networkService: NetworkService,
 	){
-		this.connection = new Connection(clusterApiUrl(
-			this.networkService.selectedNetwork.code as ('mainnet-beta' | 'devnet' | 'testnet') // TODO: update network when user changes it
-		));
+		this.connection = new Connection(this.networkService.selectedNetwork.url);
+    this.sub = this.networkService.selectedNetwork$.subscribe(network => {
+      this.connection = new Connection(network.url);
+    });
 
     afterNextRender(async () => {
       const walletName = localStorage.getItem('wallet');
@@ -38,7 +40,6 @@ export class WalletService {
     })
 	}
 
-
   getAvailableWalletes(): WalletAdapter[] {
     let res: WalletAdapter[] = [];
     for(const wal of this.wallets){
@@ -50,6 +51,17 @@ export class WalletService {
       }
     }
     return res;
+  }
+
+  async getBalanceLamports(): Promise<number> {
+    console.log(this.connection.rpcEndpoint);
+    if(!this.selectedWallet?.publicKey) return 0;
+    try{
+      const accountInfo = await this.connection.getAccountInfo(this.selectedWallet.publicKey);
+      return accountInfo?.lamports || 0;
+    } catch(err) {
+      return 0;
+    }
   }
 
   async connect(walletName: string): Promise<void> {

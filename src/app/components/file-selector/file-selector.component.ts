@@ -14,6 +14,7 @@ export class FileSelectorComponent implements OnInit {
   @Input() allowedTypes: string[] = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif'];
   @Input() maxFileSizeMB: number = 5;
   fileSelected = model.required<File | null>();
+  dataUrlSelected = model<string| null>(null);
 
   constructor(private messageService: MessageService) {}
   isDragging = false;
@@ -45,6 +46,7 @@ export class FileSelectorComponent implements OnInit {
     const reader = new FileReader();
     reader.onload = () => {
       this.imagePreviewUrl = reader.result as string;
+      this.dataUrlSelected.set(reader.result as string);
     };
     reader.readAsDataURL(this.fileSelected()!);
   }

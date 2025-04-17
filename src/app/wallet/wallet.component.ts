@@ -18,7 +18,7 @@ import { PopoverModule } from 'primeng/popover';
   ],
   templateUrl: './wallet.component.html',
   styleUrl: './wallet.component.scss',
-  providers: [MessageService]
+  providers: [WalletService, MessageService]
 })
 export class WalletComponent {
   dialogOpened = false;
