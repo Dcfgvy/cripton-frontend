@@ -1,0 +1,18 @@
+<div class="flex justify-content-center">
+  <div class="grid" style="width: 35rem;">
+    @for (tool of tools(); track $index) {
+      <div class="col-12 md:col-6">
+        <a class="w-full" rel="noopener noreferrer" pButton severity="secondary"
+        [href]="tool.url.startsWith('http') ? tool.url : undefined" [routerLink]="!tool.url.startsWith('http') ? tool.url : undefined"
+        >
+          @if (tool.isIconMD) {
+            <span class="material-symbols-outlined text-primary">{{ tool.icon }}</span>
+          } @else {
+            <i [class]="tool.icon"></i>
+          }
+          <span class="font-medium">{{ tool.title }}</span>
+        </a>
+      </div>
+    }
+  </div>
+</div>

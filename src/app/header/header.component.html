@@ -32,24 +32,24 @@
   <div class="flex justify-content-between gap-4" style="width: 70%; min-width: 1100px; max-width: 1280px;"> <!-- TODO responsive --> 
     <app-network-switch></app-network-switch>
     <nav class="flex justify-content-between gap-3">
-      <a routerLink="/" class="p-button p-button-text no-underline">
-        <span class="material-symbols-outlined">home</span>
-        Home
-      </a>
-  
-      <a routerLink="/create-token" class="p-button p-button-text no-underline">
+      <a routerLink="/solana/create-token" class="p-button p-button-text no-underline">
         <span class="material-symbols-outlined">add_circle</span>
         Create Token
       </a>
   
-      <a routerLink="/trending-tokens" class="p-button p-button-text no-underline">
-        <span class="material-symbols-outlined">trending_up</span>
-        Trending Tokens
+      <a routerLink="/solana/trending-coins" class="p-button p-button-text no-underline">
+        <span class="material-symbols-outlined">whatshot</span>
+        Trending Coins
       </a>
   
       <a href="https://raydium.io/portfolio" target="_blank" rel="noopener noreferrer" class="p-button p-button-text no-underline">
         <span class="material-symbols-outlined">water_drop</span>
         Manage Liquidity
+      </a>
+
+      <a routerLink="/trending-tokens" class="p-button p-button-text no-underline">
+        <span class="material-symbols-outlined">money_bag</span>
+        Affiliate Program
       </a>
     </nav>
     <app-wallet></app-wallet>

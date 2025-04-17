@@ -1,10 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { environment } from '../../environments/environment';
+import { environment } from '../../../environments/environment';
 import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction, TransactionInstruction } from '@solana/web3.js';
-import { WalletService } from '../wallet/wallet.service';
-import { AppSettingsService } from '../app-settings/app-settings.service';
-import { NetworkService } from '../network-switch/network-switch.service';
+import { WalletService } from '../../wallet/wallet.service';
+import { AppSettingsService } from '../../app-settings/app-settings.service';
+import { NetworkService } from '../../network-switch/network-switch.service';
 
 import {
   TOKEN_PROGRAM_ID,

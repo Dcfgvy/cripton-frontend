@@ -42,7 +42,7 @@
               [formGroup]="infoForm"
                 class="p-2 pt-0 font-medium"
               >
-              <span class="text-3xl text-center font-semibold">Provide basic Information</span>
+              <p class="text-2xl text-center font-semibold my-2">Provide basic Information</p>
                 <div class="formgrid grid mt-3">
                   <div class="field col-12 md:col-6">
                     <label for="tokenname">Token Name (max 30) <app-required/></label>
@@ -110,7 +110,7 @@
                 [formGroup]="socialsForm"
                   class="p-2 pt-0 font-medium"
                 >
-                  <span class="text-3xl text-center font-semibold">Connect token Socials</span>
+                  <p class="text-2xl text-center font-semibold my-2">Add token Socials</p>
                   <div class="formgrid grid mt-3">
                     <ng-container>
                       <!-- FIELD -->
@@ -282,7 +282,7 @@
               [formGroup]="settingsForm"
                 class="p-2 pt-0 font-medium"
               >
-              <span class="text-3xl text-center font-semibold">Additional Settings</span>
+              <p class="text-2xl text-center font-semibold my-2">Additional Settings</p>
                 <div class="formgrid grid mt-3">
                   <div class="field col-12 mb-4">
                     <app-add-on [(added)]="addOns['customAddress'].added" [isFree]="addOns['customAddress'].isFree" tag="New">

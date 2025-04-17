@@ -9,29 +9,30 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { TextareaModule } from 'primeng/textarea';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
-import { WalletService } from '../../wallet/wallet.service';
+import { WalletService } from '../../../wallet/wallet.service';
 import { Keypair, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
-import { AddOn, AddOnComponent } from '../../components/add-on/add-on.component';
-import { AppSettingsService } from '../../app-settings/app-settings.service';
+import { AddOn, AddOnComponent } from '../../../components/add-on/add-on.component';
+import { AppSettingsService } from '../../../app-settings/app-settings.service';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ChipModule } from 'primeng/chip';
-import { FileSelectorComponent } from "../../components/file-selector/file-selector.component";
+import { FileSelectorComponent } from "../../../components/file-selector/file-selector.component";
 import { DividerModule } from 'primeng/divider';
 import { ToastModule } from 'primeng/toast';
-import { formatElapsedTime } from '../../utils/functions';
-import { RequiredComponent } from "../../components/required/required.component";
+import { formatElapsedTime } from '../../../utils/functions';
+import { RequiredComponent } from "../../../components/required/required.component";
 import { MessageService } from 'primeng/api';
-import { ErrorComponent } from '../../components/error/error.component';
-import { urlValidator } from '../../utils/url.validator';
+import { ErrorComponent } from '../../../components/error/error.component';
+import { urlValidator } from '../../../utils/url.validator';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { AlertBannerComponent } from "../../components/alert-banner/alert-banner.component";
+import { AlertBannerComponent } from "../../../components/alert-banner/alert-banner.component";
 import { TokenCreationService, TokenUploadMetadata, TokenImageData, CreateTokenData, SupplyDistributionArray } from '../../token-creation/token-creation.service';
 import { catchError, of, tap } from 'rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { solanaAddressValidator } from '../../utils/solana.validator';
-import { NetworkService } from '../../network-switch/network-switch.service';
+import { solanaAddressValidator } from '../../../utils/solana-address.validator';
+import { NetworkService } from '../../../network-switch/network-switch.service';
 import { TokenConfirmationPopupComponent } from "../../token-creation/token-confirmation-popup/token-confirmation-popup.component";
 import { TokenCreatedBodyComponent } from "../../token-creation/token-created-popup/token-created-body/token-created-body.component";
+import { environment } from '../../../../environments/environment';
 
 // u64 max value: 18,446,744,073,709,551,615 (2^64-1)
 // Our limit: 10,000,000,000,000,000,000 (10 * 10^18)
@@ -133,8 +134,8 @@ export class CreateTokenFormComponent {
   readonly MAX_SUPPLY_WITH_DECIMALS_NUMBER = Number(MAX_SUPPLY_WITH_DECIMALS.toString());
   readonly MAX_SUPPLY_WITH_DECIMALS_LENGTH = MAX_SUPPLY_WITH_DECIMALS.toString().length;
   readonly MAX_WALLETS_SUPPLY_DISTRIBUTION = 10;
-  readonly DEFAULT_CREATOR_NAME = 'Token Generator'; // TODO: fix website name and link
-  readonly DEFAULT_CREATOR_WEBSITE = 'https://token-blablabla.com';
+  readonly DEFAULT_CREATOR_NAME = environment.serviceName;
+  readonly DEFAULT_CREATOR_WEBSITE = environment.serviceWebsite;
   readonly MAX_CUSTOM_ADDRESS_PREFIX_LENGTH = 4;
 
   constructor(
