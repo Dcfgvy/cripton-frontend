@@ -1,0 +1,10 @@
+<p-dialog [modal]="true" [draggable]="false" [(visible)]="visible" [style]="{ width: '25rem' }">
+  <ng-template #header>
+    <div class="inline-flex items-center justify-center gap-2">
+      <img style="height: 25px; width: 25px;" src="images/party-popper.png">
+      <span class="font-semibold">Your Token has been created!</span>
+    </div>
+  </ng-template>
+
+  <app-token-created-body [address]="address()" />
+</p-dialog>

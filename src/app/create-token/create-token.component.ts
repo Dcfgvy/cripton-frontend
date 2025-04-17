@@ -8,5 +8,15 @@ import { CreateTokenFormComponent } from './create-token-form/create-token-form.
   styleUrl: './create-token.component.scss'
 })
 export class CreateTokenComponent {
+  showForm = true;
 
+  resetForm(){
+    // Temporarily destroy the component
+    this.showForm = false;
+    
+    // Use setTimeout to ensure change detection cycle completes
+    setTimeout(() => {
+      this.showForm = true;
+    }, 0);
+  }
 }

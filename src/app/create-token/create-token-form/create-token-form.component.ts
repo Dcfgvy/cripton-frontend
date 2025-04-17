@@ -1,5 +1,5 @@
-import { AsyncPipe, CommonModule, NgTemplateOutlet } from '@angular/common';
-import { Component, computed, signal } from '@angular/core';
+import { CommonModule, NgTemplateOutlet } from '@angular/common';
+import { Component, computed, output, signal } from '@angular/core';
 import { AbstractControl, FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { StepperModule } from 'primeng/stepper';
@@ -29,8 +29,9 @@ import { TokenCreationService, TokenUploadMetadata, TokenImageData, CreateTokenD
 import { catchError, of, tap } from 'rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { solanaAddressValidator } from '../../utils/solana.validator';
-import { Dialog } from 'primeng/dialog';
 import { NetworkService } from '../../network-switch/network-switch.service';
+import { TokenConfirmationPopupComponent } from "../../token-creation/token-confirmation-popup/token-confirmation-popup.component";
+import { TokenCreatedBodyComponent } from "../../token-creation/token-created-popup/token-created-body/token-created-body.component";
 
 // u64 max value: 18,446,744,073,709,551,615 (2^64-1)
 // Our limit: 10,000,000,000,000,000,000 (10 * 10^18)
@@ -91,14 +92,17 @@ export function supplyValidator(): ValidatorFn {
     ErrorComponent,
     ToggleSwitchModule,
     AlertBannerComponent,
-    Dialog,
     CommonModule,
+    TokenConfirmationPopupComponent,
+    TokenCreatedBodyComponent
 ],
   templateUrl: './create-token-form.component.html',
   styleUrl: './create-token-form.component.scss',
   providers: [MessageService, TokenCreationService]
 })
 export class CreateTokenFormComponent {
+  onReset = output();
+
   addOns: Record<string, AddOn> = {
     customCreatorInfo: {
       added: signal(false),
@@ -150,6 +154,7 @@ export class CreateTokenFormComponent {
       }
     });
   }
+  step: number = 1;
 
   baseCost = computed<number>(() => {
     return this.settingsService.currentSettings?.baseTokenCreationCost || 0;
@@ -485,15 +490,19 @@ export class CreateTokenFormComponent {
     }
   }
 
+  get actualTokenMint(): Keypair {
+    if(this.addOns['customAddress'].added()){
+      return this.mintKeypair;
+    } else {
+      return this.defaultMintKeypair;
+    }
+  }
+
   // Create Token
   private uploadMetadata(){
     const metadata: Partial<TokenUploadMetadata> = {}
     // mint
-    if(this.addOns['customAddress'].added()){
-      metadata.mint = this.mintKeypair.publicKey.toBase58();
-    } else {
-      metadata.mint = this.defaultMintKeypair.publicKey.toBase58();
-    }
+    metadata.mint = this.actualTokenMint.publicKey.toBase58();
     // creator info
     if(this.addOns['customCreatorInfo'].added()){
       const info = this.socialsForm.get('creatorInfo')?.value;
@@ -541,11 +550,7 @@ export class CreateTokenFormComponent {
     data.totalCost = this.totalCost();
 
     // mint
-    if(this.addOns['customAddress'].added()){
-      data.mint = this.mintKeypair;
-    } else {
-      data.mint = this.defaultMintKeypair;
-    }
+    data.mint = this.actualTokenMint;
     // supply distribution
     if(this.addOns['multiWalletDistribution'].added()){
       let supplyDistribution: SupplyDistributionArray = [];
@@ -605,7 +610,7 @@ export class CreateTokenFormComponent {
   private async sendCreateTokenTx(uri: string, userPublicKey: PublicKey): Promise<boolean> { // true if an error occured
     const data = this.createCreateTokenTx(uri, userPublicKey);
     try{
-      const { mintAddress } = await this.tokenCreationService.createToken(data, userPublicKey);
+      await this.tokenCreationService.createToken(data, userPublicKey);
       return false;
     } catch(err) {
       const error = err as Error;
@@ -639,6 +644,7 @@ export class CreateTokenFormComponent {
         this.tokenLaunchLoading = false;
         if(!errorOccured){
           this.confirmationWindowOpened = false;
+          this.step = 4;
         }
       }),
       catchError(error => {

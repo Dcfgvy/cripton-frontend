@@ -1,3 +1,5 @@
 <div class="w-full">
-  <app-create-token-form></app-create-token-form>
+  @if(showForm){
+    <app-create-token-form (onReset)="resetForm()" ></app-create-token-form>
+  }
 </div>

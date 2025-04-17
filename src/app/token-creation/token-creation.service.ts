@@ -523,8 +523,6 @@ export class TokenCreationService {
         skipPreflight: false,
         preflightCommitment: 'confirmed'
       });
-      // TODO delete
-      console.log(txid, data.mint.publicKey.toBase58());
       return {
         txid,
         mintAddress: data.mint.publicKey.toBase58()

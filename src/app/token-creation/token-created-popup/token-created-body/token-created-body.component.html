@@ -1,0 +1,35 @@
+<div class="w-full flex flex-column gap-3">
+  <button pButton class="w-full" severity="secondary" title="Token Address" (click)="copyAddress()">
+    @if(addressCopiedState){
+      <span class="material-symbols-outlined">check</span>
+    } @else {
+      <span class="material-symbols-outlined">content_copy</span>
+    }
+    <span>
+      {{ address().slice(0, 7) }}...{{ address().slice(-7) }}
+    </span>
+  </button>
+
+  @if(networkService.selectedNetwork.isTest === false){
+    <a href="https://raydium.io/liquidity/create-pool/" target="_blank" rel="noopener noreferrer" class="w-full p-button p-button-secondary">
+      <span class="material-symbols-outlined">water_drop</span>
+      <span>
+        Create Liquidity Pool
+      </span>
+    </a>
+  }
+
+  <a [href]="`https://explorer.solana.com/address/${address()}?cluster=${networkService.selectedNetwork.code}`" target="_blank" rel="noopener noreferrer" class="w-full p-button p-button-secondary explorer">
+    <span class="material-symbols-outlined">open_in_new</span>
+    <span>
+      View on Solana Explorer
+    </span>
+  </a>
+  
+  <a [href]="`https://solscan.io/token/${address()}?cluster=${networkService.selectedNetwork.code}`" target="_blank" rel="noopener noreferrer" class="w-full p-button p-button-secondary solscan">
+    <span class="material-symbols-outlined">open_in_new</span>
+    <span>
+      View on Solscan
+    </span>
+  </a>
+</div>

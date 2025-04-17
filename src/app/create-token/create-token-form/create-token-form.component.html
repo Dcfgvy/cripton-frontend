@@ -26,11 +26,12 @@
 
 <div style="max-width: 900px;">
   <p-toast/>
-  <p-stepper [value]="1" class="basis-[50rem]" [linear]="true">
+  <p-stepper [(value)]="step" class="basis-[50rem]" [linear]="true">
     <p-step-list>
       <p-step [value]="1">Logo & Info</p-step>
       <p-step [value]="2">Socials</p-step>
       <p-step [value]="3">Settings</p-step>
+      <!-- <p-step [value]="4">Settings</p-step> -->
     </p-step-list>
     <p-step-panels>
       <p-card>
@@ -439,68 +440,42 @@
             </div>
           </ng-template>
         </p-step-panel>
+        
+        <p-step-panel [value]="4">
+          <ng-template #content>
+            <div class="flex flex-column items-center">
+              <div class="flex items-center justify-content-center mb-3">
+                <img style="height: 40px; width: 40px;" src="images/party-popper.png">
+                <span class="font-semibold text-3xl ml-2">Your Token has been created!</span>
+              </div>
+              <div class="flex justify-content-center items-center">
+                <app-token-created-body [address]="actualTokenMint.publicKey.toBase58()" />
+              </div>
+  
+              <button class="mt-3" pButton (click)="onReset.emit()"> <!-- TODO: make it the same width as Your token has been created -->
+                <span class="font-medium">Create a New Token</span>
+              </button>
+            </div>
+          </ng-template>
+        </p-step-panel>
       </p-card>
   </p-step-panels>
   </p-stepper>
 </div>
 
 
-<p-dialog header="Confirm token creation" [modal]="true" [draggable]="false" [(visible)]="confirmationWindowOpened" [style]="{ width: '25rem' }">
-  <span class="p-text-secondary block mb-3">Once confirmed, the token will be launched on Solana {{ networkService.selectedNetwork.name }}.</span>
-  <div class="flex justify-content-center mb-2">
-    <!-- ONLY WHEN OPENED SO THAT THE IMAGE IS NOT FETCHED EVERY TIME USER TYPES IN THE URL -->
-    @if (confirmationWindowOpened) {
-      <img [src]="infoForm.get('useImageUrl')?.value
-      ? infoForm.get('imageUrl')!.value!
-      : imageDataURL"
-      style="height: 100px; width: 100px;" class="border-circle">
-    }
-  </div>
-  <div class="w-full grid mb-3">
-    <div class="col-12 flex justify-content-between">
-      <span class="font-medium">Name</span>
-      <span class="font-medium text-right">{{ infoForm.get('name')?.value }}</span>
-    </div>
-    <p-divider class="my-2"></p-divider>
+<app-token-confirmation-popup
+[(visible)]="confirmationWindowOpened"
+[imageUrl]="infoForm.get('useImageUrl')?.value
+  ? infoForm.get('imageUrl')!.value!
+  : imageDataURL"
+[network]="networkService.selectedNetwork.name"
 
-    <div class="col-12 flex justify-content-between">
-      <span class="font-medium">Symbol</span>
-      <span class="font-medium text-right">{{ infoForm.get('symbol')?.value?.toLocaleUpperCase() }}</span>
-    </div>
-    <p-divider class="my-2"></p-divider>
+[name]="infoForm.get('name')?.value"
+[symbol]="infoForm.get('symbol')?.value?.toLocaleUpperCase()"
+[supply]="infoForm.get('supply')?.value"
+[decimals]="infoForm.get('decimals')?.value"
 
-    <div class="col-12 flex justify-content-between">
-      <span class="font-medium">Supply</span>
-      <span class="font-medium text-right">{{ infoForm.get('supply')?.value }}</span>
-    </div>
-    <p-divider class="my-2"></p-divider>
-
-    <div class="col-12 flex justify-content-between">
-      <span class="font-medium">Decimals</span>
-      <span class="w-full font-medium text-right">{{ infoForm.get('decimals')?.value }}</span>
-    </div>
-  </div>
-  <button class="w-full launch-button" pButton [loading]="tokenLaunchLoading" (click)="launchToken()">
-    <span class="font-semibold">Confirm & Launch</span>
-    <span class="material-symbols-outlined">rocket_launch</span>
-  </button>
-</p-dialog>
-
-
-<p-dialog [modal]="true" [draggable]="false" [(visible)]="createdWindowOpened" [style]="{ width: '25rem' }">
-  <ng-template #header>
-    <div class="inline-flex items-center justify-center gap-2">
-      <img style="height: 25px; width: 25px;" src="images/party-popper.png">
-      <span class="font-semibold">Your Token has been created!</span>
-    </div>
-  </ng-template>
-
-  <div class="w-full flex flex-column gap-3">
-    <button pButton class="w-full" severity="secondary" (click)="copyText(TOKEN_ADDRESS)">
-      <span class="material-symbols-outlined">content_copy</span>
-      <span>
-        {{ TOKEN_ADDRESS.slice(0, 7) }}..{{ TOKEN_ADDRESS.slice(-7) }}
-      </span>
-    </button>
-  </div>
-</p-dialog>
+[loading]="tokenLaunchLoading"
+(onClick)="launchToken()"
+/>

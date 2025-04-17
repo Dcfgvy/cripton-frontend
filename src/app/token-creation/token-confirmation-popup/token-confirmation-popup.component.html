@@ -1,0 +1,40 @@
+<p-dialog header="Confirm token creation" [modal]="true" [draggable]="false" [(visible)]="visible" [style]="{ width: '25rem' }">
+  <span class="p-text-secondary block mb-3">Once confirmed, the token will be launched on Solana {{ network() }}.</span>
+  @if(imageUrl()){
+    <div class="flex justify-content-center mb-2">
+      <!-- ONLY WHEN OPENED SO THAT THE IMAGE IS NOT FETCHED EVERY TIME USER TYPES IN THE URL -->
+      @if (visible()) {
+        <img [src]="imageUrl()"
+        style="height: 100px; width: 100px;" class="border-round">
+      }
+    </div>
+  }
+  <div class="w-full grid mb-3">
+    <div class="col-12 flex justify-content-between">
+      <span class="font-medium">Name</span>
+      <span class="font-medium text-right">{{ name() }}</span>
+    </div>
+    <p-divider class="my-2"></p-divider>
+
+    <div class="col-12 flex justify-content-between">
+      <span class="font-medium">Symbol</span>
+      <span class="font-medium text-right">{{ symbol() }}</span>
+    </div>
+    <p-divider class="my-2"></p-divider>
+
+    <div class="col-12 flex justify-content-between">
+      <span class="font-medium">Supply</span>
+      <span class="font-medium text-right">{{ supply() }}</span>
+    </div>
+    <p-divider class="my-2"></p-divider>
+
+    <div class="col-12 flex justify-content-between">
+      <span class="font-medium">Decimals</span>
+      <span class="w-full font-medium text-right">{{ decimals() }}</span>
+    </div>
+  </div>
+  <button class="w-full launch-button" pButton [loading]="loading()" (click)="onButtonClick()">
+    <span class="font-semibold">Confirm & Launch</span>
+    <span class="material-symbols-outlined">rocket_launch</span>
+  </button>
+</p-dialog>
