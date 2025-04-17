@@ -1,5 +1,5 @@
 import { Component, input } from '@angular/core';
-import { NetworkService } from '../../../network-switch/network-switch.service';
+import { NetworkService } from '../../../../network-switch/network-switch.service';
 import { ButtonDirective } from 'primeng/button';
 
 @Component({
