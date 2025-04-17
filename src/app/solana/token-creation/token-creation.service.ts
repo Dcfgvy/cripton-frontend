@@ -523,6 +523,7 @@ export class TokenCreationService {
         skipPreflight: false,
         preflightCommitment: 'confirmed'
       });
+      
       return {
         txid,
         mintAddress: data.mint.publicKey.toBase58()

@@ -6,4 +6,4 @@ import { AppComponent } from './app/app.component';
 bootstrapApplication(AppComponent, appConfig)
   .catch((err) => console.error(err));
 
-// TODO fix bundle size (styles, @metaplex-foundation/mpl-token-metadata, wallet adapters)
+// TODO fix bundle size (styles, @metaplex-foundation/mpl-token-metadata, wallet adapters, modules -> components / directives)
