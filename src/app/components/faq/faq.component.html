@@ -1,1 +1,15 @@
-<p>faq works!</p>
+<p class="text-center text-3xl font-bold mt-4">FAQ</p>
+<p-accordion [value]="['0']" [multiple]="true">
+  @for (q of data(); track $index) {
+    <p-accordion-panel [value]="$index">
+      <p-accordion-header>{{ q.question }}</p-accordion-header>
+      <p-accordion-content>
+        @for (paragraph of q.answer.split('\n'); let i = $index; track i) {
+          <p class="m-0 mt-1">
+            {{ paragraph }}
+          </p>
+        }
+      </p-accordion-content>
+  </p-accordion-panel>
+  }
+</p-accordion>

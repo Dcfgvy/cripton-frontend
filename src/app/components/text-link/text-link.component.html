@@ -1,0 +1,12 @@
+@if(isRouterLink){
+  <a class="text-color-secondary hover:text-primary cursor-pointer" [routerLink]="link()">
+    <ng-content></ng-content>
+  </a>
+} @else {
+  <a class="text-color-secondary hover:text-primary cursor-pointer" rel="noopener noreferrer" [href]="link()" target="_blank">
+    <ng-content></ng-content>
+    @if(showRedirectIcon()){
+      <span class="material-symbols-outlined ml-1" style="font-size: 1rem;">open_in_new</span>
+    }
+  </a>
+}

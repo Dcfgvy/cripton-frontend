@@ -9,7 +9,6 @@ import { Card } from 'primeng/card';
   imports: [
     RouterOutlet,
     BlockchainToolsComponent,
-    Divider,
     Card,
   ],
   templateUrl: './solana.component.html',
@@ -18,7 +17,7 @@ import { Card } from 'primeng/card';
 export class SolanaComponent {
   toolsList: BlockchainTool[] = [
     {
-      title: 'Create Token',
+      title: 'Solana Token Creator',
       url: 'create-token',
       icon: 'add_circle',
       isIconMD: true,

@@ -218,7 +218,6 @@ export class TokenCreationService {
 
     // Convert update authority if provided
     let updateAuthority: PublicKey = userPublicKey;
-    // TODO fix with pump.fun authority
     if (data.updateAuthority) {
       updateAuthority = new PublicKey(data.updateAuthority);
     }
