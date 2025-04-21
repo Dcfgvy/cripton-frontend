@@ -243,7 +243,7 @@
                     </div>
   
                     <div class="field col-12">
-                      <app-add-on [(added)]="addOns['customCreatorInfo'].added" [isFree]="addOns['customCreatorInfo'].isFree">
+                      <app-add-on [(added)]="addOns['customCreatorInfo'].added" [serviceName]="addOns['customCreatorInfo'].serviceName">
                         <div title>Custom Creator Info</div>
                         <div description>Change information about token creator in token metadata. By default it's {{ DEFAULT_CREATOR_NAME }}</div>
   
@@ -284,7 +284,7 @@
               <p class="text-2xl text-center font-semibold my-2">Additional Settings</p>
                 <div class="formgrid grid mt-3">
                   <div class="field col-12 mb-4">
-                    <app-add-on [(added)]="addOns['customAddress'].added" [isFree]="addOns['customAddress'].isFree" tag="New">
+                    <app-add-on [(added)]="addOns['customAddress'].added" [serviceName]="addOns['customAddress'].serviceName" tag="New">
                       <div title>Custom Token Address</div>
                       <div description>Personalize your token contract address by customizing the beginning or end</div>
 
@@ -335,7 +335,7 @@
 
                   <div class="field col-12">
                     <!-- TODO: generate wallet addresses -->
-                    <app-add-on [(added)]="addOns['multiWalletDistribution'].added" [isFree]="addOns['multiWalletDistribution'].isFree" tag="Advanced" tagSeverity="info">
+                    <app-add-on [(added)]="addOns['multiWalletDistribution'].added" [serviceName]="addOns['multiWalletDistribution'].serviceName" tag="Advanced" tagSeverity="info">
                       <div title>Multi-Wallet Supply Distribution</div>
                       <div description>Distribute the supply of your token across different wallets within the creation (max 10 wallets).<br>DEX scanners will mark your coin as safe</div>
 
@@ -382,7 +382,7 @@
                     <!-- FREEZE -->
                     <div class="field col-12 flex">
                       <div class="pr-2"><i class="bi bi-snow text-3xl" ></i></div>
-                      <app-add-on class="flex-grow-1" [(added)]="addOns['freezeAuthority'].added" [isFree]="addOns['freezeAuthority'].isFree"
+                      <app-add-on class="flex-grow-1" [(added)]="addOns['freezeAuthority'].added" [serviceName]="addOns['freezeAuthority'].serviceName"
                       formName="freezeAuthority"
                       >
                         <div title>Revoke Freeze</div>
@@ -397,7 +397,7 @@
                     <!-- MINT -->
                     <div class="field col-12 flex">
                       <div class="pr-2"><i class="bi bi-boxes text-3xl" ></i></div>
-                      <app-add-on class="flex-grow-1" [(added)]="addOns['mintAuthority'].added" [isFree]="addOns['mintAuthority'].isFree"
+                      <app-add-on class="flex-grow-1" [(added)]="addOns['mintAuthority'].added" [serviceName]="addOns['mintAuthority'].serviceName"
                       formName="mintAuthority">
                         <div title>Revoke Mint</div>
                         <div description>Revoking Mint authority shows that the supply is fixed and cannot grow </div>
@@ -411,7 +411,7 @@
                     <!-- UPDATE -->
                     <div class="field col-12 flex">
                       <div style="padding-right: 0.8rem;"><i class="bi bi-pen text-2xl" ></i></div>
-                      <app-add-on class="flex-grow-1" [(added)]="addOns['updateAuthority'].added" [isFree]="addOns['updateAuthority'].isFree" tag="Or use PUMP.FUN Authority" tagSeverity="success"
+                      <app-add-on class="flex-grow-1" [(added)]="addOns['updateAuthority'].added" [serviceName]="addOns['updateAuthority'].serviceName" tag="Or use PUMP.FUN Authority" tagSeverity="success"
                       formName="updateAuthority">
                         <div title>Revoke Update</div>
                         <div description>Revoking Update authority means token metadata cannot be updated by anyone </div>

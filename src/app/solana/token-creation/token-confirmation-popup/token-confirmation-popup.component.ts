@@ -2,10 +2,11 @@ import { Component, input, model, output } from '@angular/core';
 import { ButtonDirective } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
 import { Divider } from 'primeng/divider';
+import { TestnetWarningComponent } from "../../../components/testnet-warning/testnet-warning.component";
 
 @Component({
   selector: 'app-token-confirmation-popup',
-  imports: [Dialog, ButtonDirective, Divider],
+  imports: [Dialog, ButtonDirective, Divider, TestnetWarningComponent],
   templateUrl: './token-confirmation-popup.component.html',
   styleUrl: './token-confirmation-popup.component.scss'
 })

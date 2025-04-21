@@ -19,7 +19,7 @@
       <div>
         <span class="text-color-secondary">
           The fee for creating a trending coin is
-          <span class="font-semibold">{{ baseCost() }} SOL</span>
+          <span class="font-semibold">{{ creationCost.cost }} SOL</span>
         </span>
         
       </div>
@@ -66,7 +66,7 @@
                 </div>
                 
                 <!-- Create button -->
-                <button class="w-full mt-1" pButton severity="secondary">
+                <button class="w-full mt-1" pButton severity="secondary" (click)="createToken(token)">
                   <span class="material-symbols-outlined">add_circle</span>
                   <span class="font-medium">Create ${{ token.symbol }}</span>
                 </button>
@@ -81,23 +81,25 @@
   </div>
 </div>
 
-<!-- <app-token-confirmation-popup
-[(visible)]="confirmationWindowOpened"
-[imageUrl]="infoForm.get('useImageUrl')?.value
-  ? infoForm.get('imageUrl')!.value!
-  : imageDataURL"
-[network]="networkService.selectedNetwork.name"
+<p-toast />
 
-[name]="infoForm.get('name')?.value"
-[symbol]="infoForm.get('symbol')?.value?.toLocaleUpperCase()"
-[supply]="infoForm.get('supply')?.value"
-[decimals]="infoForm.get('decimals')?.value"
-
-[loading]="tokenLaunchLoading"
-(onClick)="launchToken()"
-/>
-
-<app-token-created-popup
-[(visible)]="createdWindowOpened"
-[address]=""
-/> -->
+@if(selectedToken){
+  <app-token-confirmation-popup
+  [(visible)]="confirmationWindowOpened"
+  [imageUrl]="selectedToken.imageUrl"
+  [network]="networkService.selectedNetwork.name"
+  
+  [name]="selectedToken.name"
+  [symbol]="selectedToken.symbol"
+  [supply]="selectedTokenSupply()"
+  [decimals]="selectedToken.decimals"
+  
+  [loading]="tokenLaunchLoading"
+  (onClick)="launchToken()"
+  />
+  
+  <app-token-created-popup
+  [(visible)]="createdWindowOpened"
+  [address]="createdMintKeypair?.publicKey?.toBase58() || ''"
+  />
+}

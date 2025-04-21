@@ -1,0 +1,8 @@
+@if (networkService.selectedNetwork.isTest) {
+  <div class="mt-3">
+    <app-warning>
+      You'll need {{ networkService.selectedNetwork.name }} SOL to do this, you can get some 
+      <app-text-link link="https://faucet.solana.com/" [showRedirectIcon]="true">here</app-text-link>
+    </app-warning>
+  </div>
+}

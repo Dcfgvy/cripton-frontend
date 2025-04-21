@@ -12,7 +12,6 @@ import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { WalletService } from '../../../wallet/wallet.service';
 import { Keypair, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
 import { AddOn, AddOnComponent } from '../../../components/add-on/add-on.component';
-import { AppSettingsService } from '../../../app-settings/app-settings.service';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ChipModule } from 'primeng/chip';
 import { FileSelectorComponent } from "../../../components/file-selector/file-selector.component";
@@ -33,6 +32,10 @@ import { NetworkService } from '../../../network-switch/network-switch.service';
 import { TokenConfirmationPopupComponent } from "../../token-creation/token-confirmation-popup/token-confirmation-popup.component";
 import { TokenCreatedBodyComponent } from "../../token-creation/token-created-popup/token-created-body/token-created-body.component";
 import { environment } from '../../../../environments/environment';
+import { PricesService } from '../../../app-settings/prices.service';
+import { SolanaServiceName } from '../../../app-settings/enums/solana-service-name.enum';
+import { ServiceName } from '../../../app-settings/types/service-name.type';
+import { AppSettingsService } from '../../../app-settings/app-settings.service';
 
 // u64 max value: 18,446,744,073,709,551,615 (2^64-1)
 // Our limit: 10,000,000,000,000,000,000 (10 * 10^18)
@@ -107,29 +110,30 @@ export class CreateTokenFormComponent {
   addOns: Record<string, AddOn> = {
     customCreatorInfo: {
       added: signal(false),
-      isFree: false,
+      serviceName: SolanaServiceName.CustomCreatorInfo,
     },
     customAddress: {
       added: signal(false),
-      isFree: true,
+      serviceName: SolanaServiceName.CustomAddress,
     },
     multiWalletDistribution: {
       added: signal(false),
-      isFree: true,
+      serviceName: SolanaServiceName.MultiWalletSupplyDistribution,
     },
     freezeAuthority: {
       added: signal(false),
-      isFree: true,
+      serviceName: SolanaServiceName.FreezeAuthority,
     },
     mintAuthority: {
       added: signal(false),
-      isFree: true,
+      serviceName: SolanaServiceName.MintAuthority,
     },
     updateAuthority: {
       added: signal(false),
-      isFree: true,
+      serviceName: SolanaServiceName.UpdateAuthority,
     },
   };
+  
 
   readonly MAX_SUPPLY_WITH_DECIMALS_NUMBER = Number(MAX_SUPPLY_WITH_DECIMALS.toString());
   readonly MAX_SUPPLY_WITH_DECIMALS_LENGTH = MAX_SUPPLY_WITH_DECIMALS.toString().length;
@@ -140,10 +144,11 @@ export class CreateTokenFormComponent {
 
   constructor(
     private walletService: WalletService,
-    private settingsService: AppSettingsService,
     private messageService: MessageService,
     private tokenCreationService: TokenCreationService,
     public readonly networkService: NetworkService,
+    public readonly pricesService: PricesService,
+    public readonly settingsService: AppSettingsService,
   ) {
     // Supply distribution validation
     toObservable(this.addOns['multiWalletDistribution'].added).subscribe((value) => {
@@ -157,26 +162,30 @@ export class CreateTokenFormComponent {
   }
   step: number = 1;
 
-  baseCost = computed<number>(() => {
-    return this.settingsService.currentSettings?.baseTokenCreationCost || 0;
-  });
-  addOnsCost = computed<number>(() => {
-    return this.settingsService.currentSettings?.additionalOptionsCost || 0;
-  });
+  get currentNetworkPrices(){
+    return this.settingsService.currentSettings?.prices['solana'];
+  }
+  private getAddOnCost(serviceName: ServiceName){
+    return this.currentNetworkPrices ? this.currentNetworkPrices[serviceName].cost : 0;
+  }
   totalCost = computed<number>(() => {
-    let total = this.baseCost();
+    const isFree = (serviceName: ServiceName) => {
+      if(!this.currentNetworkPrices) return false;
+      return this.currentNetworkPrices[serviceName]?.isTemporarilyFree || false;
+    };
+    let total = this.pricesService.prices().solanaTokenCreation.cost;
     for(const addon of Object.values(this.addOns)){
-      if(addon.added() && !addon.isFree){
-        total += this.addOnsCost();
+      if(addon.added() && !isFree(addon.serviceName)){
+        total += this.getAddOnCost(addon.serviceName);
       }
     }
     return total;
   });
   totalCostWithoutDiscounts = computed<number>(() => {
-    let total = this.baseCost();
+    let total = this.pricesService.prices().solanaTokenCreation.cost;
     for(const addon of Object.values(this.addOns)){
       if(addon.added()){
-        total += this.addOnsCost();
+        total += this.getAddOnCost(addon.serviceName);
       }
     }
     return total;
@@ -548,6 +557,11 @@ export class CreateTokenFormComponent {
     data.decimals = this.infoForm.get('decimals')!.value!;
     data.supply = this.infoForm.get('supply')!.value!;
     data.metadataUri = uri;
+    data.creators = [{
+      address: userPublicKey,
+      verified: true,
+      share: 100
+    }];
     data.totalCost = this.totalCost();
 
     // mint

@@ -1,9 +1,9 @@
-// app-settings.service.ts
 import { isPlatformServer } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Inject, Injectable, makeStateKey, PLATFORM_ID, TransferState } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { ServiceName } from './types/service-name.type';
 
 const EXAMPLE_DATA_KEY = makeStateKey<IAppSettings>('appSettings');
 
@@ -57,8 +57,14 @@ export class AppSettingsService {
 
 export interface IAppSettings {
   solanaAddress: string;
-  baseTokenCreationCost: number;
-  additionalOptionsCost: number;
   tokenExpirationTimeMin: number;
   maxImageSize: number; // in MB
+
+  prices: Record<string, Record<ServiceName, Price>>;
+}
+
+export interface Price {
+  cost: number;
+  isTemporarilyFree: boolean;
+  isNetworkFeeIncluded: boolean;
 }

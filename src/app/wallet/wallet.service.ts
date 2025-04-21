@@ -54,7 +54,6 @@ export class WalletService {
   }
 
   async getBalanceLamports(): Promise<number> {
-    console.log(this.connection.rpcEndpoint);
     if(!this.selectedWallet?.publicKey) return 0;
     try{
       const accountInfo = await this.connection.getAccountInfo(this.selectedWallet.publicKey);

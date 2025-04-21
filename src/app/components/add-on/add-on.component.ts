@@ -1,13 +1,14 @@
 import { Component, computed, ContentChild, input, model, OnInit, Optional, output, TemplateRef, WritableSignal } from '@angular/core';
-import { AppSettingsService } from '../../app-settings/app-settings.service';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ControlContainer, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TagModule } from 'primeng/tag';
+import { AppSettingsService } from '../../app-settings/app-settings.service';
+import { ServiceName } from '../../app-settings/types/service-name.type';
 
 // For parent components' use
 export interface AddOn {
-  added: WritableSignal<boolean>,
-  isFree: boolean // makes an add-on free (so that a discount is shown)
+  added: WritableSignal<boolean>;
+  serviceName: ServiceName;
 }
 
 @Component({
@@ -24,7 +25,8 @@ export class AddOnComponent implements OnInit {
 
   //** Pass the variable responsible for the number of selected add-ons  */
   added = model.required<boolean>();
-  isFree = input<boolean>(false);
+  serviceName = input.required<ServiceName>();
+  chain = input<string>('solana');
   currency = input<string>('SOL');
   tag = input<string>('');
   tagSeverity = input<"warn" | "success" | "secondary" | "info" | "danger" | "contrast">('warn');
@@ -54,11 +56,17 @@ export class AddOnComponent implements OnInit {
     this.setControlState(this.added());
   }
 
+  get servicePrice(){
+    return this.settingsService.currentSettings?.prices[this.chain()][this.serviceName()];
+  }
+  isFree = computed<boolean>(() => {
+    return this.servicePrice?.isTemporarilyFree || false;
+  })
   usualCost = computed<number>(() => {
-    return this.settingsService.currentSettings?.additionalOptionsCost || 0;
+    return this.servicePrice?.cost || 0;
   })
   cost = computed<number>(() => {
-    if(this.isFree()) return 0;
+    if(this.isFree()) return 0; // makes an add-on free (so that a discount is shown)
     return this.usualCost();
   })
 

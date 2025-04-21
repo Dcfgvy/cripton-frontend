@@ -66,6 +66,11 @@ export interface CreateTokenData {
   mintAuthority?: string;
   updateAuthority?: string;
   isMutable: boolean;
+  creators: {
+    address: PublicKey;
+    verified: boolean;
+    share: number;
+  }[];
   
   totalCost: number;
 }
@@ -103,11 +108,7 @@ export class TokenCreationService {
       symbol: data.symbol,
       uri: data.metadataUri,
       sellerFeeBasisPoints: 0,
-      creators: [{
-        address: userPublicKey,
-        share: 100,
-        verified: true,
-      }],
+      creators: data.creators,
       collection: null,
       uses: null
     };
@@ -523,6 +524,7 @@ export class TokenCreationService {
         preflightCommitment: 'confirmed'
       });
       
+      // console.log(txid, data.mint.publicKey.toBase58());
       return {
         txid,
         mintAddress: data.mint.publicKey.toBase58()

@@ -1,7 +1,6 @@
 import { afterNextRender, Injectable } from '@angular/core';
-import { clusterApiUrl } from '@solana/web3.js';
 import { environment } from '../../environments/environment';
-import { BehaviorSubject, Observable, of, Subject } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 
 export interface Network {
   name: string;
@@ -18,19 +17,13 @@ export class NetworkService {
     {
       name: 'Mainnet',
       code: 'mainnet-beta',
-      url: environment.mainnetUrls.solana,
+      url: environment.solana.rpcUrls['mainnet-beta'],
       isTest: false
-    },
-    {
-      name: 'Testnet',
-      code: 'testnet',
-      url: clusterApiUrl('testnet'),
-      isTest: true
     },
     {
       name: 'Devnet',
       code: 'devnet',
-      url: clusterApiUrl('devnet'),
+      url: environment.solana.rpcUrls.devnet,
       isTest: true
     }
   ]
