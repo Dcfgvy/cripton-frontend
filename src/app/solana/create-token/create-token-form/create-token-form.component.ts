@@ -24,7 +24,7 @@ import { ErrorComponent } from '../../../components/error/error.component';
 import { urlValidator } from '../../../utils/url.validator';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { AlertBannerComponent } from "../../../components/alert-banner/alert-banner.component";
-import { TokenCreationService, TokenUploadMetadata, TokenImageData, CreateTokenData, SupplyDistributionArray } from '../../token-creation/token-creation.service';
+import { TokenCreationService } from '../../token-creation/token-creation.service';
 import { catchError, of, tap } from 'rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { solanaAddressValidator } from '../../../utils/solana-address.validator';
@@ -36,6 +36,8 @@ import { PricesService } from '../../../app-settings/prices.service';
 import { SolanaServiceName } from '../../../app-settings/enums/solana-service-name.enum';
 import { ServiceName } from '../../../app-settings/types/service-name.type';
 import { AppSettingsService } from '../../../app-settings/app-settings.service';
+import { CreateTokenData, SupplyDistributionArray } from '../../token-creation/interfaces/create-token-data.interface';
+import { TokenImageData, TokenUploadMetadata } from '../../token-creation/interfaces/token-metadata.interface';
 
 // u64 max value: 18,446,744,073,709,551,615 (2^64-1)
 // Our limit: 10,000,000,000,000,000,000 (10 * 10^18)

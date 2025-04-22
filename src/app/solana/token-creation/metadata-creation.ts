@@ -1,5 +1,5 @@
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, TransactionInstruction } from "@solana/web3.js";
-import { CreateTokenData } from "./token-creation.service";
+import { CreateTokenData } from "./interfaces/create-token-data.interface";
 
 export function createTokenMetadataInstructionsTest(
   data: CreateTokenData,

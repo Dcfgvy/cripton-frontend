@@ -1,10 +1,12 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
-import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction, TransactionInstruction } from '@solana/web3.js';
+import { Connection, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { WalletService } from '../../wallet/wallet.service';
 import { AppSettingsService } from '../../app-settings/app-settings.service';
 import { NetworkService } from '../../network-switch/network-switch.service';
+import { TokenImageData, TokenUploadMetadata } from './interfaces/token-metadata.interface';
+import { CreateTokenData } from './interfaces/create-token-data.interface';
 
 import {
   TOKEN_PROGRAM_ID,
@@ -19,61 +21,6 @@ import {
 
 import { createCreateMetadataAccountV3Instruction, createUpdateMetadataAccountV2Instruction, DataV2 } from "@metaplex-foundation/mpl-token-metadata";
 // import { createTokenMetadataInstructionsTest } from './metadata-creation';
-
-export interface TokenSocials {
-  website?: string;
-  twitter?: string;
-  telegram?: string;
-  discord?: string;
-  youtube?: string;
-  medium?: string;
-  github?: string;
-  instagram?: string;
-  reddit?: string;
-  facebook?: string;
-}
-
-export interface TokenImageData {
-  imageData?: File;
-  imageUrl?: string;
-}
-
-export interface TokenUploadMetadata {
-  mint: string;
-  name: string;
-  symbol: string;
-  description: string;
-  creatorName?: string;
-  creatorWebsite?: string;
-  tags: string[];
-  tokenSocials: TokenSocials;
-}
-
-export type SupplyDistributionArray = {
-  address: string;
-  share: number; // in percents, guaranteed to sum up to 100
-}[];
-
-export interface CreateTokenData {
-  mint: Keypair;
-  name: string;
-  symbol: string;
-  decimals: number;
-  supply: bigint;
-  metadataUri: string;
-  supplyDistribution: SupplyDistributionArray;
-  freezeAuthority?: string;
-  mintAuthority?: string;
-  updateAuthority?: string;
-  isMutable: boolean;
-  creators: {
-    address: PublicKey;
-    verified: boolean;
-    share: number;
-  }[];
-  
-  totalCost: number;
-}
 
 @Injectable({
   providedIn: 'root'

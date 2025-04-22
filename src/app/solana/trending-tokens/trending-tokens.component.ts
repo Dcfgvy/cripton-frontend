@@ -17,8 +17,9 @@ import { Keypair, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
 import { WalletService } from '../../wallet/wallet.service';
 import { MessageService } from 'primeng/api';
 import { Toast } from 'primeng/toast';
-import { CreateTokenData, TokenCreationService } from '../token-creation/token-creation.service';
+import { TokenCreationService } from '../token-creation/token-creation.service';
 import { ToolHeaderComponent } from "../../components/tool-header/tool-header.component";
+import { CreateTokenData } from '../token-creation/interfaces/create-token-data.interface';
 
 @Component({
   selector: 'app-trending-tokens',
