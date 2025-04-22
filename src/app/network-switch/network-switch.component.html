@@ -11,7 +11,6 @@
 </ng-template>
 
 <!-- TODO -->
-<!-- <span>sgew</span> -->
 <p-select [options]="networkService.networks" [(ngModel)]="networkService.selectedNetwork" optionLabel="name" (ngModelChange)="onNetworkChange()">
   <ng-template #selectedItem let-selectedOption>
       <div [ngTemplateOutlet]="networkTemplate" [ngTemplateOutletContext]="{ $implicit: selectedOption }"></div>
