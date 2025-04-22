@@ -10,7 +10,7 @@
     }
     <span>
       <span class="hidden md:inline">Total fees:</span>
-      <span class="font-semibold line-through text-color-secondary ml-1">{{ (totalCostWithoutDiscounts() * 3).toFixed(2) }} SOL</span>
+      <span class="font-semibold line-through text-color-secondary ml-1">{{ totalCostWithoutDiscounts().toFixed(2) }} SOL</span>
       <span class="font-semibold ml-1">{{ totalCost().toFixed(2) }} SOL</span>
     </span>
     @if(page < 3){
@@ -32,7 +32,7 @@
       <p-step [value]="2">Socials</p-step>
       <p-step [value]="3">Settings</p-step>
     </p-step-list>
-    <p-step-panels>
+    <p-step-panels ngSkipHydration>
       <p-card>
         <p-step-panel [value]="1">
           <ng-template #content let-activateCallback="activateCallback">

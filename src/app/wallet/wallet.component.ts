@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, computed, OnInit } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { CommonModule } from '@angular/common';
 import { WalletService } from './wallet.service';
@@ -6,6 +6,7 @@ import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { PopoverModule } from 'primeng/popover';
+import { WalletAdapter } from '@solana/wallet-adapter-base';
 
 @Component({
   selector: 'app-wallet',
@@ -20,7 +21,7 @@ import { PopoverModule } from 'primeng/popover';
   styleUrl: './wallet.component.scss',
   providers: [WalletService, MessageService]
 })
-export class WalletComponent {
+export class WalletComponent implements OnInit {
   dialogOpened = false;
   addressCopiedState = false;
 
@@ -28,6 +29,15 @@ export class WalletComponent {
     public readonly walletService: WalletService,
     private readonly messageService: MessageService,
 	) {}
+
+  currentSelectedWallet: WalletAdapter | null = null;
+
+  ngOnInit(): void {
+    this.currentSelectedWallet = this.walletService.selectedWallet;
+    this.walletService.selectedWallet$.subscribe((wallet) => {
+      this.currentSelectedWallet = wallet;
+    })
+  }
 
   copyAddress(){
     if(this.walletService.selectedWallet){

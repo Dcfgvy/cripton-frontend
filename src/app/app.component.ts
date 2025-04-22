@@ -10,7 +10,7 @@ import { FooterComponent } from "./footer/footer.component";
     RouterOutlet,
     HeaderComponent,
     FooterComponent
-],
+  ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })

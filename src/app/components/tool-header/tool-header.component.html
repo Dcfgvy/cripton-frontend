@@ -1,0 +1,11 @@
+<ng-content />
+@if(headerTemplate){
+  <p class="text-center text-3xl font-bold">
+    <ng-container [ngTemplateOutlet]="headerTemplate"></ng-container>
+  </p>
+}
+@if(descriptionTemplate){
+  <p class="text-center text-color-secondary mx-auto mb-5" style="max-width: 35rem;">
+    <ng-container [ngTemplateOutlet]="descriptionTemplate"></ng-container>
+  </p>
+}

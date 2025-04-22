@@ -1,24 +1,20 @@
-import { isPlatformServer } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { Component, Inject, makeStateKey, OnInit, PLATFORM_ID, TransferState } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { environment } from '../../environments/environment';
+import { Component } from '@angular/core';
 import { AppSettingsService } from '../app-settings/app-settings.service';
 import { CheckboxModule } from 'primeng/checkbox';
 import { FormsModule } from '@angular/forms';
+import { environment } from '../../environments/environment';
 
 
 @Component({
   selector: 'app-main',
-  imports: [RouterLink, FormsModule, CheckboxModule],
+  imports: [FormsModule, CheckboxModule],
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss'
 })
 export class MainComponent {
   constructor(
     public settingsService: AppSettingsService,
-    
   ) {}
 
-  checked = false;
+  readonly appName = environment.serviceName;
 }

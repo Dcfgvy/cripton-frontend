@@ -18,6 +18,7 @@ import { WalletService } from '../../wallet/wallet.service';
 import { MessageService } from 'primeng/api';
 import { Toast } from 'primeng/toast';
 import { CreateTokenData, TokenCreationService } from '../token-creation/token-creation.service';
+import { ToolHeaderComponent } from "../../components/tool-header/tool-header.component";
 
 @Component({
   selector: 'app-trending-tokens',
@@ -29,8 +30,9 @@ import { CreateTokenData, TokenCreationService } from '../token-creation/token-c
     TextLinkComponent,
     TokenCreatedPopupComponent,
     TokenConfirmationPopupComponent,
-    Toast
-  ],
+    Toast,
+    ToolHeaderComponent
+],
   templateUrl: './trending-tokens.component.html',
   styleUrl: './trending-tokens.component.scss',
   providers: [MessageService]
@@ -98,8 +100,8 @@ export class TrendingTokensComponent implements OnInit, OnDestroy {
   selectedToken: TrendingToken | null = null;
   selectedTokenSupply = computed(() => {
     if(!this.selectedToken) return BigInt(0);
-    // MTODO change to BigInt(this.selectedToken.supply); Pump Fun tokens supply is often a bit smaller than 1,000,000,000. Maybe there is a deflationary mechanism
-    // return BigInt(this.selectedToken.supply);
+    // MTODO change it back; Pump Fun tokens supply is often a bit smaller than 1,000,000,000. Maybe there is a deflationary mechanism
+    // return BigInt(this.selectedToken.supply) / BigInt(10 ** this.selectedToken.decimals);
     return BigInt(1_000_000_000);
   });
   mintKeypair = Keypair.generate();

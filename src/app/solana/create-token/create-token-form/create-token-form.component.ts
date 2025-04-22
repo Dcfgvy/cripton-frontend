@@ -188,7 +188,7 @@ export class CreateTokenFormComponent {
         total += this.getAddOnCost(addon.serviceName);
       }
     }
-    return total;
+    return total * environment.solana.feeMultiplier;
   });
 
   infoForm = new FormGroup({

@@ -1,11 +1,14 @@
-import { afterNextRender, Injectable } from '@angular/core';
-import { WalletAdapterNetwork, WalletReadyState } from '@solana/wallet-adapter-base';
-import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js';
+import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { WalletReadyState } from '@solana/wallet-adapter-base';
+import { Connection } from '@solana/web3.js';
 import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom';
 import { SolflareWalletAdapter } from '@solana/wallet-adapter-solflare';
 import { BraveWalletAdapter } from '@solana/wallet-adapter-brave';
 import { NetworkService } from '../network-switch/network-switch.service';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { isPlatformBrowser } from '@angular/common';
 
+// TODO add more wallets & lazy-load them
 export type WalletAdapter = PhantomWalletAdapter | SolflareWalletAdapter | BraveWalletAdapter;
 
 @Injectable({ providedIn: 'root' })
@@ -18,26 +21,22 @@ export class WalletService {
     new SolflareWalletAdapter(),
   ];
   public selectedWallet: WalletAdapter | null = null;
-  sub: any;
+  private selectedWalletSubject = new BehaviorSubject<WalletAdapter | null>(this.selectedWallet);
+  public selectedWallet$: Observable<WalletAdapter | null> = this.selectedWalletSubject.asObservable();
+  private sub: any;
 
 	constructor(
 		private readonly networkService: NetworkService,
+    @Inject(PLATFORM_ID) private platformId: Object,
 	){
 		this.connection = new Connection(this.networkService.selectedNetwork.url);
     this.sub = this.networkService.selectedNetwork$.subscribe(network => {
       this.connection = new Connection(network.url);
     });
 
-    afterNextRender(async () => {
-      const walletName = localStorage.getItem('wallet');
-      if(walletName !== null && walletName !== ''){
-        try {
-          await this.connect(walletName);
-        } catch(err) {
-          localStorage.removeItem('wallet');
-        }
-      }
-    })
+    if(isPlatformBrowser(platformId)){
+      this.restoreConnectedWallet();
+    }
 	}
 
   getAvailableWalletes(): WalletAdapter[] {
@@ -63,11 +62,22 @@ export class WalletService {
     }
   }
 
+  async restoreConnectedWallet(){
+    const walletName = localStorage.getItem('wallet');
+    if(walletName !== null && walletName !== ''){
+      try {
+        await this.connect(walletName);
+      } catch(err) {
+        localStorage.removeItem('wallet');
+      }
+    }
+  }
+
   async connect(walletName: string): Promise<void> {
     const wallet = this.wallets.find(
       (w) => w.name === walletName && (w.readyState === WalletReadyState.Installed || w.readyState === WalletReadyState.Loadable)
     );
-    if (!wallet) throw new Error('Wallet not found');
+    if(!wallet) throw new Error('Wallet not found');
 
     if(this.selectedWallet !== null){
       try{
@@ -79,6 +89,7 @@ export class WalletService {
     }
     await wallet.connect();
     localStorage.setItem('wallet', walletName);
+    this.selectedWalletSubject.next(wallet);
     this.selectedWallet = wallet;
   }
 

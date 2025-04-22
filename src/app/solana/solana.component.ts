@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { BlockchainTool, BlockchainToolsComponent } from "../components/blockchain-tools/blockchain-tools.component";
-import { Divider } from 'primeng/divider';
 import { Card } from 'primeng/card';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-solana',
@@ -15,6 +15,7 @@ import { Card } from 'primeng/card';
   styleUrl: './solana.component.scss'
 })
 export class SolanaComponent {
+  readonly isDev = !environment.production;
   toolsList: BlockchainTool[] = [
     {
       title: 'Solana Token Creator',

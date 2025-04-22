@@ -27,16 +27,16 @@
 </p-dialog>
 
 
-@if (walletService.selectedWallet == null) {
+@if (currentSelectedWallet == null) {
   <p-button label="Connect Wallet" (onClick)="dialogOpened = true"></p-button>
 }
 @else {
   <button pButton (click)="op.toggle($event)" class="px-3">
     <div class="wallet-icon-container">
-      <img [src]="walletService.selectedWallet.icon" class="wallet-icon">
+      <img [src]="currentSelectedWallet.icon" class="wallet-icon">
     </div>
     <span class="font-medium white-space-nowrap">
-      {{ walletService.selectedWallet.publicKey?.toBase58()?.slice(0, 4) }}..{{ walletService.selectedWallet.publicKey?.toBase58()?.slice(-4) }}
+      {{ currentSelectedWallet.publicKey?.toBase58()?.slice(0, 4) }}..{{ currentSelectedWallet.publicKey?.toBase58()?.slice(-4) }}
     </span>
   </button>
   <p-popover #op [style]="{ width: '15rem' }">

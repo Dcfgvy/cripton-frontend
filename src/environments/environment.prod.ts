@@ -1,7 +1,7 @@
 import type { Environment } from "./environment.interface";
 
 export const environment: Environment = {
-  production: false,
+  production: true,
   serviceName: 'Token Generator',
   serviceWebsite: 'https://token-generator.com',
   apiUrl: 'http://localhost:3444',
@@ -15,5 +15,5 @@ export const environment: Environment = {
   },
 
   ssrApiUrl: 'http://localhost:3444',
-  ssrCacheExpirySeconds: 1,
+  ssrCacheExpirySeconds: 60,
 }
