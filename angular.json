@@ -32,7 +32,8 @@
               "bufferutil",
               "utf-8-validate",
               "eventemitter3",
-              "buffer"
+              "buffer",
+              "@metaplex-foundation/mpl-toolbox"
             ],
             "outputPath": "dist/solana-token-generator-frontend",
             "index": "src/index.html",
