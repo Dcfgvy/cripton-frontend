@@ -1,7 +1,7 @@
 import { Component, computed, ContentChild, input, model, OnInit, Optional, output, TemplateRef, WritableSignal } from '@angular/core';
-import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { ToggleSwitch } from 'primeng/toggleswitch';
 import { ControlContainer, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { TagModule } from 'primeng/tag';
+import { Tag } from 'primeng/tag';
 import { AppSettingsService } from '../../app-settings/app-settings.service';
 import { ServiceName } from '../../app-settings/types/service-name.type';
 
@@ -13,7 +13,7 @@ export interface AddOn {
 
 @Component({
   selector: 'app-add-on',
-  imports: [ToggleSwitchModule, FormsModule, TagModule, ReactiveFormsModule],
+  imports: [ToggleSwitch, FormsModule, Tag, ReactiveFormsModule],
   templateUrl: './add-on.component.html',
   styleUrl: './add-on.component.scss'
 })

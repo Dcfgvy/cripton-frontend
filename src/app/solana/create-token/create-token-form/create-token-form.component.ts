@@ -1,28 +1,28 @@
 import { CommonModule, NgTemplateOutlet } from '@angular/common';
 import { Component, computed, output, signal } from '@angular/core';
 import { AbstractControl, FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
-import { ButtonModule } from 'primeng/button';
+import { Button } from 'primeng/button';
 import { StepperModule } from 'primeng/stepper';
-import { CardModule } from 'primeng/card';
-import { InputTextModule } from 'primeng/inputtext';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { TextareaModule } from 'primeng/textarea';
-import { InputGroupModule } from 'primeng/inputgroup';
-import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
+import { Card } from 'primeng/card';
+import { InputText } from 'primeng/inputtext';
+import { InputNumber } from 'primeng/inputnumber';
+import { Textarea } from 'primeng/textarea';
+import { InputGroup } from 'primeng/inputgroup';
+import { InputGroupAddon } from 'primeng/inputgroupaddon';
 import { WalletService } from '../../../wallet/wallet.service';
 import { Keypair, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
 import { AddOn, AddOnComponent } from '../../../components/add-on/add-on.component';
-import { CheckboxModule } from 'primeng/checkbox';
-import { ChipModule } from 'primeng/chip';
+import { Checkbox } from 'primeng/checkbox';
+import { Chip } from 'primeng/chip';
 import { FileSelectorComponent } from "../../../components/file-selector/file-selector.component";
-import { DividerModule } from 'primeng/divider';
-import { ToastModule } from 'primeng/toast';
+import { Divider } from 'primeng/divider';
+import { Toast } from 'primeng/toast';
 import { formatElapsedTime } from '../../../utils/functions';
 import { RequiredComponent } from "../../../components/required/required.component";
 import { MessageService } from 'primeng/api';
 import { ErrorComponent } from '../../../components/error/error.component';
 import { urlValidator } from '../../../utils/url.validator';
-import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { ToggleSwitch } from 'primeng/toggleswitch';
 import { AlertBannerComponent } from "../../../components/alert-banner/alert-banner.component";
 import { TokenCreationService } from '../../token-creation/token-creation.service';
 import { catchError, of, tap } from 'rxjs';
@@ -78,25 +78,25 @@ export function supplyValidator(): ValidatorFn {
   selector: 'app-create-token-form',
   imports: [
     StepperModule,
-    ButtonModule,
+    Button,
     NgTemplateOutlet,
-    CardModule,
+    Card,
     ReactiveFormsModule,
-    InputTextModule,
-    InputNumberModule,
-    TextareaModule,
-    InputGroupModule,
-    InputGroupAddonModule,
+    InputText,
+    InputNumber,
+    Textarea,
+    InputGroup,
+    InputGroupAddon,
     AddOnComponent,
-    CheckboxModule,
-    ChipModule,
+    Checkbox,
+    Chip,
     FormsModule,
     FileSelectorComponent,
-    DividerModule,
+    Divider,
     RequiredComponent,
-    ToastModule,
+    Toast,
     ErrorComponent,
-    ToggleSwitchModule,
+    ToggleSwitch,
     AlertBannerComponent,
     CommonModule,
     TokenConfirmationPopupComponent,
