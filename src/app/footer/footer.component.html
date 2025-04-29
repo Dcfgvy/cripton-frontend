@@ -1,1 +1,9 @@
-<footer style="height: 500px;">Footer Simulation</footer>
+<footer class="mb-2">
+  <p-card>
+    @if (creationYear === year) {
+      <span>{{ year }} {{ serviceName }}. All rights reserved.</span>
+    } @else {
+      <span>{{ creationYear }} – {{ year }} {{ serviceName }}. All rights reserved.</span>
+    }
+  </p-card>
+</footer>

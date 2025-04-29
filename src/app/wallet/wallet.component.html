@@ -4,7 +4,9 @@
 <p-toast />
 
 <p-dialog header="Connect your Wallet" [modal]="true" [draggable]="false" [(visible)]="dialogOpened" [style]="{ width: '25rem' }">
-  <span class="p-text-secondary block mb-4">Select the preferrable wallet on Solana:</span>
+  @if(walletService.getAvailableWalletes().length > 0){
+    <span class="block mb-4">Select the preferrable wallet on Solana:</span>
+  }
   <div class="w-full flex flex-column gap-3">
     @for (wallet of walletService.getAvailableWalletes(); track wallet) {
       <button pButton class="w-full" severity="secondary" (click)="connect(wallet.name)">
@@ -22,6 +24,12 @@
           </div>
         </div>
       </button>
+    } @empty {
+      <p class="text-center">No wallets detected</p>
+      <a pButton class="w-full" href="https://phantom.app/" rel="noopener noreferrer">
+        <span class="font-medium">Download Phantom</span>
+        <span class="material-symbols-outlined">open_in_new</span>
+      </a>
     }
   </div>
 </p-dialog>
