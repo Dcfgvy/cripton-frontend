@@ -19,8 +19,11 @@ import {
   getAssociatedTokenAddressSync,
 } from '@solana/spl-token';
 
-import { createCreateMetadataAccountV3Instruction, createUpdateMetadataAccountV2Instruction, DataV2 } from "@metaplex-foundation/mpl-token-metadata";
-// import { createTokenMetadataInstructionsTest } from './metadata-creation';
+import { Creator, DataV2Args, createMetadataAccountV3, findMetadataPda, mplTokenMetadata, updateMetadataAccountV2 } from "@dcfgvy/mpl-token-metadata";
+import { fromWeb3JsPublicKey, toWeb3JsInstruction } from '@metaplex-foundation/umi-web3js-adapters';
+import { createNoopSigner, createUmi, Umi } from '@metaplex-foundation/umi';
+import { defaultProgramRepository } from '@metaplex-foundation/umi-program-repository';
+import { web3JsEddsa } from '@metaplex-foundation/umi-eddsa-web3js';
 
 @Injectable({
   providedIn: 'root'
@@ -48,91 +51,95 @@ export class TokenCreationService {
 
     return this.http.post(`${environment.apiUrl}/api/tokens/create`, formData);
   }
+  
+  private getUmiContext(): Umi {
+    const umi = createUmi()
+    // .use(signerIdentity(createNoopSigner(fromWeb3JsPublicKey(userPublicKey)), true))
+    .use(defaultProgramRepository())
+    .use(web3JsEddsa())
+    // .use(web3JsRpc(connection.rpcEndpoint))
+
+    return umi;
+  }
 
   private createTokenMetadataInstructions(data: CreateTokenData, userPublicKey: PublicKey, updateAuthority: PublicKey){
-    const metadataData: DataV2 = {
+    const umiCreators = data.creators.map((c) => {
+      const umiCreator: Creator = {
+        address: fromWeb3JsPublicKey(c.address),
+        share: c.share,
+        verified: c.verified,
+      };
+      return umiCreator;
+    });
+    const metadataData: DataV2Args = {
       name: data.name,
       symbol: data.symbol,
       uri: data.metadataUri,
       sellerFeeBasisPoints: 0,
-      creators: data.creators,
+      creators: umiCreators,
       collection: null,
-      uses: null
+      uses: null,
     };
-  
-    const TOKEN_METADATA_PROGRAM_ID = new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");
-    const metadataPDAAndBump = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("metadata"),
-        TOKEN_METADATA_PROGRAM_ID.toBuffer(),
-        data.mint.publicKey.toBuffer(),
-      ],
-      TOKEN_METADATA_PROGRAM_ID
-    );
-
-    const metadataPDA = metadataPDAAndBump[0];
     
+    const umi = this.getUmiContext().use(mplTokenMetadata());
+    const metadataPDA = findMetadataPda(umi, { mint: fromWeb3JsPublicKey(data.mint.publicKey) })[0];
     let instructions: TransactionInstruction[] = [];
+
     // if update authority is on of the signers
     if(updateAuthority === userPublicKey || updateAuthority === data.mint.publicKey){
-      const createInstruction =
-        createCreateMetadataAccountV3Instruction(
-          {
-            metadata: metadataPDA,
-            mint: data.mint.publicKey,
-            mintAuthority: userPublicKey,
-            payer: userPublicKey,
-            updateAuthority: updateAuthority,
-          },
-          {
-            createMetadataAccountArgsV3: {
-              collectionDetails: null,
-              data: metadataData,
-              isMutable: data.isMutable,
-            },
-          }
-        );
-      instructions.push(createInstruction);
+      const createInstructions = createMetadataAccountV3(umi, {
+        collectionDetails: null,
+        isMutable: true,
+        data: metadataData,
+        mint: fromWeb3JsPublicKey(data.mint.publicKey),
+        mintAuthority: createNoopSigner(fromWeb3JsPublicKey(userPublicKey)),
+        updateAuthority: fromWeb3JsPublicKey(updateAuthority),
+        payer: createNoopSigner(fromWeb3JsPublicKey(userPublicKey)),
+      })
+      .getInstructions();
+
+      for(const inst of createInstructions){
+        instructions.push(toWeb3JsInstruction(inst));
+      }
     } else {
       // initial update authority is user, then transfer it
-      const createInstruction =
-        createCreateMetadataAccountV3Instruction(
-          {
-            metadata: metadataPDA,
-            mint: data.mint.publicKey,
-            mintAuthority: userPublicKey,
-            payer: userPublicKey,
-            updateAuthority: userPublicKey,
-          },
-          {
-            createMetadataAccountArgsV3: {
-              collectionDetails: null,
-              data: metadataData,
-              isMutable: true,
-            },
-          }
-        );
-      const transferInstruction = createUpdateMetadataAccountV2Instruction(
-          {
-            metadata: metadataPDA,
-            updateAuthority: userPublicKey
-          },
-          {
-            updateMetadataAccountArgsV2: {
-              data: null, // Keep same data
-              updateAuthority: updateAuthority,
-              primarySaleHappened: null,
-              isMutable: data.isMutable,
-            }
-          }
-        );
-      instructions.push(createInstruction, transferInstruction);
+      const createInstructions = createMetadataAccountV3(umi, {
+        collectionDetails: null,
+        isMutable: true,
+        data: metadataData,
+        mint: fromWeb3JsPublicKey(data.mint.publicKey),
+        mintAuthority: createNoopSigner(fromWeb3JsPublicKey(userPublicKey)),
+        updateAuthority: fromWeb3JsPublicKey(userPublicKey),
+        payer: createNoopSigner(fromWeb3JsPublicKey(userPublicKey)),
+      })
+      .getInstructions();
+
+      for(const inst of createInstructions){
+        instructions.push(toWeb3JsInstruction(inst));
+      }
+
+      const transferInstructions = updateMetadataAccountV2(umi, {
+        metadata: metadataPDA,
+        updateAuthority: createNoopSigner(fromWeb3JsPublicKey(userPublicKey)),
+        newUpdateAuthority: fromWeb3JsPublicKey(updateAuthority),
+        isMutable: data.isMutable,
+      }).getInstructions();
+
+      for(const inst of transferInstructions){
+        instructions.push(toWeb3JsInstruction(inst));
+      }
     }
     
     return instructions;
   }
   
-  private async buildRawTokenCreationTx(data: CreateTokenData, userPublicKey: PublicKey, mintRent: number, blockhash: string): Promise<Transaction> {
+  private async buildRawTokenCreationTx(
+    data: CreateTokenData,
+    connection: Connection,
+    userPublicKey: PublicKey,
+    mintRent: number,
+    blockhash: string,
+  ): Promise<Transaction> {
     const instructions: TransactionInstruction[] = [];
     
     // Create mint account
@@ -171,7 +178,6 @@ export class TokenCreationService {
     }
 
     const metadataInstructions = this.createTokenMetadataInstructions(data, userPublicKey, updateAuthority);
-    // const metadataInstructions = createTokenMetadataInstructionsTest(data, userPublicKey, updateAuthority);
     instructions.push(...metadataInstructions);
     
     // Create ATAs and mint tokens
@@ -346,7 +352,7 @@ export class TokenCreationService {
       // ========================
       // 4. Simulate Transaction
       // ========================
-      const tx = await this.buildRawTokenCreationTx(data, userPublicKey, mintRent, blockhash);
+      const tx = await this.buildRawTokenCreationTx(data, connection, userPublicKey, mintRent, blockhash);
       const simulation = await connection.simulateTransaction(tx);
       
       if (simulation.value.err) {
@@ -440,7 +446,7 @@ export class TokenCreationService {
     const mintRent = await connection.getMinimumBalanceForRentExemption(MintLayout.span);
     const { blockhash } = await connection.getLatestBlockhash();
 
-    const transaction = await this.buildRawTokenCreationTx(data, userPublicKey, mintRent, blockhash);
+    const transaction = await this.buildRawTokenCreationTx(data, connection, userPublicKey, mintRent, blockhash);
     const txCost = await this.getTokenCreationCost(data, connection, userPublicKey, mintRent, blockhash);
     
     if(txCost < data.totalCost * LAMPORTS_PER_SOL){

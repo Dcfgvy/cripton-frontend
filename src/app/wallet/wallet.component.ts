@@ -1,11 +1,11 @@
-import { Component, computed, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { CommonModule } from '@angular/common';
 import { WalletService } from './wallet.service';
-import { DialogModule } from 'primeng/dialog';
-import { ToastModule } from 'primeng/toast';
+import { Dialog } from 'primeng/dialog';
+import { Toast } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-import { PopoverModule } from 'primeng/popover';
+import { Popover } from 'primeng/popover';
 import { WalletAdapter } from '@solana/wallet-adapter-base';
 
 @Component({
@@ -13,9 +13,9 @@ import { WalletAdapter } from '@solana/wallet-adapter-base';
   imports: [
     CommonModule,
     ButtonModule,
-    DialogModule,
-    ToastModule,
-    PopoverModule,
+    Dialog,
+    Toast,
+    Popover,
   ],
   templateUrl: './wallet.component.html',
   styleUrl: './wallet.component.scss',

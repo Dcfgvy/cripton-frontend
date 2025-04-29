@@ -1,11 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, EventEmitter, Input, model, OnInit, Output, ViewChild } from '@angular/core';
+import { Component, Input, model, OnInit } from '@angular/core';
 import { MessageService } from 'primeng/api';
-import { ToastModule } from 'primeng/toast';
+import { Toast } from 'primeng/toast';
 
 @Component({
   selector: 'app-file-selector',
-  imports: [CommonModule, ToastModule],
+  imports: [CommonModule, Toast],
   templateUrl: './file-selector.component.html',
   styleUrl: './file-selector.component.scss',
   providers: [MessageService]

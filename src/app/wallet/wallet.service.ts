@@ -1,5 +1,5 @@
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
-import { WalletReadyState } from '@solana/wallet-adapter-base';
+import { BaseWalletAdapter, WalletReadyState } from '@solana/wallet-adapter-base';
 import { Connection } from '@solana/web3.js';
 import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom';
 import { SolflareWalletAdapter } from '@solana/wallet-adapter-solflare';
@@ -10,6 +10,9 @@ import { isPlatformBrowser } from '@angular/common';
 
 // TODO add more wallets & lazy-load them
 export type WalletAdapter = PhantomWalletAdapter | SolflareWalletAdapter | BraveWalletAdapter;
+
+// const a: BaseWalletAdapter = null as any as BaseWalletAdapter;
+// a.se
 
 @Injectable({ providedIn: 'root' })
 export class WalletService {

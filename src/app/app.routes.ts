@@ -1,7 +1,5 @@
 import { Routes } from '@angular/router';
 import { MainComponent } from './main/main.component';
-import { CreateTokenComponent } from './solana/create-token/create-token.component';
-import { TrendingTokensComponent } from './solana/trending-tokens/trending-tokens.component';
 import { SolanaComponent } from './solana/solana.component';
 
 export const routes: Routes = [
@@ -15,12 +13,16 @@ export const routes: Routes = [
     children: [
       {
         path: 'create-token',
-        component: CreateTokenComponent,
+        loadComponent: () => import('./solana/create-token/create-token.component').then(
+          (m) => m.CreateTokenComponent
+        ),
         title: 'Create Token',
       },
       {
         path: 'trending-coins',
-        component: TrendingTokensComponent,
+        loadComponent: () => import('./solana/trending-tokens/trending-tokens.component').then(
+          (m) => m.TrendingTokensComponent
+        ),
         title: 'Trending Coins',
       },
     ]
