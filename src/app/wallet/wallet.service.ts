@@ -16,7 +16,6 @@ export type WalletAdapter = PhantomWalletAdapter | SolflareWalletAdapter | Brave
 
 @Injectable({ providedIn: 'root' })
 export class WalletService {
-  private connection: Connection;
   // IMPORTANT: some wallet adapters like the one for Keystone require React, so we can't use them
   private wallets: WalletAdapter[] = [
     new PhantomWalletAdapter(),
@@ -26,16 +25,17 @@ export class WalletService {
   public selectedWallet: WalletAdapter | null = null;
   private selectedWalletSubject = new BehaviorSubject<WalletAdapter | null>(this.selectedWallet);
   public selectedWallet$: Observable<WalletAdapter | null> = this.selectedWalletSubject.asObservable();
-  private sub: any;
+  // private sub: any;
+  // private connection: Connection;
 
 	constructor(
 		private readonly networkService: NetworkService,
     @Inject(PLATFORM_ID) private platformId: Object,
 	){
-		this.connection = new Connection(this.networkService.selectedNetwork.url);
-    this.sub = this.networkService.selectedNetwork$.subscribe(network => {
-      this.connection = new Connection(network.url);
-    });
+		// this.connection = new Connection(this.networkService.selectedNetwork.url);
+    // this.sub = this.networkService.selectedNetwork$.subscribe(network => {
+    //   this.connection = new Connection(network.url);
+    // });
 
     if(isPlatformBrowser(platformId)){
       this.restoreConnectedWallet();
@@ -58,7 +58,7 @@ export class WalletService {
   async getBalanceLamports(): Promise<number> {
     if(!this.selectedWallet?.publicKey) return 0;
     try{
-      const accountInfo = await this.connection.getAccountInfo(this.selectedWallet.publicKey);
+      const accountInfo = await this.networkService.connection.getAccountInfo(this.selectedWallet.publicKey);
       return accountInfo?.lamports || 0;
     } catch(err) {
       return 0;
@@ -69,38 +69,38 @@ export class WalletService {
     const walletName = localStorage.getItem('wallet');
     if(walletName !== null && walletName !== ''){
       try {
-        await this.connect(walletName);
+        await this.connect(walletName, true);
       } catch(err) {
         localStorage.removeItem('wallet');
       }
     }
   }
 
-  async connect(walletName: string): Promise<void> {
+  async connect(walletName: string, auto: boolean = false): Promise<void> {
     const wallet = this.wallets.find(
       (w) => w.name === walletName && (w.readyState === WalletReadyState.Installed || w.readyState === WalletReadyState.Loadable)
     );
     if(!wallet) throw new Error('Wallet not found');
 
-    if(this.selectedWallet !== null){
-      try{
-        await this.selectedWallet.disconnect();
-        this.selectedWallet = null;
-      } catch (err) {
-        // ignore
-      }
-    }
-    await wallet.connect();
+    // use connect() anyway
+    if(auto) await wallet.connect();
+    else await wallet.connect();
+    await this.selectedWallet?.disconnect();
     localStorage.setItem('wallet', walletName);
-    this.selectedWalletSubject.next(wallet);
     this.selectedWallet = wallet;
+    this.selectedWalletSubject.next(wallet);
   }
 
   async disconnect(): Promise<void> {
     localStorage.removeItem('wallet');
     if(this.selectedWallet){
-      await this.selectedWallet.disconnect();
+      try{
+        await this.selectedWallet.disconnect();
+      } catch (err) {
+        // ignore
+      }
       this.selectedWallet = null;
+      this.selectedWalletSubject.next(null);
     }
   }
 }

@@ -1,0 +1,9 @@
+<app-wallet-connection-popup [(showIf)]="dialogOpened" />
+
+@if(walletService.selectedWallet?.publicKey){
+  <ng-content />
+} @else {
+  <p-button (onClick)="connectWallet()">
+    <span class="font-semibold">Connect Wallet</span>
+  </p-button>
+}

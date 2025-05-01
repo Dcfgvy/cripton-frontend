@@ -1,36 +1,7 @@
-<!-- <ng-template #headerTemplate let-isFixed="fixed">
-  <header [classList]="`w-full flex justify-content-center items-center ${isFixed ? 'fixed z-1' : 'hidden z-0'}`" [style]="isFixed ? '' : 'z-index: -10;'">
-    <div class="flex justify-content-between gap-4" style="width: 1024px;">
-      <nav class="flex justify-content-between gap-3">
-        <p-button label="Home" variant="text" [raised]="true">
-          <span class="material-symbols-outlined">home</span>
-        </p-button>
-  
-        <p-button label="Create Token" variant="text" [raised]="true">
-          <span class="material-symbols-outlined">add_circle</span>
-        </p-button>
-  
-        <p-button label="Trending Tokens" variant="text" [raised]="true">
-          <span class="material-symbols-outlined">trending_up</span>
-        </p-button>
-    
-        <a href="https://raydium.io/liquidity/portfolio" target="_blank" rel="noopener noreferrer" class="p-button p-button-text p-button-raised no-underline">
-          <span class="material-symbols-outlined">water_drop</span>
-          Manage Liquidity
-        </a>
-      </nav>
-      <app-network-switch></app-network-switch>
-    </div>
-  </header>
-</ng-template>
-
-
-<div [ngTemplateOutlet]="headerTemplate" [ngTemplateOutletContext]="{ fixed: true }"></div>
-<div [ngTemplateOutlet]="headerTemplate" [ngTemplateOutletContext]="{ fixed: false }"></div> -->
-
 <header class="w-full flex justify-content-center items-center pt-2 pb-2" style="background-color: transparent;">
-  <div class="flex justify-content-between gap-4" style="width: 70%; min-width: 1200px; max-width: 1280px;"> <!-- TODO responsive --> 
-    <app-network-switch></app-network-switch>
+  <div class="flex justify-content-between align-items-center gap-4" style="width: 70%; min-width: 1200px; max-width: 1280px;"> <!-- TODO responsive --> 
+    <!-- <app-network-switch></app-network-switch> -->
+    <app-logo />
     <nav class="flex justify-content-between gap-3">
       <a routerLink="/solana/create-token" class="p-button p-button-text no-underline">
         <span class="material-symbols-outlined">add_circle</span>

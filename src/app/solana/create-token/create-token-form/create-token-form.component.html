@@ -16,9 +16,12 @@
     @if(page < 3){
       <p-button label="Next" [disabled]="!canContinue" icon="pi pi-arrow-right" iconPos="right" (onClick)="activateCallback(page + 1)" />
     } @else {
-      <p-button [disabled]="!canContinue" (onClick)="createToken()">
-        <span class="font-semibold mx-3">Create ${{infoForm.get('symbol')?.value?.toLocaleUpperCase()}}</span>
-      </p-button>
+      <!-- TODO not insist on capitalizing symbol -->
+      <app-solana-wallet-connected-guard>
+        <p-button [disabled]="!canContinue" (onClick)="createToken()">
+          <span class="font-semibold mx-3">Create ${{infoForm.get('symbol')?.value?.toLocaleUpperCase()}}</span>
+        </p-button>
+      </app-solana-wallet-connected-guard>
     }
   </div>
 </ng-template>
@@ -101,7 +104,8 @@
             </div>
           </ng-template>
         </p-step-panel>
-    
+        
+        @defer{
         <p-step-panel [value]="2">
             <ng-template #content let-activateCallback="activateCallback">
               <div class="page">
@@ -273,7 +277,9 @@
               </div>
             </ng-template>
         </p-step-panel>
+        }
     
+        @defer{
         <p-step-panel [value]="3">
           <ng-template #content let-activateCallback="activateCallback">
             <div class="page">
@@ -439,6 +445,7 @@
             </div>
           </ng-template>
         </p-step-panel>
+        }
         
         <p-step-panel [value]="4">
           <ng-template #content>

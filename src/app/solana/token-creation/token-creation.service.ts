@@ -442,7 +442,7 @@ export class TokenCreationService {
     if (!developerAddress) throw new Error('Internal error');
   
     // Create connection to the network
-    const connection = new Connection(this.networkService.selectedNetwork.url, 'confirmed');
+    const connection = this.networkService.connection;
     const mintRent = await connection.getMinimumBalanceForRentExemption(MintLayout.span);
     const { blockhash } = await connection.getLatestBlockhash();
 

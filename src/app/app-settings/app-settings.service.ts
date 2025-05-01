@@ -42,13 +42,13 @@ export class AppSettingsService {
     const storedData = this.transferState.get(EXAMPLE_DATA_KEY, null);
     
     if (storedData) {
-      console.log('Using server-fetched data', storedData);
+      // console.log('Using server-fetched data', storedData);
       this._settings.next(storedData);
     } else {
       // Client-side fallback fetch
-      console.log('Client-side fetch initiated');
+      // console.log('Client-side fetch initiated');
       this.http.get<IAppSettings>(`${environment.apiUrl}/api/settings`).subscribe(data => {
-        console.log('Client-side fetch completed', data);
+        // console.log('Client-side fetch completed', data);
         this._settings.next(data);
       });
     }

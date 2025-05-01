@@ -1,12 +1,13 @@
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 
-import { routes } from './app.routes';
+import { routes } from './routes/app.routes';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { provideHttpClient, withFetch } from '@angular/common/http';
 import { AppSettingsService } from './app-settings/app-settings.service';
 import { NetworkService } from './network-switch/network-switch.service';
 import { primengProviders } from './primeng.config';
+import { WalletService } from './wallet/wallet.service';
 
 export const appConfig: ApplicationConfig = {
   providers: 
@@ -18,5 +19,6 @@ export const appConfig: ApplicationConfig = {
     ...primengProviders,
     AppSettingsService,
     NetworkService,
+    WalletService,
   ],
 };

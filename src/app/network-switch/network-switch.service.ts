@@ -1,6 +1,7 @@
 import { afterNextRender, Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { Connection } from '@solana/web3.js';
 
 export interface Network {
   name: string;
@@ -28,6 +29,8 @@ export class NetworkService {
     }
   ]
 
+  public connection: Connection = new Connection(this.networks[0].url);
+
   selectedNetwork: Network = this.networks[0];
   private selectedNetworkSubject = new BehaviorSubject<Network>(this.networks[0]);
   selectedNetwork$: Observable<Network> = this.selectedNetworkSubject.asObservable();
@@ -47,6 +50,7 @@ export class NetworkService {
 
   private updateSelectedNetwork(network: Network){
     this.selectedNetwork = network;
+    this.connection = new Connection(network.url, 'confirmed');
     this.selectedNetworkSubject.next(network);
   }
 

@@ -1,9 +1,10 @@
-<footer class="mb-2">
+<footer class="mb-4">
   <p-card>
     @if (creationYear === year) {
       <span>{{ year }} {{ serviceName }}. All rights reserved.</span>
     } @else {
       <span>{{ creationYear }} – {{ year }} {{ serviceName }}. All rights reserved.</span>
     }
+    <app-network-switch></app-network-switch>
   </p-card>
 </footer>

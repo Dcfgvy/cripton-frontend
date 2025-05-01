@@ -2,8 +2,8 @@ import type { Environment } from "./environment.interface";
 
 export const environment: Environment = {
   production: true,
-  serviceName: 'Token Generator',
-  serviceWebsite: 'https://token-generator.com',
+  serviceName: 'Cripton',
+  serviceWebsite: 'https://cripton.app',
   apiUrl: 'http://localhost:3444',
 
   solana: {

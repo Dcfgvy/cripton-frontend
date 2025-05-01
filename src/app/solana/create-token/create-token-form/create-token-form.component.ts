@@ -1,7 +1,7 @@
 import { CommonModule, NgTemplateOutlet } from '@angular/common';
-import { Component, computed, output, signal } from '@angular/core';
+import { Component, computed, inject, output, signal } from '@angular/core';
 import { AbstractControl, FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
-import { Button } from 'primeng/button';
+import { ButtonModule } from 'primeng/button';
 import { StepperModule } from 'primeng/stepper';
 import { Card } from 'primeng/card';
 import { InputText } from 'primeng/inputtext';
@@ -38,6 +38,7 @@ import { ServiceName } from '../../../app-settings/types/service-name.type';
 import { AppSettingsService } from '../../../app-settings/app-settings.service';
 import { CreateTokenData, SupplyDistributionArray } from '../../token-creation/interfaces/create-token-data.interface';
 import { TokenImageData, TokenUploadMetadata } from '../../token-creation/interfaces/token-metadata.interface';
+import { SolanaWalletConnectedGuardComponent } from "../../components/solana-wallet-connected-guard/solana-wallet-connected-guard.component";
 
 // u64 max value: 18,446,744,073,709,551,615 (2^64-1)
 // Our limit: 10,000,000,000,000,000,000 (10 * 10^18)
@@ -78,7 +79,7 @@ export function supplyValidator(): ValidatorFn {
   selector: 'app-create-token-form',
   imports: [
     StepperModule,
-    Button,
+    ButtonModule,
     NgTemplateOutlet,
     Card,
     ReactiveFormsModule,
@@ -100,11 +101,12 @@ export function supplyValidator(): ValidatorFn {
     AlertBannerComponent,
     CommonModule,
     TokenConfirmationPopupComponent,
-    TokenCreatedBodyComponent
+    TokenCreatedBodyComponent,
+    SolanaWalletConnectedGuardComponent
 ],
   templateUrl: './create-token-form.component.html',
   styleUrl: './create-token-form.component.scss',
-  providers: [MessageService, TokenCreationService]
+  providers: [MessageService]
 })
 export class CreateTokenFormComponent {
   onReset = output();
@@ -144,10 +146,11 @@ export class CreateTokenFormComponent {
   readonly DEFAULT_CREATOR_WEBSITE = environment.serviceWebsite;
   readonly MAX_CUSTOM_ADDRESS_PREFIX_LENGTH = 4;
 
+  private tokenCreationService = inject(TokenCreationService);
   constructor(
     private walletService: WalletService,
     private messageService: MessageService,
-    private tokenCreationService: TokenCreationService,
+    // private tokenCreationService: TokenCreationService,
     public readonly networkService: NetworkService,
     public readonly pricesService: PricesService,
     public readonly settingsService: AppSettingsService,
@@ -412,11 +415,21 @@ export class CreateTokenFormComponent {
       })
     );
   }
+  userSelectedWallet = computed(() => {
+    return this.walletService.selectedWallet;
+  })
   setInitialUserWalletSupply = () => {
     if(this.supplyDistributions.length > 1) return;
+    // TODO fix wallet connection. Scenario:
+    // 1. user doesn't have their wallet connected
+    // 2. user tries to add multi-wallet supply distribution add-on
+    // 3. gets the appropriate error AND PROBLEM the switch is not being returned to false
+    // 4. When the user connects the wallet afterwards, he will get the same error and this.walletService.selectedWallet.publicKey will be null
     if(!this.walletService.selectedWallet?.publicKey){
-      this.addOns['multiWalletDistribution'].added.set(false);
-      this.messageService.add({ severity: 'error', summary: 'No Wallet Connected', detail: 'Please reconnect your wallet to proceed' });
+      setTimeout(() => {
+        this.addOns['multiWalletDistribution'].added.set(false);
+      }, 0);
+      this.messageService.add({ severity: 'error', summary: 'No Wallet Connected', detail: 'Please connect your wallet to proceed' });
       return;
     }
     this.supplyDistributions.clear();
