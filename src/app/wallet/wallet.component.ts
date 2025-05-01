@@ -1,9 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { CommonModule } from '@angular/common';
-import { WalletService } from './wallet.service';
+import { SolanaWalletAdapter, WalletService } from './wallet.service';
 import { Popover } from 'primeng/popover';
-import { WalletAdapter } from '@solana/wallet-adapter-base';
 import { WalletConnectionPopupComponent } from "./wallet-connection-popup/wallet-connection-popup.component";
 
 @Component({
@@ -25,7 +24,7 @@ export class WalletComponent implements OnInit {
     public readonly walletService: WalletService,
 	) {}
 
-  currentSelectedWallet: WalletAdapter | null = null;
+  currentSelectedWallet: SolanaWalletAdapter | null = null;
 
   ngOnInit(): void {
     this.currentSelectedWallet = this.walletService.selectedWallet;

@@ -1,30 +1,56 @@
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
-import { BaseWalletAdapter, WalletReadyState } from '@solana/wallet-adapter-base';
-import { Connection } from '@solana/web3.js';
-import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom';
-import { SolflareWalletAdapter } from '@solana/wallet-adapter-solflare';
-import { BraveWalletAdapter } from '@solana/wallet-adapter-brave';
+import { BaseWalletAdapter, WalletAdapter, WalletReadyState } from '@solana/wallet-adapter-base';
 import { NetworkService } from '../network-switch/network-switch.service';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 
-// TODO add more wallets & lazy-load them
-export type WalletAdapter = PhantomWalletAdapter | SolflareWalletAdapter | BraveWalletAdapter;
+import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom';
+import { SolflareWalletAdapter } from '@solana/wallet-adapter-solflare';
+import { BraveWalletAdapter } from '@solana/wallet-adapter-brave';
+import { CoinbaseWalletAdapter } from '@solana/wallet-adapter-coinbase';
+import { AlphaWalletAdapter } from '@solana/wallet-adapter-alpha';
+import { AvanaWalletAdapter } from '@solana/wallet-adapter-avana';
+import { BitgetWalletAdapter } from '@solana/wallet-adapter-bitkeep';
+import { BitpieWalletAdapter } from '@solana/wallet-adapter-bitpie';
+import { Coin98WalletAdapter } from '@solana/wallet-adapter-coin98';
+import { CoinhubWalletAdapter } from '@solana/wallet-adapter-coinhub';
+import { HyperPayWalletAdapter } from '@solana/wallet-adapter-hyperpay';
+import { KrystalWalletAdapter } from '@solana/wallet-adapter-krystal';
+import { LedgerWalletAdapter } from '@solana/wallet-adapter-ledger';
+import { MathWalletAdapter } from '@solana/wallet-adapter-mathwallet';
+import { NightlyWalletAdapter } from '@solana/wallet-adapter-nightly';
+import { SafePalWalletAdapter } from '@solana/wallet-adapter-safepal';
+import { SaifuWalletAdapter } from '@solana/wallet-adapter-saifu';
+import { SkyWalletAdapter } from '@solana/wallet-adapter-sky';
 
-// const a: BaseWalletAdapter = null as any as BaseWalletAdapter;
-// a.se
+export type SolanaWalletAdapter = WalletAdapter;
 
 @Injectable({ providedIn: 'root' })
 export class WalletService {
-  // IMPORTANT: some wallet adapters like the one for Keystone require React, so we can't use them
-  private wallets: WalletAdapter[] = [
+  // IMPORTANT: some wallet adapters like the ones for Keystone, Fractal, Torus require React, so we can't use them
+  private wallets: SolanaWalletAdapter[] = [
     new PhantomWalletAdapter(),
     new BraveWalletAdapter(),
     new SolflareWalletAdapter(),
+    new CoinbaseWalletAdapter(),
+    new AlphaWalletAdapter(),
+    new AvanaWalletAdapter(),
+    new BitgetWalletAdapter(),
+    new BitpieWalletAdapter(),
+    new Coin98WalletAdapter(),
+    new CoinhubWalletAdapter(),
+    new HyperPayWalletAdapter(),
+    new KrystalWalletAdapter(),
+    new LedgerWalletAdapter(),
+    new MathWalletAdapter(),
+    new NightlyWalletAdapter(),
+    new SafePalWalletAdapter(),
+    new SaifuWalletAdapter(),
+    new SkyWalletAdapter(),
   ];
-  public selectedWallet: WalletAdapter | null = null;
-  private selectedWalletSubject = new BehaviorSubject<WalletAdapter | null>(this.selectedWallet);
-  public selectedWallet$: Observable<WalletAdapter | null> = this.selectedWalletSubject.asObservable();
+  public selectedWallet: SolanaWalletAdapter | null = null;
+  private selectedWalletSubject = new BehaviorSubject<SolanaWalletAdapter | null>(this.selectedWallet);
+  public selectedWallet$: Observable<SolanaWalletAdapter | null> = this.selectedWalletSubject.asObservable();
   // private sub: any;
   // private connection: Connection;
 
@@ -42,8 +68,8 @@ export class WalletService {
     }
 	}
 
-  getAvailableWalletes(): WalletAdapter[] {
-    let res: WalletAdapter[] = [];
+  getAvailableWalletes(): SolanaWalletAdapter[] {
+    let res: SolanaWalletAdapter[] = [];
     for(const wal of this.wallets){
       if(
         wal.readyState === WalletReadyState.Installed ||
@@ -82,9 +108,9 @@ export class WalletService {
     );
     if(!wallet) throw new Error('Wallet not found');
 
-    // use connect() anyway
-    if(auto) await wallet.connect();
+    if(auto) await wallet.autoConnect();
     else await wallet.connect();
+
     await this.selectedWallet?.disconnect();
     localStorage.setItem('wallet', walletName);
     this.selectedWallet = wallet;

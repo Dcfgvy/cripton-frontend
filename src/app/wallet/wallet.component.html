@@ -5,7 +5,15 @@
 <app-wallet-connection-popup [(showIf)]="dialogOpened" />
 
 @if (currentSelectedWallet == null) {
-  <p-button label="Connect Wallet" (onClick)="dialogOpened = true"></p-button>
+  <!-- <p-button label="Connect Wallet" (onClick)="dialogOpened = true"></p-button> -->
+  <p-button  (onClick)="dialogOpened = true">
+    <span class="material-symbols-outlined">
+      account_balance_wallet
+      </span>
+      <span class="font-medium">
+        Connect Wallet
+      </span>
+  </p-button>
 }
 @else {
   <button pButton (click)="op.toggle($event)" class="px-3">
