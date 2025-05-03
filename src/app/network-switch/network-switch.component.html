@@ -1,21 +1,27 @@
-<ng-content />
-<ng-template #networkTemplate let-network>
-  <div class="flex items-center gap-2">
-    @if (network?.code == 'mainnet-beta') {
-      <div>
-        <img src="images/solana.png" class="-mb-1 icon-height" />
-      </div>
-    }
-    <div>{{ network?.name }}</div>
-  </div>
-</ng-template>
+<p-dialog header="Switch Solana Network" [modal]="true" [draggable]="false" [(visible)]="dialogOpened" [style]="{ width: '25rem' }">
+  <span>Select one of the following Solana networks:</span>
+  <div class="mb-3"></div>
+  @for(network of networkService.networks; track network.code){
+    <button class="w-full my-1" pButton severity="secondary" style="justify-content: start;" [disabled]="networkService.selectedNetwork === network" (click)="selectNetwork(network)">
+      <div class="w-full flex justify-content-between align-items-center ">
+        <div class="w-full flex justify-content-start gap-2">
+          <div>
+            <img [src]="network.image" class="-mb-1 icon-height" />
+          </div>
+          <div>{{ network.name }}</div>
+        </div>
 
-<!-- TODO -->
-<p-select [options]="networkService.networks" [(ngModel)]="networkService.selectedNetwork" optionLabel="name" (ngModelChange)="onNetworkChange()">
-  <ng-template #selectedItem let-selectedOption>
-      <div [ngTemplateOutlet]="networkTemplate" [ngTemplateOutletContext]="{ $implicit: selectedOption }"></div>
-  </ng-template>
-  <ng-template let-network #item>
-    <div [ngTemplateOutlet]="networkTemplate" [ngTemplateOutletContext]="{ $implicit: network }"></div>
-  </ng-template>
-</p-select>
+        @if (networkService.selectedNetwork === network) {
+          <span class="text-color-secondary">Selected</span>
+        }
+        @else if (network.isTest) {
+          <p-tag severity="warn" value="Testnet" />
+        }
+      </div>
+    </button>
+  }
+</p-dialog>
+
+<p-button severity="secondary" (onClick)="openNetworkPopup()">
+  <img [src]="networkService.selectedNetwork.image" class="-mb-1 my-1 icon-height" />
+</p-button>

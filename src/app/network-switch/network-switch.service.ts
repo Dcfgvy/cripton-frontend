@@ -7,6 +7,7 @@ export interface Network {
   name: string;
   code: string;
   url: string;
+  image: string;
   isTest: boolean;
 }
 
@@ -19,12 +20,14 @@ export class NetworkService {
       name: 'Mainnet',
       code: 'mainnet-beta',
       url: environment.solana.rpcUrls['mainnet-beta'],
+      image: 'images/blockchain_logos/solana.svg',
       isTest: false
     },
     {
       name: 'Devnet',
       code: 'devnet',
       url: environment.solana.rpcUrls.devnet,
+      image: 'images/blockchain_logos/solana_devnet.svg',
       isTest: true
     }
   ]

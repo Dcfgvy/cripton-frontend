@@ -1,0 +1,5 @@
+@if(networkService.selectedNetwork.isTest){
+  <div class="mb-2">
+    <app-warning>Please note that metadata of a token created on Devnet will be deleted after {{ metadataExpirationTime() }}</app-warning>
+  </div>
+}

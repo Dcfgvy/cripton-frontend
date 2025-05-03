@@ -2,8 +2,13 @@
 
 @if(walletService.selectedWallet?.publicKey){
   <ng-content />
-} @else {
+} @else {  
   <p-button (onClick)="connectWallet()">
-    <span class="font-semibold">Connect Wallet</span>
+    <span class="material-symbols-outlined">
+      account_balance_wallet
+      </span>
+      <span class="font-medium">
+        Connect Wallet
+      </span>
   </p-button>
 }

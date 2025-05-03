@@ -3,7 +3,7 @@
   <div class="w-full flex flex-row gap-3 justify-content-between items-center">
     <div class="flex items-center">
       <div>
-        <p-toggleswitch [(ngModel)]="_checked" (onChange)="onValueChange($event)" size="small" class="mr-2" />
+        <p-toggleswitch [(ngModel)]="_checked" (onChange)="onValueChange($event)" [disabled]="disabled()" size="small" class="mr-2" />
       </div>
       <ng-content select="[title]"></ng-content>
       <div class="text-sm">

@@ -1,7 +1,7 @@
 <ng-template #continueButton let-page="page" let-canContinue="canContinue" let-activateCallback="activateCallback">
   <div class="w-full flex px-2 justify-content-between align-items-center">
     @if(page > 1){
-      <p-button label="Back" severity="secondary" icon="pi pi-arrow-left" iconPos="left" (onClick)="activateCallback(page - 1)" />
+      <p-button label="Back" severity="secondary" icon="pi pi-arrow-left" iconPos="left" (onClick)="activateCallback(page - 1); scrollToStepper();" />
     }
     @else {
       <div style="visibility: hidden;">
@@ -14,12 +14,11 @@
       <span class="font-semibold ml-1">{{ totalCost().toFixed(2) }} SOL</span>
     </span>
     @if(page < 3){
-      <p-button label="Next" [disabled]="!canContinue" icon="pi pi-arrow-right" iconPos="right" (onClick)="activateCallback(page + 1)" />
+      <p-button label="Next" [disabled]="!canContinue" icon="pi pi-arrow-right" iconPos="right" (onClick)="activateCallback(page + 1); scrollToStepper();" />
     } @else {
-      <!-- TODO not insist on capitalizing symbol -->
       <app-solana-wallet-connected-guard>
         <p-button [disabled]="!canContinue" (onClick)="createToken()">
-          <span class="font-semibold mx-3">Create ${{infoForm.get('symbol')?.value?.toLocaleUpperCase()}}</span>
+          <span class="font-semibold mx-3">Create ${{infoForm.get('symbol')?.value}}</span>
         </p-button>
       </app-solana-wallet-connected-guard>
     }
@@ -27,7 +26,7 @@
 </ng-template>
 
 
-<div style="max-width: 900px;">
+<div id="token-creation-stepper">
   <p-toast/>
   <p-stepper [(value)]="step" class="basis-[50rem]" [linear]="true">
     <p-step-list>
@@ -52,7 +51,7 @@
                   </div>
                   <div class="field col-12 md:col-6">
                     <label for="symbol">Symbol (max 10) <app-required/></label>
-                    <input id="symbol" name="Symbol" placeholder="SOLR" style="text-transform: uppercase" type="text" pInputText formControlName="symbol" required [minlength]="1" [maxlength]="10">
+                    <input id="symbol" name="Symbol" placeholder="SOLR" type="text" pInputText formControlName="symbol" required [minlength]="1" [maxlength]="10">
                   </div>
                   <div class="field col-12 md:col-6">
                     <label for="decimals">Decimals <app-required/></label>
@@ -65,7 +64,7 @@
                       <p-inputnumber id="supply" name="Initial Supply" formControlName="supply" required [min]="1" [maxlength]="MAX_SUPPLY_WITH_DECIMALS_LENGTH" [max]="MAX_SUPPLY_WITH_DECIMALS_NUMBER"/>
                       @if(infoForm.get('symbol')?.value){
                         <p-inputgroup-addon>
-                          {{ infoForm.get('symbol')?.value?.toLocaleUpperCase() || 'SOLR' }}
+                          {{ infoForm.get('symbol')?.value || 'SOLR' }}
                         </p-inputgroup-addon>
                       }
                     </p-inputgroup>
@@ -287,9 +286,9 @@
               [formGroup]="settingsForm"
                 class="p-2 pt-0 font-medium"
               >
-              <p class="text-2xl text-center font-semibold my-2">Additional Settings</p>
+                <p class="text-2xl text-center font-semibold my-2">Additional Settings</p>
                 <div class="formgrid grid mt-3">
-                  <div class="field col-12 mb-4">
+                  <div class="field col-12 mb-3">
                     <app-add-on [(added)]="addOns['customAddress'].added" [serviceName]="addOns['customAddress'].serviceName" tag="New">
                       <div title>Custom Token Address</div>
                       <div description>Personalize your token contract address by customizing the beginning or end</div>
@@ -335,13 +334,18 @@
                             <p-button label="Regenerate" variant="outlined" icon="pi pi-sync" severity="contrast" [loading]="addressGenerationInProgress" (onClick)="regenerateAddress()" />
                           }
                         </div>
+                        <div class="-mt-2 field col-12 mb-0">
+                          <app-alert-banner>
+                            Finding an address with 4 specified symbols may take up to several hours
+                          </app-alert-banner>
+                        </div>
                       </div>
                     </app-add-on>
                   </div>
 
                   <div class="field col-12">
-                    <!-- TODO: generate wallet addresses -->
-                    <app-add-on [(added)]="addOns['multiWalletDistribution'].added" [serviceName]="addOns['multiWalletDistribution'].serviceName" tag="Advanced" tagSeverity="info">
+                    <app-add-on [(added)]="addOns['multiWalletDistribution'].added" [serviceName]="addOns['multiWalletDistribution'].serviceName" tag="Advanced" tagSeverity="info"
+                    [disabled]="supplyDistributionAddonDisabled()">
                       <div title>Multi-Wallet Supply Distribution</div>
                       <div description>Distribute the supply of your token across different wallets within the creation (max 10 wallets).<br>DEX scanners will mark your coin as safe</div>
 
@@ -376,6 +380,10 @@
                       (click)="addDistribution()"
                       [disabled]="supplyDistributions.controls.length === MAX_WALLETS_SUPPLY_DISTRIBUTION"></button>
                     </app-add-on>
+                    @if (supplyDistributionAddonDisabled()) {
+                      <div class="mt-2"></div>
+                      <app-warning>Connect your wallet first</app-warning>
+                    }
                   </div>
 
                   <p-divider class="mt-1"></p-divider>
@@ -435,6 +443,7 @@
                     </div>
                   </ng-container>
                 </div>
+                <app-testnet-token-data-removal-warning />
               </form>
 
               <div [ngTemplateOutlet]="continueButton" [ngTemplateOutletContext]="{
@@ -447,6 +456,7 @@
         </p-step-panel>
         }
         
+        @defer{
         <p-step-panel [value]="4">
           <ng-template #content>
             <div class="flex flex-column items-center">
@@ -465,6 +475,7 @@
             </div>
           </ng-template>
         </p-step-panel>
+        }
       </p-card>
   </p-step-panels>
   </p-stepper>
@@ -479,7 +490,7 @@
 [network]="networkService.selectedNetwork.name"
 
 [name]="infoForm.get('name')?.value"
-[symbol]="infoForm.get('symbol')?.value?.toLocaleUpperCase()"
+[symbol]="infoForm.get('symbol')?.value"
 [supply]="infoForm.get('supply')?.value"
 [decimals]="infoForm.get('decimals')?.value"
 

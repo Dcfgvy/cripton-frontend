@@ -1,6 +1,6 @@
 import { isPlatformServer } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Inject, Injectable, makeStateKey, PLATFORM_ID, TransferState } from '@angular/core';
+import { Inject, Injectable, makeStateKey, PLATFORM_ID, signal, TransferState } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { ServiceName } from './types/service-name.type';
@@ -23,6 +23,7 @@ export class AppSettingsService {
   get currentSettings(): IAppSettings | null {
     return this._settings.value;
   }
+  settingsSignal = signal<IAppSettings | null>(null);
 
   init(): void {
     if (isPlatformServer(this.platformId)) {
@@ -44,12 +45,14 @@ export class AppSettingsService {
     if (storedData) {
       // console.log('Using server-fetched data', storedData);
       this._settings.next(storedData);
+      this.settingsSignal.set(storedData);
     } else {
       // Client-side fallback fetch
       // console.log('Client-side fetch initiated');
       this.http.get<IAppSettings>(`${environment.apiUrl}/api/settings`).subscribe(data => {
         // console.log('Client-side fetch completed', data);
         this._settings.next(data);
+        this.settingsSignal.set(data);
       });
     }
   }
@@ -57,7 +60,7 @@ export class AppSettingsService {
 
 export interface IAppSettings {
   solanaAddress: string;
-  tokenExpirationTimeMin: number;
+  tokenExpirationTime: number;
   maxImageSize: number; // in MB
 
   prices: Record<string, Record<ServiceName, Price>>;

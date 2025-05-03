@@ -25,6 +25,7 @@ export class AddOnComponent implements OnInit {
 
   //** Pass the variable responsible for the number of selected add-ons  */
   added = model.required<boolean>();
+  disabled = input<boolean>(false);
   serviceName = input.required<ServiceName>();
   chain = input<string>('solana');
   currency = input<string>('SOL');

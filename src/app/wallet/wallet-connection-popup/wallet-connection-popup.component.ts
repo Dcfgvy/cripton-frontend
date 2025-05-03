@@ -29,10 +29,10 @@ export class WalletConnectionPopupComponent {
     try{
       await this.walletService.connect(walletName);
       this.showIf.set(false);
-      this.messageService.add({ severity: 'success', summary: 'Connected', detail: `${walletName} wallet was successfully connected`, life: 3000 });
+      this.messageService.add({ severity: 'success', summary: 'Connected', detail: `${walletName} was connected successfully`, life: 3000 });
     }
     catch{
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: `${walletName} wallet connection failed`, life: 3000 });
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: `${walletName} connection failed`, life: 3000 });
     }
   }
 }

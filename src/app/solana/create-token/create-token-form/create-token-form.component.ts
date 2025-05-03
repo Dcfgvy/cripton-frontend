@@ -39,6 +39,9 @@ import { AppSettingsService } from '../../../app-settings/app-settings.service';
 import { CreateTokenData, SupplyDistributionArray } from '../../token-creation/interfaces/create-token-data.interface';
 import { TokenImageData, TokenUploadMetadata } from '../../token-creation/interfaces/token-metadata.interface';
 import { SolanaWalletConnectedGuardComponent } from "../../components/solana-wallet-connected-guard/solana-wallet-connected-guard.component";
+import { WarningComponent } from "../../../components/warning/warning.component";
+import { ViewportScroller } from '@angular/common';
+import { TestnetTokenDataRemovalWarningComponent } from "../../../components/testnet-token-data-removal-warning/testnet-token-data-removal-warning.component";
 
 // u64 max value: 18,446,744,073,709,551,615 (2^64-1)
 // Our limit: 10,000,000,000,000,000,000 (10 * 10^18)
@@ -102,7 +105,9 @@ export function supplyValidator(): ValidatorFn {
     CommonModule,
     TokenConfirmationPopupComponent,
     TokenCreatedBodyComponent,
-    SolanaWalletConnectedGuardComponent
+    SolanaWalletConnectedGuardComponent,
+    WarningComponent,
+    TestnetTokenDataRemovalWarningComponent
 ],
   templateUrl: './create-token-form.component.html',
   styleUrl: './create-token-form.component.scss',
@@ -137,7 +142,7 @@ export class CreateTokenFormComponent {
       serviceName: SolanaServiceName.UpdateAuthority,
     },
   };
-  
+
 
   readonly MAX_SUPPLY_WITH_DECIMALS_NUMBER = Number(MAX_SUPPLY_WITH_DECIMALS.toString());
   readonly MAX_SUPPLY_WITH_DECIMALS_LENGTH = MAX_SUPPLY_WITH_DECIMALS.toString().length;
@@ -150,10 +155,10 @@ export class CreateTokenFormComponent {
   constructor(
     private walletService: WalletService,
     private messageService: MessageService,
-    // private tokenCreationService: TokenCreationService,
     public readonly networkService: NetworkService,
     public readonly pricesService: PricesService,
     public readonly settingsService: AppSettingsService,
+    private readonly viewportScroller: ViewportScroller
   ) {
     // Supply distribution validation
     toObservable(this.addOns['multiWalletDistribution'].added).subscribe((value) => {
@@ -166,6 +171,9 @@ export class CreateTokenFormComponent {
     });
   }
   step: number = 1;
+  scrollToStepper(){
+    this.viewportScroller.scrollToAnchor('token-creation-stepper');
+  }
 
   get currentNetworkPrices(){
     return this.settingsService.currentSettings?.prices['solana'];
@@ -415,25 +423,18 @@ export class CreateTokenFormComponent {
       })
     );
   }
-  userSelectedWallet = computed(() => {
-    return this.walletService.selectedWallet;
+  userSupplyDistributionAdded = false;
+  supplyDistributionAddonDisabled = computed(() => {
+    return this.walletService.selectedWalletSignal() === null && !this.userSupplyDistributionAdded;
   })
   setInitialUserWalletSupply = () => {
     if(this.supplyDistributions.length > 1) return;
-    // TODO fix wallet connection. Scenario:
-    // 1. user doesn't have their wallet connected
-    // 2. user tries to add multi-wallet supply distribution add-on
-    // 3. gets the appropriate error AND PROBLEM the switch is not being returned to false
-    // 4. When the user connects the wallet afterwards, he will get the same error and this.walletService.selectedWallet.publicKey will be null
     if(!this.walletService.selectedWallet?.publicKey){
-      setTimeout(() => {
-        this.addOns['multiWalletDistribution'].added.set(false);
-      }, 0);
-      this.messageService.add({ severity: 'error', summary: 'No Wallet Connected', detail: 'Please connect your wallet to proceed' });
       return;
     }
     this.supplyDistributions.clear();
     this.addDistribution(this.walletService.selectedWallet?.publicKey?.toBase58(), 100);
+    this.userSupplyDistributionAdded = true;
   }
   removeDistribution(index: number): void {
     if(this.supplyDistributions.length >= index + 1){
@@ -540,7 +541,7 @@ export class CreateTokenFormComponent {
       metadata.creatorWebsite = this.DEFAULT_CREATOR_WEBSITE;
     }
     metadata.name = this.infoForm.get('name')!.value!;
-    metadata.symbol = this.infoForm.get('symbol')!.value!.toLocaleUpperCase();
+    metadata.symbol = this.infoForm.get('symbol')!.value!;
     metadata.description = this.infoForm.get('description')!.value!;
     metadata.tags = this.socialsForm.get('tags')!.value || [];
     metadata.tokenSocials = {
@@ -568,7 +569,7 @@ export class CreateTokenFormComponent {
   private createCreateTokenTx(uri: string, userPublicKey: PublicKey): CreateTokenData {
     const data: Partial<CreateTokenData> = {};
     data.name = this.infoForm.get('name')!.value!;
-    data.symbol = this.infoForm.get('symbol')!.value!.toLocaleUpperCase();
+    data.symbol = this.infoForm.get('symbol')!.value!;
     data.decimals = this.infoForm.get('decimals')!.value!;
     data.supply = this.infoForm.get('supply')!.value!;
     data.metadataUri = uri;

@@ -20,6 +20,29 @@ export function formatElapsedTime(start: Date): string {
   return parts.join(' ');
 }
 
+export function formatTimeMinutes(minutes: number): string {
+  const hours = Math.floor(minutes / 60);
+  const leftMinutes = minutes % 60;
+  console.log('minutes', minutes)
+
+  let parts: string[] = [];
+
+  if (hours === 1) {
+    parts.push(`${hours} hour`);
+  }
+  else if (hours > 1) {
+    parts.push(`${hours} hours`);
+  }
+  if (leftMinutes === 1) {
+    parts.push(`${leftMinutes} minute`);
+  }
+  else if (leftMinutes > 1) {
+    parts.push(`${leftMinutes} minutes`);
+  }
+
+  return parts.join(' ');
+}
+
 export function formatNumberShort(num: number): string {
   const absNum = Math.abs(num);
   let formatted: string;

@@ -1,12 +1,7 @@
-<!-- <ng-template #detectedWallet let-wallet="wallet" let-callback="callback">
-  
-</ng-template> -->
-
 <app-wallet-connection-popup [(showIf)]="dialogOpened" />
 
 @if (currentSelectedWallet == null) {
-  <!-- <p-button label="Connect Wallet" (onClick)="dialogOpened = true"></p-button> -->
-  <p-button  (onClick)="dialogOpened = true">
+  <p-button (onClick)="dialogOpened = true">
     <span class="material-symbols-outlined">
       account_balance_wallet
       </span>
@@ -30,7 +25,7 @@
         <!-- <span class="material-symbols-outlined">content_copy</span> -->
         {{ addressCopiedState ? 'Copied!' : 'Copy addreess' }}
       </button>
-      <button pButton class="w-full" severity="secondary" (click)="dialogOpened = true">
+      <button pButton class="w-full" severity="secondary" (click)="dialogOpened = true; op.toggle($event);">
         <!-- <span class="material-symbols-outlined">swap_horiz</span> -->
         Change wallet
       </button>

@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
 import { CreateTokenFormComponent } from './create-token-form/create-token-form.component';
 import { QuestionAndAnswer, FaqComponent } from '../../components/faq/faq.component';
+import { ToolHeaderComponent } from "../../components/tool-header/tool-header.component";
 
 @Component({
   selector: 'app-create-token',
-  imports: [CreateTokenFormComponent, FaqComponent],
+  imports: [CreateTokenFormComponent, FaqComponent, ToolHeaderComponent],
   templateUrl: './create-token.component.html',
   styleUrl: './create-token.component.scss'
 })
@@ -47,7 +48,7 @@ export class CreateTokenComponent {
     },
     {
       question: "Can I try Solana Token Generator for free?",
-      answer: "Yes. You can create any number of SPL tokens for free on solana devnet or testnet"
+      answer: "Yes. You can create any number of SPL tokens for free on Solana Devnet"
     },
     {
       question: "Can I create meme coin on Solana via your tool?",

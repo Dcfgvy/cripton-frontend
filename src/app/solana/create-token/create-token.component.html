@@ -1,5 +1,14 @@
 <div>
-  <p class="text-center text-3xl font-bold">Create Token on Solana</p>
+  <app-tool-header>
+    <ng-template #header>
+      Create Token on Solana
+    </ng-template>
+    <ng-template #description>
+      Easily create and control your Solana SPL tokens without coding!
+      Сustomize metadata, token address, logo and supply distribution.
+      Revoke or transfer authorities. Try it out for free on Solana Devnet
+    </ng-template>
+  </app-tool-header>
   <div class="w-full">
     @if(showForm){
       <app-create-token-form (onReset)="resetForm()" ></app-create-token-form>

@@ -29,7 +29,7 @@ export const routes: Routes = [
         resolve: { seo: SeoResolver }
       },
       {
-        path: 'trending-coins',
+        path: 'trending',
         loadComponent: () => import('../solana/trending-tokens/trending-tokens.component').then((m) => m.TrendingTokensComponent),
         data: {
           title: 'Copy Trending Meme Coins on Pump Fun',
@@ -41,7 +41,16 @@ export const routes: Routes = [
     ]
   },
   {
+    path: 'affiliate',
+    loadComponent: () => import('../affiliate-program/affiliate-program.component').then((m) => m.AffiliateProgramComponent),
+    data: {
+      title: 'Affiliate Program',
+      description: 'Invite other people via your link and get revenue in SOL, ETH, TON, SUI and more!',
+    },
+    resolve: { seo: SeoResolver }
+  },
+  {
     path: '**',
-    redirectTo: '/'
+    loadComponent: () => import('../not-found/not-found.component').then((m) => m.NotFoundComponent),
   },
 ];

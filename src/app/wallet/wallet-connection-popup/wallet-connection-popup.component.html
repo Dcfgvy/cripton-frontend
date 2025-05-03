@@ -1,11 +1,11 @@
 <p-toast />
 
 <p-dialog header="Connect your Wallet" [modal]="true" [draggable]="false" [(visible)]="showIf" [style]="{ width: '25rem' }">
-  @if(walletService.getAvailableWalletes().length > 0){
+  @if(walletService.getAvailableWalletesForConnection().length > 0){
     <span class="block mb-4">Select the preferrable wallet on Solana:</span>
   }
   <div class="w-full flex flex-column gap-3">
-    @for (wallet of walletService.getAvailableWalletes(); track wallet) {
+    @for (wallet of walletService.getAvailableWalletesForConnection(); track wallet) {
       <button pButton class="w-full" severity="secondary" (click)="connect(wallet.name)">
         <div class="w-full grid -mb-2">
           <div class="col-8">
