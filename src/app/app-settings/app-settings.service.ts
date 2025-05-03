@@ -5,7 +5,7 @@ import { BehaviorSubject } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { ServiceName } from './types/service-name.type';
 
-const EXAMPLE_DATA_KEY = makeStateKey<IAppSettings>('appSettings');
+const DATA_KEY = makeStateKey<IAppSettings>('appSettings');
 
 @Injectable({
   providedIn: 'root'
@@ -35,17 +35,18 @@ export class AppSettingsService {
 
   private fetchDataOnServer(): void {
     this.http.get(`${environment.ssrApiUrl}/api/settings`).subscribe(data => {
-      this.transferState.set(EXAMPLE_DATA_KEY, data);
+      this.transferState.set(DATA_KEY, data);
     });
   }
 
   private handleDataOnClient(): void {
-    const storedData = this.transferState.get(EXAMPLE_DATA_KEY, null);
+    const storedData = this.transferState.get(DATA_KEY, null);
     
     if (storedData) {
       // console.log('Using server-fetched data', storedData);
       this._settings.next(storedData);
       this.settingsSignal.set(storedData);
+      this.transferState.remove(DATA_KEY);
     } else {
       // Client-side fallback fetch
       // console.log('Client-side fetch initiated');

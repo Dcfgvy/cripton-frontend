@@ -24,6 +24,7 @@ import { fromWeb3JsPublicKey, toWeb3JsInstruction } from '@metaplex-foundation/u
 import { createNoopSigner, createUmi, Umi } from '@metaplex-foundation/umi';
 import { defaultProgramRepository } from '@metaplex-foundation/umi-program-repository';
 import { web3JsEddsa } from '@metaplex-foundation/umi-eddsa-web3js';
+import { sleep } from '../../utils/functions';
 
 @Injectable({
   providedIn: 'root'
@@ -471,11 +472,12 @@ export class TokenCreationService {
       
       // Send transaction for signing and broadcasting
       if(!this.walletService.selectedWallet) throw new Error('User wallet is not connected');
-      
+
       const txid = await this.walletService.selectedWallet.sendTransaction(finalTransaction, connection, {
         skipPreflight: false,
         preflightCommitment: 'confirmed'
       });
+      await sleep(2000);
       
       // console.log(txid, data.mint.publicKey.toBase58());
       return {
@@ -490,6 +492,7 @@ export class TokenCreationService {
         skipPreflight: false,
         preflightCommitment: 'confirmed'
       });
+      await sleep(2000);
       return {
         txid,
         mintAddress: data.mint.publicKey.toBase58()

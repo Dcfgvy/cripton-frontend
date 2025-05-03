@@ -1,12 +1,16 @@
 @if(isRouterLink){
   <a class="hover:text-primary cursor-pointer" [routerLink]="link()">
-    <ng-content></ng-content>
+    <ng-container *ngTemplateOutlet="linkTemplate"></ng-container>
   </a>
 } @else {
   <a class="hover:text-primary cursor-pointer" rel="noopener noreferrer" [href]="link()" target="_blank">
-    <ng-content></ng-content>
+    <ng-container *ngTemplateOutlet="linkTemplate"></ng-container>
     @if(showRedirectIcon()){
       <span class="material-symbols-outlined ml-1" style="font-size: 1rem;">open_in_new</span>
     }
   </a>
 }
+
+<ng-template #linkTemplate>
+  <ng-content></ng-content>
+</ng-template>

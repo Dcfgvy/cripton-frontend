@@ -1,4 +1,4 @@
-import { Component, computed, ContentChild, input, model, OnInit, Optional, output, TemplateRef, WritableSignal } from '@angular/core';
+import { AfterContentInit, Component, computed, ContentChild, ContentChildren, input, model, OnInit, Optional, output, QueryList, TemplateRef, WritableSignal } from '@angular/core';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import { ControlContainer, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Tag } from 'primeng/tag';
@@ -17,10 +17,25 @@ export interface AddOn {
   templateUrl: './add-on.component.html',
   styleUrl: './add-on.component.scss'
 })
-export class AddOnComponent implements OnInit {
-  @ContentChild(TemplateRef) content!: TemplateRef<any>;
-  get hasContent(): boolean {
-    return !!this.content;
+export class AddOnComponent implements OnInit, AfterContentInit {
+  // @ContentChild('[content]') content: any;
+  // hasContent = computed(() => {
+  //   return !!this.content;
+  // })
+
+  hasContent = false;
+  
+  // Query for elements with the 'content' attribute
+  @ContentChildren('[content]', {descendants: true}) contentElements!: QueryList<any>;
+  
+  ngAfterContentInit() {
+    // Check if any content elements were projected
+    this.hasContent = this.contentElements.length > 0;
+    
+    // Listen for changes in case content is dynamically added/removed
+    this.contentElements.changes.subscribe(elements => {
+      this.hasContent = elements.length > 0;
+    });
   }
 
   //** Pass the variable responsible for the number of selected add-ons  */

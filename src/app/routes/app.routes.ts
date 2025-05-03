@@ -50,6 +50,22 @@ export const routes: Routes = [
     resolve: { seo: SeoResolver }
   },
   {
+    path: 'privacy-policy',
+    loadComponent: () => import('../policies/privacy-policy/privacy-policy.component').then((m) => m.PrivacyPolicyComponent),
+    data: {
+      title: 'Privacy Policy',
+    },
+    resolve: { seo: SeoResolver }
+  },
+  {
+    path: 'terms-of-use',
+    loadComponent: () => import('../policies/terms-of-use/terms-of-use.component').then((m) => m.TermsOfUseComponent),
+    data: {
+      title: 'Terms of use',
+    },
+    resolve: { seo: SeoResolver }
+  },
+  {
     path: '**',
     loadComponent: () => import('../not-found/not-found.component').then((m) => m.NotFoundComponent),
   },

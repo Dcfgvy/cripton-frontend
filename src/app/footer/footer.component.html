@@ -1,11 +1,23 @@
 <footer class="mb-4">
   <p-card>
-    @if (creationYear === year) {
-      <span>{{ year }} {{ serviceName }}. All rights reserved.</span>
-    } @else {
-      <span>{{ creationYear }} – {{ year }} {{ serviceName }}. All rights reserved.</span>
-    }
+    <div class="grid">
+      <div class="col-12 md:col-6">
+        @if (creationYear === year) {
+          <span>&copy; {{ year }} {{ serviceName }}. All rights reserved.</span>
+        } @else {
+          <span>&copy; {{ creationYear }} – {{ year }} {{ serviceName }}. All rights reserved.</span>
+        }
+      </div>
+      
+      <div class="col-12 md:col-6 flex md:justify-content-end">
+        <div>
+          <app-text-link link="/affiliate">Affiliate</app-text-link>
+           | 
+          <app-text-link link="/privacy-policy">Privacy Policy</app-text-link>
+           | 
+          <app-text-link link="/terms-of-use">Terms of Use</app-text-link>
+        </div>
+      </div>
+    </div>
   </p-card>
 </footer>
-<!-- TODO privacy policy and TOU -->
-<!-- TODO Affiliate Program link -->

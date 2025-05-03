@@ -1,5 +1,4 @@
 <div class="w-full flex flex-column">
-  <!-- TODO margins get added even when no content exists -->
   <div class="w-full flex flex-row gap-3 justify-content-between items-center">
     <div class="flex items-center">
       <div>
@@ -30,8 +29,8 @@
     <ng-content select="[description]"></ng-content>
   </span>
   @if(_checked){
-    <div class="w-full mt-2">
-      <ng-content #content></ng-content>
+    <div class="w-full mt-2 content-wrapper">
+      <ng-content></ng-content>
     </div>
   }
 </div>
