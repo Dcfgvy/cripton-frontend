@@ -8,4 +8,5 @@ export enum SolanaServiceName {
   UpdateAuthority = "Update Authority",
   TrendingTokenCreation = "Trending Token Creation",
   MultisenderProTransfer = "Multisender pro Transfer",
+  AffiliateSharePercents = "Affiliate Share in Percents",
 }

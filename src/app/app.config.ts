@@ -8,6 +8,8 @@ import { AppSettingsService } from './app-settings/app-settings.service';
 import { NetworkService } from './network-switch/network-switch.service';
 import { primengProviders } from './primeng.config';
 import { WalletService } from './wallet/wallet.service';
+import { AffiliateService } from './affiliate-program/affiliate.service';
+import { PricesService } from './app-settings/prices.service';
 
 export const appConfig: ApplicationConfig = {
   providers: 
@@ -18,7 +20,9 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withFetch()),
     ...primengProviders,
     AppSettingsService,
+    PricesService,
     NetworkService,
     WalletService,
+    AffiliateService,
   ],
 };

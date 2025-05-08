@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { Connection, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { WalletService } from '../../wallet/wallet.service';
@@ -25,11 +25,13 @@ import { createNoopSigner, createUmi, Umi } from '@metaplex-foundation/umi';
 import { defaultProgramRepository } from '@metaplex-foundation/umi-program-repository';
 import { web3JsEddsa } from '@metaplex-foundation/umi-eddsa-web3js';
 import { sleep } from '../../utils/functions';
+import { TransactionsHandlerService } from '../transactions-handler/transactions-handler.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class TokenCreationService {
+  txHandlerService = inject(TransactionsHandlerService);
   constructor(
     private http: HttpClient,
     private walletService: WalletService,
@@ -244,84 +246,6 @@ export class TokenCreationService {
     return transaction;
   }
 
-  /*
-  private async getTokenCreationCost(data: CreateTokenData, connection: Connection, userPublicKey: PublicKey, mintRent: number, blockhash: string): Promise<number> {
-    function calculateRentCosts(
-      numATAs: number, 
-      numMintOperations: number, 
-      numAuthorityTransfers: number
-    ): number {
-      // Constants for rent-exempt minimums in lamports
-      const TOKEN_ACCOUNT_RENT = 2039280; // ~0.00203928 SOL in lamports
-      const MINT_RENT = 1518480; // ~0.00151848 SOL in lamports
-      const METADATA_RENT = 3000000; // ~0.003 SOL in lamports
-      const ATA_RENT = 2039280; // Same as token account
-      
-      // Fixed costs - one-time operations
-      let rentCostLamports = 0;
-      
-      // Always include one token account, one mint, and one metadata creation
-      rentCostLamports += TOKEN_ACCOUNT_RENT; // Creating the main token account
-      rentCostLamports += MINT_RENT; // Initializing the mint
-      rentCostLamports += METADATA_RENT; // Creating metadata record
-      
-      // Variable costs - based on provided counts
-      // Add ATA creation costs
-      rentCostLamports += numATAs * ATA_RENT;
-      
-      // Minting tokens doesn't require additional rent, just compute units
-      // But we'll add a small compute fee per mint operation
-      const MINT_OPERATION_COMPUTE = 10000; // Approximate compute units per mint
-      const COMPUTE_UNIT_PRICE = 1; // lamports per compute unit (adjust as needed)
-      rentCostLamports += numMintOperations * MINT_OPERATION_COMPUTE * COMPUTE_UNIT_PRICE;
-      
-      // Authority transfers use minimal compute, no rent
-      const AUTHORITY_TRANSFER_COMPUTE = 5000; // Approximate compute units per authority transfer
-      rentCostLamports += numAuthorityTransfers * AUTHORITY_TRANSFER_COMPUTE * COMPUTE_UNIT_PRICE;
-      
-      return rentCostLamports;
-    }
-
-    const tx = await this.buildRawTokenCreationTx(data, userPublicKey, mintRent, blockhash);
-
-    const feesResponse = (await connection.simulateTransaction(tx)).value;
-    if(feesResponse.err !== null){
-      console.error(feesResponse.err);
-      throw new Error('Error simulating transaction');
-    }
-
-    // CU fees
-    const unitsConsumed = feesResponse.unitsConsumed || 0;
-    const computeFee = unitsConsumed * 1;
-    // Signature fees
-    const lamportsPerSignature = 5000;
-    const numSignatures = tx.signatures.length;
-    const signatureFee = lamportsPerSignature * numSignatures;
-    // Rent costs fees
-    const numATAs = data.supplyDistribution.length;
-    const numMintOperations = data.supplyDistribution.length;
-    let numAuthorityTransfers = 0;
-    const newMintAuthority = data.mintAuthority ? new PublicKey(data.mintAuthority) : null;
-    if(newMintAuthority !== userPublicKey) numAuthorityTransfers++;
-    const rentCosts = calculateRentCosts(
-      numATAs, 
-      numMintOperations, 
-      numAuthorityTransfers
-    );
-
-    // Total fee in lamports
-    const totalFeeInLamports = computeFee + signatureFee + rentCosts;
-      
-    console.log(`Estimated fees breakdown:
-      - Compute: ${computeFee} lamports
-      - Signatures: ${signatureFee} lamports
-      - Rent/Account Creation: ${rentCosts} lamports
-      - Total: ${totalFeeInLamports} lamports (${totalFeeInLamports / 1e9} SOL)`);
-    
-    return totalFeeInLamports;
-  }
-  */
-
   private async getTokenCreationCost(
     data: CreateTokenData,
     connection: Connection,
@@ -385,15 +309,15 @@ export class TokenCreationService {
       // ========================
       const totalFee = computeFee + signatureFee + rentCosts + 7_450_000;  // TODO: fix fees calculation
       
-      console.log(`
-        🟢 Fee Breakdown (SOL):
-        - Compute:       ${computeFee / 1e9}
-        - Signatures:    ${signatureFee / 1e9}
-        - Rent/Storage:  ${rentCosts / 1e9}
-        --------------------------
-        Total:           ${totalFee / 1e9} SOL
-        (${totalFee} lamports)
-      `);
+      // console.log(`
+      //   🟢 Fee Breakdown (SOL):
+      //   - Compute:       ${computeFee / 1e9}
+      //   - Signatures:    ${signatureFee / 1e9}
+      //   - Rent/Storage:  ${rentCosts / 1e9}
+      //   --------------------------
+      //   Total:           ${totalFee / 1e9} SOL
+      //   (${totalFee} lamports)
+      // `);
   
       return totalFee;
   
@@ -402,11 +326,6 @@ export class TokenCreationService {
       throw new Error(`Failed to estimate creation cost: ${(error as any).message}`);
     }
   }
-  
-  // ========================
-  // Helper Methods
-  // ========================
-  
   private calculateMedianPriorityFee(fees: { prioritizationFee: number }[]): number {
     if (fees.length === 0) return 5000; // Default fallback (0.000005 SOL)
     
@@ -419,7 +338,6 @@ export class TokenCreationService {
       ? sorted[mid] 
       : (sorted[mid - 1] + sorted[mid]) / 2;
   }
-  
   private calculateActualRentCosts(
     connection: Connection,
     data: CreateTokenData,
@@ -449,54 +367,20 @@ export class TokenCreationService {
 
     const transaction = await this.buildRawTokenCreationTx(data, connection, userPublicKey, mintRent, blockhash);
     const txCost = await this.getTokenCreationCost(data, connection, userPublicKey, mintRent, blockhash);
-    
-    if(txCost < data.totalCost * LAMPORTS_PER_SOL){
-      // Calculate the remaining amount to transfer to developer
-      const remainingAmount = data.totalCost * LAMPORTS_PER_SOL - txCost;
-      
-      const txInstructions = [...transaction.instructions];
-      // Add transfer instruction
-      txInstructions.push(
-        SystemProgram.transfer({
-          fromPubkey: userPublicKey,
-          toPubkey: new PublicKey(developerAddress),
-          lamports: Math.round(remainingAmount)
-        })
-      );
-      
-      // Rebuild transaction with the fee transfer
-      const finalTransaction = new Transaction().add(...txInstructions);
-      finalTransaction.feePayer = userPublicKey;
-      finalTransaction.recentBlockhash = blockhash;
-      finalTransaction.partialSign(data.mint);
-      
-      // Send transaction for signing and broadcasting
-      if(!this.walletService.selectedWallet) throw new Error('User wallet is not connected');
 
-      const txid = await this.walletService.selectedWallet.sendTransaction(finalTransaction, connection, {
-        skipPreflight: false,
-        preflightCommitment: 'confirmed'
-      });
-      await sleep(2000);
-      
-      // console.log(txid, data.mint.publicKey.toBase58());
-      return {
-        txid,
-        mintAddress: data.mint.publicKey.toBase58()
-      };
-    } else {
-      // If fees exceed or equal totalCost, just send the transaction without developer fee
-      if(!this.walletService.selectedWallet) throw new Error('User wallet is not connected');
-
-      const txid = await this.walletService.selectedWallet.sendTransaction(transaction, connection, {
-        skipPreflight: false,
-        preflightCommitment: 'confirmed'
-      });
-      await sleep(2000);
-      return {
-        txid,
-        mintAddress: data.mint.publicKey.toBase58()
-      };
-    }
+    const txid = await this.txHandlerService.sendTransactionWithFees({
+      tx: transaction,
+      txFeesLamports: txCost,
+      txCostLamports: data.totalCost * LAMPORTS_PER_SOL,
+      blockhash,
+      userPublicKey,
+      additionalSigners: [data.mint],
+      connection,
+    });
+    await sleep(1000);
+    return {
+      txid,
+      mintAddress: data.mint.publicKey.toBase58()
+    };
   }
 }

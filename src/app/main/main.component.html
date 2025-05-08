@@ -1,2 +1,136 @@
-<h1>Coming soon!</h1>
+<div class="">
+  <!-- Hero Section -->
+  <div class="pb-8"></div>
+  <div class="text-white py-8">
+    <div class="container mx-auto md:px-4">
+      <div class="grid">
+        <div class="col-12 flex flex-column justify-content-center align-items-center">
+          <div class="text-5xl font-bold mb-4 text-center">Create Solana Tokens Without Coding</div>
+          <div class="text-xl line-height-3 mb-6 text-center">
+            Launch your own SPL token in minutes. Customize metadata, control token supply, and manage liquidity all in one platform.
+          </div>
+          <div>
+            <a pButton label="Get Started" class="p-button-lg" routerLink="/solana/create-token"></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features Section -->
+  <div class="py-8">
+    <div class="container mx-auto md:px-4">
+      <h2 class="text-4xl font-bold text-center mb-6">Everything You Need in One Platform</h2>
+      
+      <div class="grid">
+        <div class="col-12 md:col-6 p-3 feature-card">
+          <p-card styleClass="h-full">
+            <div class="mb-4 flex align-items-center ">
+              <i class="pi pi-plus-circle text-primary text-4xl"></i>
+            </div>
+            <h3 class="text-xl font-medium">Create Custom Tokens</h3>
+            <p class="text-color-secondary">
+              Design and launch your own Solana SPL tokens without any coding knowledge. Set token name, symbol, decimals, and initial supply.
+            </p>
+          </p-card>
+        </div>
+        
+        <div class="col-12 md:col-6 p-3 feature-card">
+          <p-card styleClass="h-full">
+            <div class="mb-4 flex align-items-center ">
+              <i class="pi pi-arrow-up-right text-primary text-4xl"></i>
+            </div>
+            <h3 class="text-xl font-medium">Copy Trending Coins</h3>
+            <p class="text-color-secondary">
+              Replicate successful memecoins with exact metadata, creators, and authority structure. Launch before they graduate to maximize your potential.
+            </p>
+          </p-card>
+        </div>
+        
+        <div class="col-12 md:col-6 p-3 feature-card">
+          <p-card styleClass="h-full">
+            <div class="mb-4 flex align-items-center ">
+              <i class="pi pi-cog text-primary text-4xl"></i>
+            </div>
+            <h3 class="text-xl font-medium">Manage Liquidity</h3>
+            <p class="text-color-secondary">
+              Easily add, remove, and control liquidity pools for your tokens. Monitor performance and make adjustments as needed.
+            </p>
+          </p-card>
+        </div>
+        
+        <div class="col-12 md:col-6 p-3 feature-card">
+          <p-card styleClass="h-full">
+            <div class="mb-4 flex align-items-center ">
+              <i class="pi pi-dollar text-primary text-4xl"></i>
+            </div>
+            <h3 class="text-xl font-medium">Affiliate Program</h3>
+            <p class="text-color-secondary">
+              Earn 30% of all service fees paid by your referrals. Generate your unique referral link and start earning passive income.
+            </p>
+          </p-card>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Affiliate Calculator Section bg-primary-900 -->
+  <div class="py-8">
+    <div class="container mx-auto md:px-4">
+      <h2 class="text-4xl font-bold text-center mb-6 text-white">Calculate Your Affiliate Earnings</h2>
+      
+      <div class="grid">
+        <div class="col-12 lg:col-8 lg:col-offset-2 ">
+          <p-card styleClass="affiliate-earnings-card">
+            <h3 class="mt-0 text-2xl font-bold text-center mb-5">Affiliate Income Calculator</h3>
+            
+            <div class="mb-4">
+              <label class="block mb-2">Number of Referrals</label>
+              <div class="flex align-items-center gap-3">
+                <p-slider [(ngModel)]="numReferrals" [min]="1" [max]="100" class="w-full hidden md:block" (onChange)="calculateEarnings()"></p-slider>
+                <p-inputNumber [(ngModel)]="numReferrals" [min]="1" [max]="100" [showButtons]="true" (onInput)="calculateEarnings()" styleClass="w-6rem"></p-inputNumber>
+              </div>
+            </div>
+            
+            <div class="mb-4">
+              <label class="block mb-2">Average Tokens Created per Referral</label>
+              <div class="flex align-items-center gap-3">
+                <p-slider [(ngModel)]="tokensPerReferral" [min]="1" [max]="20" class="w-full hidden md:block" (onChange)="calculateEarnings()"></p-slider>
+                <p-inputNumber [(ngModel)]="tokensPerReferral" [min]="1" [max]="20" [showButtons]="true" (onInput)="calculateEarnings()" styleClass="w-6rem"></p-inputNumber>
+              </div>
+            </div>
+            
+            <p-divider></p-divider>
+            
+            <div class="mt-4 px-4 py-2 border-round-lg bg-primary-900 ">
+              <div class="flex justify-content-between align-items-center py-3 border-bottom-1 border-primary-200">
+                <span class="font-medium">Monthly Earnings</span>
+                <span class="font-bold text-primary">{{result.monthlyEarnings.toFixed(2)}} SOL</span>
+              </div>
+              <div class="flex justify-content-between align-items-center py-3 border-bottom-1 border-primary-200">
+                <span class="font-medium">Yearly Earnings</span>
+                <span class="font-bold text-primary">{{result.yearlyEarnings.toFixed(2)}} SOL</span>
+              </div>
+              <div class="flex justify-content-between align-items-center py-3">
+                <span class="font-medium">Estimated USD Value</span>
+                <span class="font-bold text-primary">${{result.usdValue.toFixed(2)}}</span>
+              </div>
+            </div>
+          </p-card>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA Section -->
+  <div class="py-8">
+    <div class="container mx-auto px-4 text-center">
+      <h2 class="text-4xl font-bold mb-4">Ready to Start Your Crypto Journey?</h2>
+      <p class="text-xl text-color-secondary mb-6 mx-auto" style="max-width: 600px">
+        Join thousands of creators who have already launched their tokens on the Solana blockchain with Cripton.
+      </p>
+      <a pButton label="Create Your Token Now" class="p-button-lg" routerLink="/solana/create-token"></a>
+    </div>
+  </div>
+</div>
 <!-- TODO landing page -->

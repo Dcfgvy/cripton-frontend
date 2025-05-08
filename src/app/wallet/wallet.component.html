@@ -16,7 +16,7 @@
       <img [src]="currentSelectedWallet.icon" class="wallet-icon">
     </div>
     <span class="font-medium white-space-nowrap">
-      {{ currentSelectedWallet.publicKey?.toBase58()?.slice(0, 4) }}..{{ currentSelectedWallet.publicKey?.toBase58()?.slice(-4) }}
+      {{ currentSelectedWallet.publicKey?.toBase58()?.slice(0, 4) }}…{{ currentSelectedWallet.publicKey?.toBase58()?.slice(-4) }}
     </span>
   </button>
   <p-popover #op [style]="{ width: '15rem' }">

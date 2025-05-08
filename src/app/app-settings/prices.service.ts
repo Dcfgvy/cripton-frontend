@@ -23,7 +23,8 @@ export class PricesService {
         SolanaServiceName.MintAuthority,
         SolanaServiceName.UpdateAuthority,
         SolanaServiceName.TrendingTokenCreation,
-        SolanaServiceName.MultisenderProTransfer
+        SolanaServiceName.MultisenderProTransfer,
+        SolanaServiceName.AffiliateSharePercents,
       ];
       for(const service of solanaServices){
         solanaPrices[service] = {
@@ -43,6 +44,7 @@ export class PricesService {
       solanaUpdateAuthority: solanaPrices[SolanaServiceName.UpdateAuthority],
       solanaTrendingTokenCreation: solanaPrices[SolanaServiceName.TrendingTokenCreation],
       solanaMultisenderProTransfer: solanaPrices[SolanaServiceName.MultisenderProTransfer],
+      solanaAffiliateSharePercents: solanaPrices[SolanaServiceName.AffiliateSharePercents],
     };
   });
 }

@@ -48,4 +48,10 @@ export class HeaderComponent {
   toggleMobileMenu() {
     this.showMobileMenu = !this.showMobileMenu;
   }
+
+  closeDrawerWithTimeout(){
+    setTimeout(() => {
+      this.showMobileMenu = false;
+    }, 400)
+  }
 }

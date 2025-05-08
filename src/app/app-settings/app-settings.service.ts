@@ -49,9 +49,7 @@ export class AppSettingsService {
       this.transferState.remove(DATA_KEY);
     } else {
       // Client-side fallback fetch
-      // console.log('Client-side fetch initiated');
       this.http.get<IAppSettings>(`${environment.apiUrl}/api/settings`).subscribe(data => {
-        // console.log('Client-side fetch completed', data);
         this._settings.next(data);
         this.settingsSignal.set(data);
       });
