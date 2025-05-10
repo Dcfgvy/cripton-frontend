@@ -4,7 +4,7 @@ export const environment: Environment = {
   production: true,
   serviceName: 'Cripton',
   serviceWebsite: 'https://cripton.app',
-  apiUrl: 'http://localhost:3444',
+  apiUrl: 'https://cripton.app',
 
   solana: {
     rpcUrls: {
@@ -14,6 +14,6 @@ export const environment: Environment = {
     feeMultiplier: 3, // indicates current discount that will be shown
   },
 
-  ssrApiUrl: 'http://localhost:3444',
+  ssrApiUrl: 'https://cripton.app',
   ssrCacheExpirySeconds: 60,
 }
