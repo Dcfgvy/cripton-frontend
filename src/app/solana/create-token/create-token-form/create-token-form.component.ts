@@ -680,6 +680,7 @@ export class CreateTokenFormComponent {
       }),
       catchError(error => {
         console.error('Error occurred:', error);
+        this.messageService.add({ severity: 'error', summary: 'Unexpected error happened', detail: `Check browser console for details` });
         this.tokenLaunchLoading = false;
         return of(null);
       }),

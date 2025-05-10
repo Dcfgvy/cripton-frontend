@@ -1,4 +1,4 @@
-<header class="w-full flex justify-content-between align-items-center py-2 px-3 xl:px-4" style="background-color: transparent;">
+<header class="w-full flex justify-content-between align-items-center border-bottom-1 border-50 py-2 px-3 xl:px-4">
   <div class="logo-container flex align-items-center">
     <app-logo />
   </div>
@@ -45,10 +45,11 @@
   }
 </header>
 
+<div class="header-gap mb-1"></div>
+
 <!-- Mobile menu - only visible when toggled -->
 
 @defer {
-<!-- @if(showMobileMenu){ -->
   <p-drawer header="Menu" [(visible)]="showMobileMenu" styleClass="w-full" position="right">
     <nav class="flex flex-column gap-2">
       <a routerLink="/solana/create-token" class="p-button p-button-text no-underline" (click)="closeDrawerWithTimeout()">
@@ -75,5 +76,4 @@
       <app-wallet></app-wallet>
     </div>
   </p-drawer>
-<!-- } -->
 }

@@ -1,12 +1,11 @@
 import { Routes } from '@angular/router';
-import { MainComponent } from '../main/main.component';
 import { SolanaComponent } from '../solana/solana.component';
 import { SeoResolver } from './seo.resolver';
 
 export const routes: Routes = [
   {
     path: '',
-    component: MainComponent,
+    loadComponent: () => import('../main/main.component').then((m) => m.MainComponent),
     data: {
       title: 'SPL Token Creator',
       description: 'Create Solana SPL token without coding. Copy trending meme coins on Pump Fun',
@@ -34,7 +33,7 @@ export const routes: Routes = [
         data: {
           title: 'Copy Trending Meme Coins on Pump Fun',
           description: 'Copy the hottest trending Solana meme coins on Pump.fun for just 0.1 SOL and launch them on Raydium. Create exact replicas with metadata, creators, and full Pump Fun authority',
-          keywords: 'Solana meme coins, Pump.fun coins, copy trending tokens, Solana crypto launch, meme coin creator, Pump Fun copy tool, launch Solana tokens, Raydium meme coins, create meme coin Solana, top Solana coins, trending tokens Solana'
+          keywords: 'Solana meme coins, Pump.fun coins, copy trending tokens, Solana crypto launch, meme coin creator, Pump Fun copy tool, launch Solana tokens, Raydium meme coins, create meme coin Solana, Pump fun authority, top Solana coins, trending tokens Solana'
         },
         resolve: { seo: SeoResolver }
       },

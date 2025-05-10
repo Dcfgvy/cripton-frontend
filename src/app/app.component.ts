@@ -4,6 +4,7 @@ import { AppSettingsService } from './app-settings/app-settings.service';
 import { HeaderComponent } from './header/header.component';
 import { FooterComponent } from "./footer/footer.component";
 import { AffiliateService } from './affiliate-program/affiliate.service';
+import { PricesService } from './app-settings/prices.service';
 
 @Component({
   selector: 'app-root',
@@ -21,10 +22,12 @@ export class AppComponent implements OnInit {
   constructor(
     private settingsService: AppSettingsService,
     private affiliateService: AffiliateService,
+    private pricesService: PricesService,
   ) {}
 
   ngOnInit(): void {
     this.settingsService.init();
     this.affiliateService.init();
+    this.pricesService.initCryptoPrices();
   }
 }

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { AppSettingsService } from '../app-settings/app-settings.service';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../environments/environment';
@@ -9,6 +9,7 @@ import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { DividerModule } from 'primeng/divider';
 import { RouterLink } from '@angular/router';
+import { PricesService } from '../app-settings/prices.service';
 
 interface AffiliateCalcResult {
   monthlyEarnings: number;
@@ -35,41 +36,25 @@ export class MainComponent {
   readonly appName = environment.serviceName;
   constructor(
     public settingsService: AppSettingsService,
-  ) {
-    this.calculateEarnings();
-  }
+    private pricesService: PricesService,
+  ) {}
 
   // Calculator inputs
-  numReferrals: number = 10;
-  tokensPerReferral: number = 3;
-  
-  // Constants
-  private readonly SOL_PRICE_USD: number = 150; // Example SOL price in USD
-  private readonly FEE_PER_TOKEN: number = 0.1; // 0.1 SOL fee per token creation
-  private readonly AFFILIATE_PERCENT: number = 0.3; // 30% affiliate commission
-  
-  // Results
-  result: AffiliateCalcResult = {
-    monthlyEarnings: 0,
-    yearlyEarnings: 0,
-    usdValue: 0
-  };
-  
-  calculateEarnings(): void {
-    // Calculate monthly earnings
-    const monthlyEarnings = this.numReferrals * this.tokensPerReferral * this.FEE_PER_TOKEN * this.AFFILIATE_PERCENT;
+  numReferrals = signal<number>(10);
+  tokensPerReferral = signal<number>(3);
+  private readonly FEE_PER_TOKEN: number = 0.08;
+
+  calculatedEarnings = computed<AffiliateCalcResult>(() => {
+    const monthlyEarnings = this.numReferrals() * this.tokensPerReferral() * this.FEE_PER_TOKEN * (this.pricesService.prices().solanaAffiliateSharePercents.cost / 100);
     
-    // Calculate yearly earnings
     const yearlyEarnings = monthlyEarnings * 12;
-    
-    // Calculate USD value
-    const usdValue = yearlyEarnings * this.SOL_PRICE_USD;
+    const usdValue = yearlyEarnings * this.pricesService.cryptoPrices().SOL;
     
     // Update result
-    this.result = {
+    return {
       monthlyEarnings,
       yearlyEarnings,
-      usdValue
+      usdValue,
     };
-  }
+  })
 }

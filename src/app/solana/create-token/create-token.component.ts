@@ -24,35 +24,32 @@ export class CreateTokenComponent {
 
   faqList: QuestionAndAnswer[] = [
     {
-      question: "What is Solana Token Creator?",
-      answer: "Solana Token Creator is a dapp that allows you to create and mint your own SPL tokens without coding. You just need customize metadata, name, symbol, logo and enter supply."
+      "question": "What is Solana Token Creator?",
+      "answer": "Solana Token Creator is a decentralized app (dApp) that lets you easily create and mint SPL tokens without writing any code. Just customize the metadata, name, symbol, logo, and specify the supply."
     },
     {
-      question: "What is SPL token?",
-      answer: "SPL (Solana Program Library) token is a type of digital asset on the Solana blockchain. SPL tokens are similar to ERC20 tokens on Ethereum blockchain, as they have specific methods for token management, like transferring, minting etc."
+      "question": "What is SPL token?",
+      "answer": "An SPL (Solana Program Library) token is a digital asset built on the Solana blockchain. It works similarly to ERC-20 tokens on Ethereum and supports actions like transferring and minting."
     },
     {
-      question: "What wallets can I use to create and mint SPL tokens?",
-      answer: "You can use any popular solana wallets, such as Phantom, Solflare etc."
+      "question": "What wallets can I use to create and mint SPL tokens?",
+      "answer": "You can use any major Solana wallet, such as Phantom, Solflare, and others."
     },
     {
-      question: "How much does it cost to create SPL tokens?",
-      answer: "The current price is displayed in the bottom of the creation form"
+      "question": "How much does it cost to create SPL tokens?",
+      "answer": "The current cost is shown at the bottom of the token creation form."
     },
     {
-      question: "How to use Solana Token Creator?",
-      answer: `Step 1. Connect your Solana wallet and select network (mainnet, devnet or testnet). This wallet will have authority to mint
-      Step 2. Enter information about your SPL token (token name, symbol, decimals, logo, supply)
-      Step 3. Press 'Create token' button and confirm transaction
-      Congratulations! Your token is created and supply is transferred to your wallet`
+      "question": "How to use Solana Token Creator?",
+      "answer": "Step 1. Connect your Solana wallet and choose a network (mainnet, devnet, or testnet). This wallet will have minting authority.\nStep 2. Fill in your token details (name, symbol, decimals, logo, and supply).\nStep 3. Click the 'Create token' button and approve the transaction.\nYour token will be created, and the supply sent to your wallet."
     },
     {
-      question: "Can I try Solana Token Generator for free?",
-      answer: "Yes. You can create any number of SPL tokens for free on Solana Devnet"
+      "question": "Can I try Solana Token Generator for free?",
+      "answer": "Yes, you can create unlimited SPL tokens for free on the Solana Devnet."
     },
     {
-      question: "Can I create meme coin on Solana via your tool?",
-      answer: "Yes. Our tool is perfect for creating meme coins on Solana. Create, mint and manage your meme tokens with ease."
+      "question": "Can I create meme coin on Solana via your tool?",
+      "answer": "Yes. Our tool is ideal for launching meme coins on Solana - create, mint, and manage them with ease."
     }
   ]
 }

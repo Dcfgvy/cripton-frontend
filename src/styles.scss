@@ -5,6 +5,7 @@ body {
   font-style: normal;
   font-variation-settings:
     "wdth" 100;
+  margin-top: 0;
 }
 
 /* Ensure all text-related elements inherit the default font */
@@ -23,4 +24,8 @@ h1, h2, h3, h4, h5, h6, p, span, label, a, div, input, textarea, button {
 
 a {
   text-decoration: none;
+}
+
+:root {
+  --theme-color: #121212;
 }
