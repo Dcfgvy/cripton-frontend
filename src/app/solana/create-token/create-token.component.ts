@@ -41,7 +41,7 @@ export class CreateTokenComponent {
     },
     {
       "question": "How to use Solana Token Creator?",
-      "answer": "Step 1. Connect your Solana wallet and choose a network (mainnet, devnet, or testnet). This wallet will have minting authority.\nStep 2. Fill in your token details (name, symbol, decimals, logo, and supply).\nStep 3. Click the 'Create token' button and approve the transaction.\nYour token will be created, and the supply sent to your wallet."
+      "answer": "Step 1. Connect your Solana wallet and choose a network (mainnet or devnet). This wallet will have minting authority, unless you revoke it.\nStep 2. Fill in your token details (name, symbol, decimals, logo, and supply).\nStep 3. Optionally customise your token metadata and revoke authorities for security.\nStep 4. Click the 'Create $TOKEN' button and approve the transaction.\nYour token will be created, and the supply sent to your wallet."
     },
     {
       "question": "Can I try Solana Token Generator for free?",
