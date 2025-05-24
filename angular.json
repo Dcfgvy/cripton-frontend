@@ -33,7 +33,8 @@
               "utf-8-validate",
               "eventemitter3",
               "buffer",
-              "@metaplex-foundation/mpl-toolbox"
+              "@metaplex-foundation/mpl-toolbox",
+              "semver"
             ],
             "outputPath": "dist/solana-token-generator-frontend",
             "index": "src/index.html",

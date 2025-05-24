@@ -8,8 +8,8 @@ export const environment: Environment = {
 
   solana: {
     rpcUrls: {
-      'mainnet-beta': 'https://lb.drpc.org/ogrpc?network=solana&dkey=AnwthBMQyk6Nn04E_iyiffZt40l9H4sR8LjzxiVsY8sN',
-      'devnet': 'https://lb.drpc.org/ogrpc?network=solana-devnet&dkey=AnwthBMQyk6Nn04E_iyiffZt40l9H4sR8LjzxiVsY8sN'
+      'mainnet-beta': 'https://lb.drpc.org/ogrpc?network=solana&dkey=AnwthBMQyk6Nn04E_iyiffaqkpYPOHsR8KxEbrRhIxXF',
+      'devnet': 'https://lb.drpc.org/ogrpc?network=solana-devnet&dkey=AnwthBMQyk6Nn04E_iyiffaqkpYPOHsR8KxEbrRhIxXF'
     },
     feeMultiplier: 3, // indicates current discount that will be shown
   },
