@@ -1,4 +1,9 @@
 <ng-content />
+@if(iconTemplate){
+  <p class="text-center -mb-3 mt-5">
+    <ng-container [ngTemplateOutlet]="iconTemplate"></ng-container>
+  </p>
+}
 @if(headerTemplate){
   <p class="text-center text-3xl font-bold">
     <ng-container [ngTemplateOutlet]="headerTemplate"></ng-container>

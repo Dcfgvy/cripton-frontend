@@ -10,6 +10,7 @@ import { SolanaWalletConnectedGuardComponent } from "../solana/components/solana
 import { Divider } from 'primeng/divider';
 import { AffiliateService } from './affiliate.service';
 import { PricesService } from '../app-settings/prices.service';
+import { ToolHeaderComponent } from "../components/tool-header/tool-header.component";
 
 @Component({
   selector: 'app-affiliate-program',
@@ -20,7 +21,8 @@ import { PricesService } from '../app-settings/prices.service';
     Toast,
     SolanaWalletConnectedGuardComponent,
     Divider,
-  ],
+    ToolHeaderComponent
+],
   templateUrl: './affiliate-program.component.html',
   styleUrl: './affiliate-program.component.scss',
   providers: [MessageService]
