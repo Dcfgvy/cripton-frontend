@@ -8,11 +8,13 @@
         <p-button label="Back" severity="secondary" icon="pi pi-arrow-left" iconPos="left" [disabled]="true" />
       </div>
     }
-    <span>
-      <span class="hidden md:inline">Total fees:</span>
+
+    <span class="hidden md:inline-block">
+      <span>Total fees:</span>
       <span class="font-semibold line-through text-color-secondary ml-1">{{ totalCostWithoutDiscounts().toFixed(2) }} SOL</span>
       <span class="font-semibold ml-1">{{ totalCost().toFixed(2) }} SOL</span>
     </span>
+
     @if(page < 3){
       <p-button label="Next" [disabled]="!canContinue" icon="pi pi-arrow-right" iconPos="right" (onClick)="activateCallback(page + 1); scrollToStepper();" />
     } @else {
@@ -22,6 +24,14 @@
         </p-button>
       </app-solana-wallet-connected-guard>
     }
+  </div>
+
+  <div class="md:hidden text-center mt-3">
+    <span>
+      <span>Total fees:</span>
+      <span class="font-semibold line-through text-color-secondary ml-1">{{ totalCostWithoutDiscounts().toFixed(2) }} SOL</span>
+      <span class="font-semibold ml-1">{{ totalCost().toFixed(2) }} SOL</span>
+    </span>
   </div>
 </ng-template>
 

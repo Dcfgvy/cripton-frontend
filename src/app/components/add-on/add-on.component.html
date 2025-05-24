@@ -1,27 +1,33 @@
 <div class="w-full flex flex-column">
-  <div class="w-full flex flex-row gap-3 justify-content-between items-center">
-    <div class="flex items-center">
+  <div class="w-full flex flex-row gap-0 justify-content-between">
+    <div class="flex align-items-center">
       <div>
         <p-toggleswitch [(ngModel)]="_checked" (onChange)="onValueChange($event)" [disabled]="disabled()" size="small" class="mr-2" />
       </div>
-      <ng-content select="[title]"></ng-content>
-      <div class="text-sm">
-        @if(tag().length > 0){
-          <p-tag class="ml-2" [style]="{'margin-top': '-2px'}" [severity]="tagSeverity()" [value]="tag()" />
-        }
+      <div class="flex flex-wrap w-9 md:w-auto">
+        <div class="">
+          <ng-content select="[title]"></ng-content>
+        </div>
+        <div>
+          @if(tag().length > 0){
+            <p-tag class="mt-1 md:mt-0 md:ml-2" [style]="{'margin-top': '-2px'}" [severity]="tagSeverity()" [value]="tag()" />
+          }
+        </div>
       </div>
     </div>
-    <div class="text-sm">
+    <div class="text-sm text-right min-w-max">
       @if (cost() === 0) {
         <span class="font-medium">
-          <span>Fee:</span>
+          <span class="hidden md:inline">Fee:</span>
           @if(isFree()){
             <span class="line-through text-color-secondary ml-1">{{ usualCost() }} {{ currency() }}</span>
           }
           <span class="ml-1 font-semibold">FREE</span>
         </span>
       } @else {
-        <span class="font-medium">Fee: {{ cost() }} {{ currency() }}</span>
+        <span class="font-medium">
+        <span class="hidden md:inline">Fee: </span>
+        {{ cost() }} {{ currency() }}</span>
       }
     </div>
   </div>
