@@ -29,3 +29,7 @@ a {
 :root {
   --theme-color: #121212;
 }
+
+.overflow-break-word {
+  overflow-wrap: break-word !important;
+}
