@@ -18,7 +18,7 @@
     <p-card>
       <div class="flex items-center justify-content-between">
         <span class="font-medium">Trending coins with the highest Engagement and Market Caps 📈</span>
-        <div class="flex items-center">
+        <div class="hidden md:flex md:items-center">
           <p-toggleswitch [(ngModel)]="isAutoUpdateOn" />
           <span class="ml-2">Auto-Update {{ isAutoUpdateOn ? 'On' : 'Off' }}</span>
         </div>
@@ -28,7 +28,10 @@
           The fee for creating a trending coin is
           <span class="font-semibold">{{ creationCost.cost }} SOL</span>
         </span>
-        
+      </div>
+      <div class="flex items-center md:hidden mt-1">
+        <p-toggleswitch [(ngModel)]="isAutoUpdateOn" />
+        <span class="ml-2">Auto-Update {{ isAutoUpdateOn ? 'On' : 'Off' }}</span>
       </div>
 
       <div class="grid mt-2">
@@ -41,7 +44,7 @@
               <div class="flex-grow-1 flex flex-column gap-1 ml-3">
                 <!-- Info -->
                 <div class="flex align-items-center justify-content-between">
-                  <span class="font-semibold text-lg w-7">{{ token.name }}</span>
+                  <span class="font-semibold text-lg w-7 overflow-break-word">{{ token.name }}</span>
                   <app-text-link [link]="token.tokenUrl" [showRedirectIcon]="true">${{ token.symbol }}</app-text-link>
                 </div>
                 

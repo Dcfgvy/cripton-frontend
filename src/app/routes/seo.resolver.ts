@@ -10,12 +10,18 @@ export class SeoResolver implements Resolve<void> {
   resolve(route: ActivatedRouteSnapshot): void {
     if (route.data['title']) {
       this.title.setTitle(`${route.data['title']} | ${environment.serviceName}`);
+      this.meta.updateTag({ name: 'og:title', content: route.data['title'] });
+      this.meta.updateTag({ name: 'twitter:title', content: route.data['title'] });
     } else {
       this.title.setTitle(environment.serviceName);
+      this.meta.updateTag({ name: 'og:title', content: environment.serviceName });
+      this.meta.updateTag({ name: 'twitter:title', content: environment.serviceName });
     }
     
     if (route.data['description']) {
       this.meta.updateTag({ name: 'description', content: route.data['description'] });
+      this.meta.updateTag({ name: 'og:description', content: route.data['description'] });
+      this.meta.updateTag({ name: 'twitter:description', content: route.data['description'] });
     }
     
     if (route.data['keywords']) {
