@@ -5,9 +5,11 @@
     <div class="container mx-auto md:px-4">
       <div class="grid">
         <div class="col-12 flex flex-column justify-content-center align-items-center">
-          <div class="text-5xl font-bold mb-4 text-center">Create Solana Tokens Without Coding</div>
+          <div class="text-5xl font-bold mb-4 text-center">Create Solana Tokens<br>
+            for <span class="bg-primary p-1 px-3 border-round">just {{ pricesService.prices().solanaTokenCreation.cost || '0.05' }} SOL</span> !
+          </div>
           <div class="text-xl line-height-3 mb-6 text-center">
-            Launch your own SPL token in minutes. Customize metadata, control token supply, and manage liquidity all in one platform.
+            Launch your own SPL token in minutes. Customize metadata, control token supply, and manage liquidity all in one platform. Without coding.
           </div>
           <div>
             <a pButton label="Get Started" class="p-button-lg" routerLink="/solana/create-token"></a>
