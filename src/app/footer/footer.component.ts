@@ -13,4 +13,7 @@ export class FooterComponent {
   readonly creationYear = 2025;
   readonly year = new Date().getFullYear();
   readonly serviceName = environment.serviceName;
+  
+  readonly serviceWebsite = environment.serviceWebsite;
+  readonly serviceHost = new URL(this.serviceWebsite).host;
 }

@@ -36,7 +36,7 @@ export class MainComponent {
   readonly appName = environment.serviceName;
   constructor(
     public settingsService: AppSettingsService,
-    private pricesService: PricesService,
+    public pricesService: PricesService,
   ) {}
 
   // Calculator inputs
