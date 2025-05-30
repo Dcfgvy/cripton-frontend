@@ -19,8 +19,16 @@
         </div>
       </div>
 
-      <div class="col-12 flex md:justify-content-end">
+      <div class="col-12 md:col-6">
         <span>support&commat;{{serviceHost}}</span>
+      </div>
+
+      <div class="col-12 md:col-6 flex md:justify-content-end">
+        <app-text-link [link]="socials.telegram">
+          <div>
+            <i class="bi bi-telegram text-xl"></i>
+          </div>
+        </app-text-link>
       </div>
     </div>
   </p-card>

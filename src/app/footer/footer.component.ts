@@ -16,4 +16,5 @@ export class FooterComponent {
   
   readonly serviceWebsite = environment.serviceWebsite;
   readonly serviceHost = new URL(this.serviceWebsite).host;
+  readonly socials = environment.socials;
 }

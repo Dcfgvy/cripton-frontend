@@ -5,6 +5,9 @@ export const environment: Environment = {
   serviceName: 'Cripton',
   serviceWebsite: 'https://cripton.app',
   apiUrl: 'http://localhost:3444',
+  socials: {
+    telegram: 'https://t.me/cripton_app',
+  },
 
   solana: {
     rpcUrls: {
