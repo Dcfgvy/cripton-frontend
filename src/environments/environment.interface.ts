@@ -3,6 +3,9 @@ export interface Environment {
   serviceName: string;
   serviceWebsite: string;
   apiUrl: string;
+  socials: {
+    telegram: string;
+  };
   
   solana: {
     rpcUrls: {
