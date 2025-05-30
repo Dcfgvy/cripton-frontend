@@ -39,7 +39,7 @@
           <div class="col-12 lg:col-6">
             <div class="w-full flex align-items-center border-round border-2 border-50 p-3">
               <!-- Image -->
-              <img [src]="token.imageUrl" class="border-round" style="width: 55px; height: 55px;">
+              <img [src]="token.imageUrl || 'images/no-image-placeholder.svg'" class="border-round" style="width: 55px; height: 55px;">
 
               <div class="flex-grow-1 flex flex-column gap-1 ml-3">
                 <!-- Info -->
