@@ -68,7 +68,7 @@
             </div>
             <h3 class="text-xl font-medium">Affiliate Program</h3>
             <p class="text-color-secondary">
-              Earn 30% of all service fees paid by your referrals. Generate your unique referral link and start earning passive income.
+              Earn {{ pricesService.prices().solanaAffiliateSharePercents.cost }}% of all service fees paid by your referrals. Generate your unique referral link and start earning passive income.
             </p>
           </p-card>
         </div>
@@ -101,15 +101,15 @@
               <label class="block mb-2">Number of Referrals per month</label>
               <div class="flex align-items-center gap-3">
                 <p-slider [(ngModel)]="numReferrals" [min]="1" [max]="100" class="w-full hidden md:block"></p-slider>
-                <p-inputNumber [(ngModel)]="numReferrals" [min]="1" [max]="100" [showButtons]="true" styleClass="w-6rem"></p-inputNumber>
+                <p-inputNumber [(ngModel)]="numReferrals" [min]="1" [max]="10000" [showButtons]="true" styleClass="w-6rem"></p-inputNumber>
               </div>
             </div>
             
             <div class="mb-4">
               <label class="block mb-2">Average Tokens Created per Referral</label>
               <div class="flex align-items-center gap-3">
-                <p-slider [(ngModel)]="tokensPerReferral" [min]="1" [max]="20" class="w-full hidden md:block"></p-slider>
-                <p-inputNumber [(ngModel)]="tokensPerReferral" [min]="1" [max]="20" [showButtons]="true" styleClass="w-6rem"></p-inputNumber>
+                <p-slider [(ngModel)]="tokensPerReferral" [min]="1" [max]="10" class="w-full hidden md:block"></p-slider>
+                <p-inputNumber [(ngModel)]="tokensPerReferral" [min]="1" [max]="1000" [showButtons]="true" styleClass="w-6rem"></p-inputNumber>
               </div>
             </div>
             
