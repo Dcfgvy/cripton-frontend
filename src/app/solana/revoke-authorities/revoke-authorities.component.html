@@ -1,0 +1,36 @@
+<p-toast />
+<div>
+  <app-tool-header>
+    <ng-template #icon>
+      <span class="material-symbols-outlined text-6xl text-primary">lock_person</span>
+    </ng-template>
+    <ng-template #header>
+      Update Token Authorities
+    </ng-template>
+    <ng-template #description>
+      Easily revoke or transfer Freeze, Mint, and Update authorities to demonstrate the security of your Solana tokens
+    </ng-template>
+  </app-tool-header>
+
+  <div class="w-full">
+    <p-card>
+      <app-select-user-token [(token)]="selectedToken" />
+
+      <div class="my-3">
+        <app-solana-token-authorities [(form)]="authoritiesForm" [(addOns)]="addOns" />
+      </div>
+
+      <div class="-mt-2"></div>
+      @for (error of authorityErrors(); track error) {
+        <app-error [showIf]="true">{{ error }}</app-error><br>
+      }
+      <div class="mt-3"></div>
+
+      <p-button fluid [disabled]="buttonDisabled()" [loading]="loading" (onClick)="updateAuthorities()">
+        <span class="font-semibold mx-3">Update Authorities</span>
+      </p-button>
+      <div class="mt-2"></div>
+      <app-total-fees [cost]="totalCost()" [costWithoutDiscounts]="totalCostWithoutDiscounts()" />
+    </p-card>
+  </div>
+</div>

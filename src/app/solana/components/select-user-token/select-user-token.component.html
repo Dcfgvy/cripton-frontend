@@ -1,2 +1,33 @@
 <span>Select the preferrable Solana Token:</span>
-<p-select [(ngModel)]="token" class="w-full" [options]="userTokens" optionLabel="name" [placeholder]="" [virtualScroll]="true" [loading]="isFetchingInProgress"></p-select>
+<p-select
+  [(ngModel)]="token"
+  class="w-full mt-2"
+  [options]="userTokens"
+  optionLabel="name"
+  [placeholder]="selectPlaceholder()"
+  [loading]="isFetchingInProgress()"
+  fluid
+  [disabled]="walletService.selectedWalletSignal() === null"
+>
+  <ng-template #selectedItem let-selectedOption>
+    @if (selectedOption) {
+      <div class="flex items-center gap-2">
+        <!-- Image -->
+        <img [src]="selectedOption.imageUrl || 'images/no-image-placeholder.svg'" class="border-round" style="width: 25px; height: 25px;">
+        <!-- Name -->
+        <div>{{ selectedOption.name }}</div>
+      </div>
+    }
+  </ng-template>
+  <ng-template #item let-token>
+    <div class="flex items-center gap-2">
+      <!-- Image -->
+      <img [src]="token.imageUrl || 'images/no-image-placeholder.svg'" class="border-round" style="width: 25px; height: 25px;">
+      <!-- Name -->
+      <div>{{ token.name }}</div>
+    </div>
+  </ng-template>
+  <ng-template #header>
+    <div class="font-medium p-3">Your Tokens</div>
+  </ng-template>
+</p-select>

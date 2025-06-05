@@ -38,3 +38,4 @@ export class BlockchainToolsComponent implements OnInit{
     }
   }
 }
+// TODO scroll on load, not this 400ms kludge

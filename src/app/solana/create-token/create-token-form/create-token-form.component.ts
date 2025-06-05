@@ -42,6 +42,9 @@ import { SolanaWalletConnectedGuardComponent } from "../../components/solana-wal
 import { WarningComponent } from "../../../components/warning/warning.component";
 import { ViewportScroller } from '@angular/common';
 import { TestnetTokenDataRemovalWarningComponent } from "../../../components/testnet-token-data-removal-warning/testnet-token-data-removal-warning.component";
+import { TotalFeesComponent } from "../../../components/total-fees/total-fees.component";
+import { AddOnService } from '../../../components/add-on/add-on.service';
+import { SolanaTokenAuthoritiesComponent } from "../../components/solana-token-authorities/solana-token-authorities.component";
 
 // u64 max value: 18,446,744,073,709,551,615 (2^64-1)
 // Our limit: 10,000,000,000,000,000,000 (10 * 10^18)
@@ -107,7 +110,9 @@ export function supplyValidator(): ValidatorFn {
     TokenCreatedBodyComponent,
     SolanaWalletConnectedGuardComponent,
     WarningComponent,
-    TestnetTokenDataRemovalWarningComponent
+    TestnetTokenDataRemovalWarningComponent,
+    TotalFeesComponent,
+    SolanaTokenAuthoritiesComponent
 ],
   templateUrl: './create-token-form.component.html',
   styleUrl: './create-token-form.component.scss',
@@ -158,7 +163,8 @@ export class CreateTokenFormComponent {
     public readonly networkService: NetworkService,
     public readonly pricesService: PricesService,
     public readonly settingsService: AppSettingsService,
-    private readonly viewportScroller: ViewportScroller
+    private readonly viewportScroller: ViewportScroller,
+    private readonly addOnService: AddOnService,
   ) {
     // Supply distribution validation
     toObservable(this.addOns['multiWalletDistribution'].added).subscribe((value) => {
@@ -175,34 +181,14 @@ export class CreateTokenFormComponent {
     this.viewportScroller.scrollToAnchor('token-creation-stepper');
   }
 
-  get currentNetworkPrices(){
-    return this.settingsService.currentSettings?.prices['solana'];
-  }
-  private getAddOnCost(serviceName: ServiceName){
-    return this.currentNetworkPrices ? this.currentNetworkPrices[serviceName].cost : 0;
-  }
-  totalCost = computed<number>(() => {
-    const isFree = (serviceName: ServiceName) => {
-      if(!this.currentNetworkPrices) return false;
-      return this.currentNetworkPrices[serviceName]?.isTemporarilyFree || false;
-    };
-    let total = this.pricesService.prices().solanaTokenCreation.cost;
-    for(const addon of Object.values(this.addOns)){
-      if(addon.added() && !isFree(addon.serviceName)){
-        total += this.getAddOnCost(addon.serviceName);
-      }
-    }
-    return total;
-  });
-  totalCostWithoutDiscounts = computed<number>(() => {
-    let total = this.pricesService.prices().solanaTokenCreation.cost;
-    for(const addon of Object.values(this.addOns)){
-      if(addon.added()){
-        total += this.getAddOnCost(addon.serviceName);
-      }
-    }
-    return total * environment.solana.feeMultiplier;
-  });
+  totalCost = computed<number>(() => this.addOnService.calculateTotalCost(
+    this.pricesService.prices().solanaTokenCreation.cost,
+    this.addOns
+  )());
+  totalCostWithoutDiscounts = computed<number>(() => this.addOnService.calculateTotalCostWithoutDiscounts(
+    this.pricesService.prices().solanaTokenCreation.cost,
+    this.addOns
+  )());
 
   infoForm = new FormGroup({
     name: new FormControl('', [
@@ -333,11 +319,11 @@ export class CreateTokenFormComponent {
 
   settingsForm = new FormGroup({
     customAddressBeginning: new FormControl('', [
-      Validators.maxLength(4),
+      Validators.maxLength(this.MAX_CUSTOM_ADDRESS_PREFIX_LENGTH),
       Validators.pattern(ADDRESS_SYMBOLS)
     ]),
     customAddressEnd: new FormControl('', [
-      Validators.maxLength(4),
+      Validators.maxLength(this.MAX_CUSTOM_ADDRESS_PREFIX_LENGTH),
       Validators.pattern(ADDRESS_SYMBOLS),
     ]),
     customAddressCaseSensitive: new FormControl<boolean>(false),

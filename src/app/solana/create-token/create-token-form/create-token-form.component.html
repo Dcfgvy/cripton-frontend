@@ -9,10 +9,8 @@
       </div>
     }
 
-    <span class="hidden md:inline-block">
-      <span>Total fees:</span>
-      <span class="font-semibold line-through text-color-secondary ml-1">{{ totalCostWithoutDiscounts().toFixed(2) }} SOL</span>
-      <span class="font-semibold ml-1">{{ totalCost().toFixed(2) }} SOL</span>
+    <span class="hidden md:block">
+      <app-total-fees [cost]="totalCost()" [costWithoutDiscounts]="totalCostWithoutDiscounts()" />
     </span>
 
     @if(page < 3){
@@ -27,11 +25,7 @@
   </div>
 
   <div class="md:hidden text-center mt-3">
-    <span>
-      <span>Total fees:</span>
-      <span class="font-semibold line-through text-color-secondary ml-1">{{ totalCostWithoutDiscounts().toFixed(2) }} SOL</span>
-      <span class="font-semibold ml-1">{{ totalCost().toFixed(2) }} SOL</span>
-    </span>
+    <app-total-fees [cost]="totalCost()" [costWithoutDiscounts]="totalCostWithoutDiscounts()" />
   </div>
 </ng-template>
 
@@ -403,8 +397,11 @@
                       <span class="text-xl">Authorities</span><br>
                       <span class="text-sm text-color-secondary">Solana Tokens have 3 authorities: Freeze Authority, Mint Authority, and Update Authority.<br>Revoke them to attract more investors</span>
                     </div>
+                    <div class="field col-12 p-0 mb-0">
+                      <app-solana-token-authorities [(form)]="settingsForm" [(addOns)]="addOns" [smallerGap]="false"/>
+                    </div>
                     <!-- FREEZE -->
-                    <div class="field col-12 flex">
+                    <!-- <div class="field col-12 flex">
                       <div class="pr-2"><i class="bi bi-snow text-3xl" ></i></div>
                       <app-add-on class="flex-grow-1" [(added)]="addOns['freezeAuthority'].added" [serviceName]="addOns['freezeAuthority'].serviceName"
                       formName="freezeAuthority"
@@ -417,9 +414,9 @@
                           <input class="w-full mt-1" name="Transfer Freeze Authority" placeholder="Paste address here" type="text" pInputText pSize="small" formControlName="freezeAuthority" [maxlength]="50">
                         </div>
                       </app-add-on>
-                    </div>
+                    </div> -->
                     <!-- MINT -->
-                    <div class="field col-12 flex">
+                    <!-- <div class="field col-12 flex">
                       <div class="pr-2"><i class="bi bi-boxes text-3xl" ></i></div>
                       <app-add-on class="flex-grow-1" [(added)]="addOns['mintAuthority'].added" [serviceName]="addOns['mintAuthority'].serviceName"
                       formName="mintAuthority">
@@ -431,9 +428,9 @@
                           <input class="w-full mt-1" name="Transfer Mint Authority" placeholder="Paste address here" type="text" pInputText pSize="small" formControlName="mintAuthority" [maxlength]="50">
                         </div>
                       </app-add-on>
-                    </div>
+                    </div> -->
                     <!-- UPDATE -->
-                    <div class="field col-12 flex">
+                    <!-- <div class="field col-12 flex">
                       <div style="padding-right: 0.8rem;"><i class="bi bi-pen text-2xl" ></i></div>
                       <app-add-on class="flex-grow-1" [(added)]="addOns['updateAuthority'].added" [serviceName]="addOns['updateAuthority'].serviceName" tag="Or use PUMP.FUN Authority" tagSeverity="success"
                       formName="updateAuthority">
@@ -450,7 +447,7 @@
                           If you transfer the Update Authority to Pump.Fun, token metadata will become immutable. That means Pump.Fun address will be displayed in the metadata, but nobody will be able to change it, just like if your token was created on Pump.Fun
                         </app-alert-banner>
                       </app-add-on>
-                    </div>
+                    </div> -->
                   </ng-container>
                 </div>
                 <app-testnet-token-data-removal-warning />

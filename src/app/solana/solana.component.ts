@@ -31,7 +31,7 @@ export class SolanaComponent {
     },
     // {
     //   title: 'Solana Multisender',
-    //   url: 'trwefwefwefwes',
+    //   url: 'multisender',
     //   icon: 'send_money',
     //   isIconMD: true,
     // },
@@ -41,12 +41,12 @@ export class SolanaComponent {
     //   icon: 'ac_unit',
     //   isIconMD: true,
     // },
-    // {
-    //   title: 'Revoke Mint Authority',
-    //   url: 'trwefwefwefwes',
-    //   icon: 'cancel',
-    //   isIconMD: true,
-    // },
+    {
+      title: 'Update Authorities',
+      url: 'authorities',
+      icon: 'lock_person',
+      isIconMD: true,
+    },
     // {
     //   title: 'Update Token Metadata',
     //   url: 'trwefwefwefwes',

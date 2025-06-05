@@ -31,3 +31,4 @@ export class AppComponent implements OnInit {
     this.pricesService.initCryptoPrices();
   }
 }
+// TODO reload settings and prices when user goes to a different page

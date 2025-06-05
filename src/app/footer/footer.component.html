@@ -20,7 +20,9 @@
       </div>
 
       <div class="col-12 md:col-6">
-        <span>support&commat;{{serviceHost}}</span>
+        <app-text-link [link]="'mailto:support@' + serviceHost">
+          support&commat;{{serviceHost}}
+        </app-text-link>
       </div>
 
       <div class="col-12 md:col-6 flex md:justify-content-end">

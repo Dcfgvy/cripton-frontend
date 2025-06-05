@@ -22,7 +22,7 @@ export const routes: Routes = [
         loadComponent: () => import('../solana/create-token/create-token.component').then((m) => m.CreateTokenComponent),
         data: {
           title: 'Create Solana SPL Token',
-          description: 'Create Solana SPL token in under one minute without coding for just 0.05 SOL! Update token metadata, supply, logo and mint tokens. Get a custom token address, distribute supply across different wallets! Revoke Freeze, Mint and Update authorities.',
+          description: 'Create Solana SPL token in under one minute without coding for just 0.05 SOL! Update token metadata, supply, logo and mint tokens. Get a custom token address, distribute supply across different wallets! Revoke Freeze, Mint and Update authorities',
           keywords: 'memecoin creator, solana creator, SPL, create Solana token, SPL token, tokens, blockchain'
         },
         resolve: { seo: SeoResolver }
@@ -34,6 +34,16 @@ export const routes: Routes = [
           title: 'Copy Trending Meme Coins on Pump Fun',
           description: 'Copy the hottest trending Solana meme coins on Pump.fun for just 0.1 SOL and launch them on Raydium. Create exact replicas with metadata, creators, and full Pump Fun authority',
           keywords: 'Solana meme coins, Pump.fun coins, copy trending tokens, Solana crypto launch, meme coin creator, Pump Fun copy tool, launch Solana tokens, Raydium meme coins, create meme coin Solana, Pump fun authority, top Solana coins, trending tokens Solana'
+        },
+        resolve: { seo: SeoResolver }
+      },
+      {
+        path: 'authorities',
+        loadComponent: () => import('../solana/revoke-authorities/revoke-authorities.component').then((m) => m.RevokeAuthoritiesComponent),
+        data: {
+          title: 'Revoke or Transfer Solana Token Authorities',
+          description: 'Revoke or transfer Freeze, Mint and Update authorities of your Solana tokens for just 0.01 SOL! Both SPL and Token 2022 Programs are supported',
+          keywords: 'revoke freeze authority, revoke mint authority, revoke update authority, Solana SPL token, SPL token, Solana Token 2022, Token 2022, tokens, blockchain'
         },
         resolve: { seo: SeoResolver }
       },
