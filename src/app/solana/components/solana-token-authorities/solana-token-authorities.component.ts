@@ -22,6 +22,7 @@ export class SolanaTokenAuthoritiesComponent {
   form = model.required<FormGroup>();
   addOns = model.required<Record<string, AddOn>>();
   smallerGap = input<boolean>(true);  // it works, so just don't touch it
+  showPumpFun = input<boolean>(true);
 
   pastePumpFunUpdateAddress() {
     this.form().get('updateAuthority')?.setValue(PUMP_FUN_MINT_AUTHORITY);

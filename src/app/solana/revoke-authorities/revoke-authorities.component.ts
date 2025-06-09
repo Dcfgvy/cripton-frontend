@@ -2,7 +2,6 @@ import { Component, computed, model, OnInit, signal } from '@angular/core';
 import { SelectUserTokenComponent } from "../components/select-user-token/select-user-token.component";
 import { ToolHeaderComponent } from "../../components/tool-header/tool-header.component";
 import { Card } from 'primeng/card';
-import { TokenData } from '../components/select-user-token/select-user-token.service';
 import { TotalFeesComponent } from "../../components/total-fees/total-fees.component";
 import { Button } from 'primeng/button';
 import { AddOn } from '../../components/add-on/add-on.component';
@@ -15,7 +14,11 @@ import { WalletService } from '../../wallet/wallet.service';
 import { ErrorComponent } from "../../components/error/error.component";
 import { MessageService } from 'primeng/api';
 import { Toast } from 'primeng/toast';
-import { RevokeAuthoritiesService } from './revoke-authorities.service';
+import { RevokeAuthoritiesService, UpdateAuthoritiesData } from './revoke-authorities.service';
+import { PublicKey } from '@solana/web3.js';
+import { PricesService } from '../../app-settings/prices.service';
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { TokenData } from '../components/select-user-token/select-user-token.service';
 
 @Component({
   selector: 'app-revoke-authorities',
@@ -42,6 +45,7 @@ export class RevokeAuthoritiesComponent implements OnInit {
     private readonly walletService: WalletService,
     private readonly revokeAuthoritiesService: RevokeAuthoritiesService,
     private readonly messageService: MessageService,
+    private readonly pricesService: PricesService,
   ) {}
 
   addOns: Record<string, AddOn> = {
@@ -81,11 +85,11 @@ export class RevokeAuthoritiesComponent implements OnInit {
   }
 
   totalCost = computed<number>(() => this.addOnService.calculateTotalCost(
-    0,
+    this.pricesService.prices().solanaUpdateAuthorities.cost,
     this.addOns
   )());
   totalCostWithoutDiscounts = computed<number>(() => this.addOnService.calculateTotalCostWithoutDiscounts(
-    0,
+    this.pricesService.prices().solanaUpdateAuthorities.cost,
     this.addOns
   )());
 
@@ -132,10 +136,11 @@ export class RevokeAuthoritiesComponent implements OnInit {
     }
 
     if(this.addOns['updateAuthority']?.added()) {
-      if(!this.selectedToken()?.isMutable) {
+      // TODO add support for token 2022
+      if(!this.selectedToken()?.metadata?.metaplexMetadata?.isMutable) {
         errors.push('Token metadata is immutable, Update Authority cannot be changed');
       }
-      const currentAuthority = this.selectedToken()?.updateAuthority?.toBase58();
+      const currentAuthority = this.selectedToken()?.metadata?.metaplexMetadata?.updateAuthority?.toBase58();
       if(!currentAuthority || currentAuthority !== userPublicKey) {
         errors.push('You must be the current Update Authority to transfer or revoke it');
       }
@@ -185,39 +190,57 @@ export class RevokeAuthoritiesComponent implements OnInit {
     try {
       this.loading = true;
 
-      // Prepare the update data
-      const data: any = {
+      const data: Partial<UpdateAuthoritiesData> = {
         mint: token.mint,
+        tokenProgram: token.tokenProgram,
         totalCost: this.totalCost(),
+        isNetworkFeeIncluded: this.pricesService.prices().solanaUpdateAuthorities.isNetworkFeeIncluded,
       };
 
-      // Add Freeze Authority update if selected
       if (this.addOns['freezeAuthority'].added()) {
         const newAuthority = this.authoritiesForm.get('freezeAuthority')?.value || null;
         data.freezeAuthority = {
           currentAuthority: token.freezeAuthority!,
-          newAuthority
+          newAuthority: newAuthority ? new PublicKey(newAuthority) : null
         };
       }
 
-      // Add Mint Authority update if selected
       if (this.addOns['mintAuthority'].added()) {
         const newAuthority = this.authoritiesForm.get('mintAuthority')?.value || null;
         data.mintAuthority = {
           currentAuthority: token.mintAuthority!,
-          newAuthority
+          newAuthority: newAuthority ? new PublicKey(newAuthority) : null
         };
       }
 
-      // Send transaction
-      const signature = await this.revokeAuthoritiesService.updateAuthorities(data);
+      if (this.addOns['updateAuthority'].added()) {
+        const newAuthority = this.authoritiesForm.get('updateAuthority')?.value || null;
+        // TODO add support for token 2022
+        if(token.tokenProgram.equals(TOKEN_PROGRAM_ID)){ // Original token program with Metaplex Metadata
+          if(newAuthority === null) {  // if revoked
+            data.updateAuthority = {
+              currentAuthority: token.metadata!.metaplexMetadata!.updateAuthority!,
+              newAuthority: token.metadata!.metaplexMetadata!.updateAuthority!,
+              isMutable: false
+            };
+          } else {
+            data.updateAuthority = {  // if transferred
+              currentAuthority: token.metadata!.metaplexMetadata!.updateAuthority!,
+              newAuthority: new PublicKey(newAuthority),
+              isMutable: true
+            };
+          }
+        }
+      }
+
+      const signature = await this.revokeAuthoritiesService.updateAuthorities(data as UpdateAuthoritiesData);
       
+      // TODO refetch user's tokens after transaction is executed (because the metadata and authorities are changed)
       this.messageService.add({ 
         severity: 'success', 
-        summary: `Successfully updated ${token.symbol} authorities!`,
+        summary: `Successfully updated ${token.metadata ? ' $' + token.metadata.symbol : ''}authorities!`,
         detail: `Transaction signature: ${signature}` 
       });
-
     } catch (error: any) {
       console.error('Error updating authorities:', error);
       this.messageService.add({ 

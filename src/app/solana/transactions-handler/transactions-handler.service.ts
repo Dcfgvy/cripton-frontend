@@ -6,8 +6,9 @@ import { AffiliateService } from '../../affiliate-program/affiliate.service';
 
 export interface SendTransactionWithFeesArgs {
   tx: Transaction;
-  /** Pass 0 if network fees are not included */
+  /** Simulated transaction network fee. Pass 0 if network fees are not included in the price */
   txFeesLamports: number;
+  /** The total cost of a service */
   txCostLamports: number;
   blockhash: string;
   userPublicKey: PublicKey;

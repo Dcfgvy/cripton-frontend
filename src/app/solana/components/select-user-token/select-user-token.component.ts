@@ -59,7 +59,7 @@ export class SelectUserTokenComponent implements OnInit, OnDestroy {
     this.userTokens = [];
 
     try {
-      this.userTokens = await this.tokenService.getUserTokens();
+      this.userTokens = await this.tokenService.fetchUserTokens();
       this.tokenService.loadTokenImages(this.userTokens).subscribe();
     } catch (error) {
       console.error('Error fetching token accounts:', error);
@@ -68,4 +68,3 @@ export class SelectUserTokenComponent implements OnInit, OnDestroy {
     }
   }
 }
-// TODO add disabled state & error message when no wallet is connected

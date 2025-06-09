@@ -33,7 +33,7 @@
   <div class="field col-12 flex">
     <div style="padding-right: 0.8rem;"><i class="bi bi-pen text-2xl"></i></div>
     <app-add-on class="flex-grow-1" [(added)]="addOns()['updateAuthority'].added" [serviceName]="addOns()['updateAuthority'].serviceName"
-      tag="Or use PUMP.FUN Authority" tagSeverity="success" formName="updateAuthority">
+      [tag]="showPumpFun() ? 'Or use PUMP.FUN Authority' : ''" tagSeverity="success" formName="updateAuthority">
       <div title>Revoke Update</div>
       <div description>Revoking Update authority means token metadata cannot be updated by anyone </div>
 
@@ -41,11 +41,13 @@
         <span class="text-sm">If you want to transfer the Update Authority, paste another Solana address below:</span>
         <input class="w-full mt-1" name="Transfer Update Authority" placeholder="Paste address here" type="text" pInputText pSize="small" formControlName="updateAuthority" [maxlength]="50">
       </div>
-      <p-button variant="text" size="small" (onClick)="pastePumpFunUpdateAddress()">Paste PUMP.FUN Update Authority address</p-button>
+      @if(showPumpFun()) {
+        <p-button variant="text" size="small" (onClick)="pastePumpFunUpdateAddress()">Paste PUMP.FUN Update Authority address</p-button>
 
-      <app-alert-banner>
-        If you transfer the Update Authority to Pump.Fun, token metadata will become immutable. That means Pump.Fun address will be displayed in the metadata, but nobody will be able to change it, just like if your token was created on Pump.Fun
-      </app-alert-banner>
+        <app-alert-banner>
+          If you transfer the Update Authority to Pump.Fun, token metadata will become immutable. That means Pump.Fun address will be displayed in the metadata, but nobody will be able to change it, just like if your token was created on Pump.Fun
+        </app-alert-banner>
+      }
     </app-add-on>
   </div>
 </form>

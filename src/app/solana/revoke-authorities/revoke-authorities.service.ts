@@ -1,21 +1,33 @@
 import { Injectable } from '@angular/core';
-import { Connection, PublicKey, Transaction } from '@solana/web3.js';
+import { LAMPORTS_PER_SOL, PublicKey, Transaction } from '@solana/web3.js';
 import { createSetAuthorityInstruction, AuthorityType } from '@solana/spl-token';
 import { TransactionsHandlerService, SendTransactionWithFeesArgs } from '../transactions-handler/transactions-handler.service';
 import { WalletService } from '../../wallet/wallet.service';
 import { NetworkService } from '../../network-switch/network-switch.service';
+import { findMetadataPda, updateMetadataAccountV2 } from '@dcfgvy/mpl-token-metadata';
+import { createNoopSigner, createUmi, Umi } from '@metaplex-foundation/umi';
+import { defaultProgramRepository } from '@metaplex-foundation/umi-program-repository';
+import { web3JsEddsa } from '@metaplex-foundation/umi-eddsa-web3js';
+import { fromWeb3JsPublicKey, toWeb3JsInstruction } from '@metaplex-foundation/umi-web3js-adapters';
 
 export interface UpdateAuthoritiesData {
   mint: PublicKey;
+  tokenProgram: PublicKey;
+  totalCost: number;
+  isNetworkFeeIncluded: boolean;
   freezeAuthority?: {
     currentAuthority: PublicKey;
-    newAuthority: string | null;
+    newAuthority: PublicKey | null;
   };
   mintAuthority?: {
     currentAuthority: PublicKey;
-    newAuthority: string | null;
+    newAuthority: PublicKey | null;
   };
-  totalCost: number;
+  updateAuthority?: {
+    currentAuthority: PublicKey;
+    newAuthority: PublicKey | null;
+    isMutable?: boolean;
+  };
 }
 
 @Injectable({
@@ -27,6 +39,14 @@ export class RevokeAuthoritiesService {
     private readonly walletService: WalletService,
     private readonly networkService: NetworkService,
   ) {}
+
+  private getUmiContext(): Umi {
+    const umi = createUmi()
+    .use(defaultProgramRepository())
+    .use(web3JsEddsa())
+
+    return umi;
+  }
 
   public async updateAuthorities(data: UpdateAuthoritiesData): Promise<string> {
     const userPublicKey = this.walletService.selectedWallet?.publicKey;
@@ -44,7 +64,7 @@ export class RevokeAuthoritiesService {
           data.mint,
           data.freezeAuthority.currentAuthority,
           AuthorityType.FreezeAccount,
-          data.freezeAuthority.newAuthority ? new PublicKey(data.freezeAuthority.newAuthority) : null
+          data.freezeAuthority.newAuthority
         )
       );
     }
@@ -56,22 +76,36 @@ export class RevokeAuthoritiesService {
           data.mint,
           data.mintAuthority.currentAuthority,
           AuthorityType.MintTokens,
-          data.mintAuthority.newAuthority ? new PublicKey(data.mintAuthority.newAuthority) : null
+          data.mintAuthority.newAuthority
         )
       );
+    }
+
+    if (data.updateAuthority) {
+      const metadataPDA = findMetadataPda(this.getUmiContext(), { mint: fromWeb3JsPublicKey(data.mint) })[0];
+
+      let updateAuthority: PublicKey | null | undefined = data.updateAuthority.newAuthority;
+      if(updateAuthority === null || updateAuthority === data.updateAuthority.currentAuthority) updateAuthority = undefined;
+
+      const transferInstructions = updateMetadataAccountV2(this.getUmiContext(), {
+        metadata: metadataPDA,
+        updateAuthority: createNoopSigner(fromWeb3JsPublicKey(data.updateAuthority.currentAuthority)),
+        newUpdateAuthority: updateAuthority ? fromWeb3JsPublicKey(updateAuthority) : undefined,
+        isMutable: data.updateAuthority.isMutable,
+      }).getInstructions();
+
+      for(const inst of transferInstructions){
+        transaction.add(toWeb3JsInstruction(inst));
+      }
     }
 
     transaction.feePayer = userPublicKey;
     transaction.recentBlockhash = blockhash;
 
-    // Calculate network fees
-    const fees = await connection.getFeeForMessage(transaction.compileMessage(), 'confirmed');
-    if (fees.value === undefined) throw new Error('Failed to calculate network fees');
-
     const txData: SendTransactionWithFeesArgs = {
       tx: transaction,
-      txFeesLamports: fees.value || 0, // Default to 0 if null
-      txCostLamports: Math.round(data.totalCost * 10 ** 9), // Convert SOL to lamports
+      txFeesLamports: 0,  // CUs for these operations are extremely small, so the network fee doesn't increase at all
+      txCostLamports: Math.round(data.totalCost * LAMPORTS_PER_SOL),
       blockhash,
       userPublicKey,
       additionalSigners: [],
@@ -80,4 +114,4 @@ export class RevokeAuthoritiesService {
 
     return await this.transactionsHandler.sendTransactionWithFees(txData);
   }
-} 
+}

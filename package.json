@@ -1,6 +1,7 @@
 {
   "name": "solana-token-generator-frontend",
   "version": "0.0.0",
+  "author": "Ivan Kusliy <ipkusliywork@gmail.com>",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",

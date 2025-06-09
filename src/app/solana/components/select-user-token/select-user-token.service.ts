@@ -1,44 +1,62 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { AccountInfo, Connection, ParsedAccountData, PublicKey, RpcResponseAndContext } from '@solana/web3.js';
 import { WalletService } from '../../../wallet/wallet.service';
 import { NetworkService } from '../../../network-switch/network-switch.service';
-import { AccountInfo, ParsedAccountData, PublicKey, RpcResponseAndContext } from '@solana/web3.js';
-import { 
-  TOKEN_2022_PROGRAM_ID, 
-  TOKEN_PROGRAM_ID, 
-  unpackMint,
-  getExtensionTypes,
-  getMetadataPointerState,
-  getTokenMetadata,
-  Mint,
-  ExtensionType,
-  getExtensionData
-} from '@solana/spl-token';
-import { unpack } from '@solana/spl-token-metadata';
-import { deserializeMetadata } from '@dcfgvy/mpl-token-metadata';
+import { HttpClient } from '@angular/common/http';
+import { forkJoin } from 'rxjs';
+import { of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { ExtensionType, getExtensionData, getMetadataPointerState, Mint, TOKEN_PROGRAM_ID, unpackMint } from '@solana/spl-token';
+import { TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
+import { deserializeMetadata, Metadata } from '@dcfgvy/mpl-token-metadata';
 import { fromWeb3JsPublicKey, toWeb3JsPublicKey } from '@metaplex-foundation/umi-web3js-adapters';
 import { sol } from '@metaplex-foundation/umi';
-import { catchError, forkJoin, map, Observable, of } from 'rxjs';
+import { unpack, TokenMetadata as SplTokenMetadata } from '@solana/spl-token-metadata';
 
 export interface TokenData {
   mint: PublicKey;
   tokenProgram: PublicKey;
-  name: string;
-  symbol: string;
   balanceInDecimals: bigint;
   supplyInDecimals: bigint;
   decimals: number;
-  uri: string;
-  imageUrl?: string;
+  name: string;
 
   freezeAuthority: PublicKey | null;
   mintAuthority: PublicKey | null;
-  updateAuthority: PublicKey | null;
-  isMutable: boolean;
+
+  metadata?: {
+    symbol: string;
+    uri: string;
+    imageUrl?: string;
+    metadataPointer?: {
+      metadataAddress: PublicKey;
+      authority: PublicKey | null;
+    };
+    tokenMetadata?: {
+      updateAuthority: PublicKey | null;
+    },
+    metaplexMetadata?: {
+      updateAuthority: PublicKey | null;
+      isMutable: boolean;
+    }
+  }
 }
 
-interface TokenMetadata {
-  image?: string;
+interface ParsedTokenAccountInfo {
+  extensions?: any[];
+  isNative: boolean;
+  mint: PublicKey;
+  owner: PublicKey;
+  state: string;
+  tokenAmount: {
+    amount: string;
+    decimals: number;
+    uiAmount: number;
+    uiAmountString: string;
+  }
+  programId: PublicKey;
 }
 
 @Injectable({
@@ -53,433 +71,332 @@ export class SelectUserTokenService {
     private readonly http: HttpClient,
   ) { }
 
-  // private async processToken2022Metadata(
-  //   tokenMint: PublicKey,
-  //   mintAccountInfo: AccountInfo<Buffer>,
-  //   parsedInfo: any,
-  //   mintAccount: any
-  // ): Promise<TokenData | null> {
-  //   try {
-  //     // Check if it's a Token2022 token
-  //     if (!mintAccountInfo.owner.equals(TOKEN_2022_PROGRAM_ID)) {
-  //       return null;
-  //     }
+  async fetchUserTokens(): Promise<TokenData[]> {
+    const connection = this.networkService.connection;
+    const pubKey = this.walletService.selectedWallet?.publicKey;
+    if (!pubKey) return [];
 
-  //     // Get extension types
-  //     const extensionTypes = getExtensionTypes(mintAccountInfo.data) as number[];
-      
-  //     // Check for metadata pointer extension
-  //     if (!extensionTypes.includes(51716)) {
-  //       // No metadata pointer - check for TokenMetadata extension first
-  //       if (extensionTypes.includes(51712)) {
-  //         // Process TokenMetadata directly from mint account
-  //         const metadata = await getTokenMetadata(
-  //           this.networkService.connection,
-  //           tokenMint,
-  //           'confirmed',
-  //           TOKEN_2022_PROGRAM_ID,
-  //         );
+    const { mintAddresses, tokenAccountsInfos } = await this.getParsedTokenAccounts(connection, pubKey);
 
-  //         if (!metadata) {
-  //           return null;
-  //         }
+    // console.log('mintAddresses', mintAddresses);
+    // console.log('tokenAccountsInfos', tokenAccountsInfos);
+    
+    const metaplexMetadataAddresses = this.getMetaplexMetadataAccounts(mintAddresses);
+    const { mintAccountsInfoMap, metaplexAccountsInfoMap } = await this.fetchMintAndMetaplexAccountsInfo(connection, mintAddresses, tokenAccountsInfos, metaplexMetadataAddresses);
 
-  //         const tokenBalance = BigInt(parsedInfo.tokenAmount.amount);
-  //         const tokenDecimals = Number(parsedInfo.tokenAmount.decimals);
+    // console.log('mintAccountsInfoMap', mintAccountsInfoMap);
+    // console.log('metaplexAccountsInfoMap', metaplexAccountsInfoMap);
+    // console.log('metaplexAccountsInfoMap keys', Array.from(metaplexAccountsInfoMap.keys()).map(key => key.toBase58()));
 
-  //         return {
-  //           name: metadata.name,
-  //           symbol: metadata.symbol,
-  //           uri: metadata.uri,
-  //           mint: tokenMint,
-  //           tokenProgram: TOKEN_2022_PROGRAM_ID,
-  //           balanceInDecimals: tokenBalance,
-  //           supplyInDecimals: mintAccount.supply,
-  //           decimals: tokenDecimals,
-  //           freezeAuthority: mintAccount.freezeAuthority,
-  //           mintAuthority: mintAccount.mintAuthority,
-  //           updateAuthority: metadata.updateAuthority ?? null,
-  //           isMutable: true, // Token2022 metadata is always mutable
-  //         };
-  //       }
-  //       // No TokenMetadata extension - try Metaplex metadata as fallback
-  //       return this.processMetaplexMetadata(
-  //         tokenMint,
-  //         mintAccountInfo,
-  //         parsedInfo,
-  //         mintAccount,
-  //         this.METADATA_PROGRAM_ID,
-  //         await this.networkService.connection.getAccountInfo(this.METADATA_PROGRAM_ID)
-  //       );
-  //     }
-
-  //     // Get metadata pointer state by first unpacking the mint account
-  //     const unpackedMint = unpackMint(tokenMint, mintAccountInfo, mintAccountInfo.owner);
-  //     const metadataPointer = getMetadataPointerState(unpackedMint);
-  //     if (!metadataPointer?.authority || !metadataPointer?.metadataAddress) {
-  //       return null;
-  //     }
-
-  //     // Get metadata account info
-  //     const metadataAccountInfo = await this.networkService.connection.getAccountInfo(
-  //       metadataPointer.metadataAddress
-  //     );
-
-  //     if (!metadataAccountInfo) {
-  //       return null;
-  //     }
-
-  //     // If metadata address points to a Metaplex account
-  //     if (metadataAccountInfo.owner.equals(this.METADATA_PROGRAM_ID)) {
-  //       return this.processMetaplexMetadata(
-  //         tokenMint,
-  //         mintAccountInfo,
-  //         parsedInfo,
-  //         mintAccount,
-  //         metadataPointer.metadataAddress,
-  //         metadataAccountInfo
-  //       );
-  //     }
-
-  //     // Get Token2022 native metadata
-  //     const metadata = await getTokenMetadata(
-  //       this.networkService.connection,
-  //       metadataPointer.metadataAddress,
-  //       'confirmed',
-  //       TOKEN_2022_PROGRAM_ID,
-  //     );
-
-  //     if (!metadata) {
-  //       return null;
-  //     }
-
-  //     const tokenBalance = BigInt(parsedInfo.tokenAmount.amount);
-  //     const tokenDecimals = Number(parsedInfo.tokenAmount.decimals);
-
-  //     return {
-  //       name: metadata.name,
-  //       symbol: metadata.symbol,
-  //       uri: metadata.uri,
-  //       mint: tokenMint,
-  //       tokenProgram: TOKEN_2022_PROGRAM_ID,
-  //       balanceInDecimals: tokenBalance,
-  //       supplyInDecimals: mintAccount.supply,
-  //       decimals: tokenDecimals,
-  //       freezeAuthority: mintAccount.freezeAuthority,
-  //       mintAuthority: mintAccount.mintAuthority,
-  //       updateAuthority: metadataPointer.authority,
-  //       isMutable: true, // Token2022 metadata is always mutable
-  //     };
-  //   } catch (error) {
-  //     console.error(`Failed to process Token2022 metadata for ${tokenMint.toString()}:`, error);
-  //     return null;
-  //   }
-  // }
-  private getTokenMetadataByMintData(mintInfo: Mint){
-    const data = getExtensionData(ExtensionType.TokenMetadata, mintInfo.tlvData);
-    if (data === null) {
-      return null;
-    }
-    return unpack(data);
+    const tokens = await this.parseTokensMetadata(tokenAccountsInfos, mintAccountsInfoMap, metaplexAccountsInfoMap, metaplexMetadataAddresses);
+    return this.filterTokens(tokens, tokenAccountsInfos, mintAccountsInfoMap, mintAddresses);
   }
 
-  private processMetaplexMetadata(
-    tokenMint: PublicKey,
-    mintAccountInfo: AccountInfo<Buffer>,
-    parsedInfo: any,
-    mintAccount: any,
-    metadataAddress: PublicKey,
-    metadataAccountInfo: AccountInfo<Buffer> | null
-  ): TokenData | null {
-    try {
-      if (!metadataAccountInfo || !metadataAccountInfo.data) {
-        return null;
-      }
+  private async getParsedTokenAccounts(
+    connection: Connection,
+    userPublicKey: PublicKey,
+  ): Promise<{ mintAddresses: PublicKey[]; tokenAccountsInfos: ParsedTokenAccountInfo[] }> {
+    // Fetch token accounts for both token programs with a timeout
+    const [standardTokens, token2022] = await Promise.race([
+      Promise.all([
+        connection.getParsedTokenAccountsByOwner(
+          userPublicKey,
+          { programId: TOKEN_PROGRAM_ID },
+        ).catch(() => ({ value: [] })),
+        connection.getParsedTokenAccountsByOwner(
+          userPublicKey,
+          { programId: TOKEN_2022_PROGRAM_ID },
+        ).catch(() => ({ value: [] })),
+      ]),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout: Failed to fetch token accounts after 10 seconds')), 10_000)
+      )
+    ]) as [RpcResponseAndContext<Array<{
+      pubkey: PublicKey;
+      account: AccountInfo<ParsedAccountData>;
+    }>>, RpcResponseAndContext<Array<{
+      pubkey: PublicKey;
+      account: AccountInfo<ParsedAccountData>;
+    }>>];
+    const allTokenAccounts = [...standardTokens.value, ...token2022.value];
 
+    const mintAddresses: PublicKey[] = [];
+    const tokenAccountsInfos: ParsedTokenAccountInfo[] = [];
+    for (const item of allTokenAccounts) {
+      const parsedInfo = item.account.data.parsed.info;
+      const tokenMint = new PublicKey(parsedInfo.mint);
+
+      // const tokenBalance = Number(parsedInfo.tokenAmount.amount);
+      // if (tokenBalance === 0) continue;  // also include 0-balance tokens
+
+      mintAddresses.push(tokenMint);
+      tokenAccountsInfos.push({
+        ...parsedInfo,
+        programId: item.account.owner,
+        mint: tokenMint,
+        owner: userPublicKey,  // no other options
+      });
+    }
+
+    return { mintAddresses, tokenAccountsInfos };
+  }
+
+  private getMetaplexMetadataAccounts(mintAddresses: PublicKey[]): PublicKey[] {
+    const metaplexMetadataAddresses: PublicKey[] = [];
+
+    // For all tokens, derive potential Metaplex metadata address
+    for(const tokenMint of mintAddresses){
+      const [metaplexAddress] = PublicKey.findProgramAddressSync(
+        [
+          Buffer.from('metadata'),
+          this.METADATA_PROGRAM_ID.toBuffer(),
+          tokenMint.toBuffer(),
+        ],
+        this.METADATA_PROGRAM_ID
+      );
+      metaplexMetadataAddresses.push(metaplexAddress);
+    }
+
+    return metaplexMetadataAddresses;
+  }
+
+  private async fetchMintAndMetaplexAccountsInfo(
+    connection: Connection,
+    mintAddresses: PublicKey[],
+    tokenAccountsInfos: ParsedTokenAccountInfo[],
+    metaplexMetadataAddresses: PublicKey[]
+  ): Promise<{
+    mintAccountsInfoMap: Map<PublicKey, Mint>;
+    metaplexAccountsInfoMap: Map<PublicKey, Metadata>
+  }> {
+    // Fetch all mint accounts and potential Metaplex metadata accounts in parallel
+    const [mintAccountsInfo, metaplexAccountsInfo] = await Promise.all([
+      connection.getMultipleAccountsInfo(mintAddresses),
+      connection.getMultipleAccountsInfo(metaplexMetadataAddresses)
+    ]);
+
+    const mintAccountsInfoMap = new Map<PublicKey, Mint>();
+    for(let i = 0; i < mintAccountsInfo.length; i++){
+      const mintAccountInfo = mintAccountsInfo[i];
+      if(!mintAccountInfo) continue;
+      const unpackedMint = unpackMint(mintAddresses[i], mintAccountInfo, tokenAccountsInfos[i].programId);
+      mintAccountsInfoMap.set(mintAddresses[i], unpackedMint);
+    }
+
+    const metaplexAccountsInfoMap = new Map<PublicKey, Metadata>();
+    for(let i = 0; i < metaplexAccountsInfo.length; i++){
+      const metaplexAccountInfo = metaplexAccountsInfo[i];
+      if(!metaplexAccountInfo) continue;
       const metadata = deserializeMetadata({
-        ...metadataAccountInfo,
-        data: metadataAccountInfo.data,
-        executable: false,
+        ...metaplexAccountInfo,
         owner: fromWeb3JsPublicKey(this.METADATA_PROGRAM_ID),
         lamports: sol(0),
         rentEpoch: BigInt(0),
-        publicKey: fromWeb3JsPublicKey(metadataAddress)
+        publicKey: fromWeb3JsPublicKey(metaplexMetadataAddresses[i])
       });
+      metaplexAccountsInfoMap.set(mintAddresses[i], metadata);
+    }
 
-      const tokenBalance = BigInt(parsedInfo.tokenAmount.amount);
-      const tokenDecimals = Number(parsedInfo.tokenAmount.decimals);
+    return { mintAccountsInfoMap, metaplexAccountsInfoMap };
+  }
+
+  private async parseTokensMetadata(
+    tokenAccountsInfos: ParsedTokenAccountInfo[],
+    mintAccountsInfoMap: Map<PublicKey, Mint>,
+    metaplexAccountsInfoMap: Map<PublicKey, Metadata>,
+    metaplexMetadataAddresses: PublicKey[],
+  ) {
+    const processMetaplexMetadata = (tokenAccountInfo: ParsedTokenAccountInfo, mint: Mint, metadata: Metadata | undefined): TokenData | null => {
+      if(metadata === undefined) return null;
+      
+      const tokenBalance = BigInt(tokenAccountInfo.tokenAmount.amount);
+      const tokenDecimals = Number(tokenAccountInfo.tokenAmount.decimals);
       const name = metadata.name.replace(/\0/g, '').trim();
 
       return {
-        name,
-        symbol: metadata.symbol.replace(/\0/g, '').trim(),
-        uri: metadata.uri.replace(/\0/g, '').trim(),
-        mint: toWeb3JsPublicKey(metadata.mint),
-        tokenProgram: mintAccountInfo.owner,
+        mint: mint.address,
+        tokenProgram: tokenAccountInfo.programId,
         balanceInDecimals: tokenBalance,
-        supplyInDecimals: mintAccount.supply,
+        supplyInDecimals: mint.supply,
         decimals: tokenDecimals,
-        freezeAuthority: mintAccount.freezeAuthority,
-        mintAuthority: mintAccount.mintAuthority,
-        updateAuthority: toWeb3JsPublicKey(metadata.updateAuthority),
-        isMutable: metadata.isMutable,
-      };
-    } catch (error) {
-      console.error(`Failed to process Metaplex metadata for ${tokenMint.toString()}:`, error);
-      return null;
-    }
-  }
-
-  /** fetch all user tokens in 3 RPC calls */
-  async getUserTokens(): Promise<TokenData[]> {
-    try {
-      const connection = this.networkService.connection;
-      const pubKey = this.walletService.selectedWallet?.publicKey;
-      if (!pubKey) return [];
-
-      // Fetch token accounts for both programs with a timeout
-      const [standardTokens, token2022] = await Promise.race([
-        Promise.all([
-          connection.getParsedTokenAccountsByOwner(
-            pubKey,
-            { programId: TOKEN_PROGRAM_ID },
-          ).catch(() => ({ value: [] })),
-          connection.getParsedTokenAccountsByOwner(
-            pubKey,
-            { programId: TOKEN_2022_PROGRAM_ID },
-          ).catch(() => ({ value: [] })),
-        ]),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout: Failed to fetch token accounts after 10 seconds')), 10_000)
-        )
-      ]) as [RpcResponseAndContext<Array<{
-        pubkey: PublicKey;
-        account: AccountInfo<ParsedAccountData>;
-      }>>, RpcResponseAndContext<Array<{
-        pubkey: PublicKey;
-        account: AccountInfo<ParsedAccountData>;
-      }>>];
-
-      const response = {
-        value: [...standardTokens.value, ...token2022.value]
-      };
-
-      // Collect all accounts we need to fetch
-      const mintAddresses: PublicKey[] = [];
-      const metaplexMetadataAddresses: PublicKey[] = [];
-      const tokenInfos: { parsedInfo: any; isToken2022: boolean }[] = [];
-
-      for (const item of response.value) {
-        const parsedInfo = item.account.data.parsed.info;
-        const tokenBalance = Number(parsedInfo.tokenAmount.amount);
-        const tokenMint = new PublicKey(parsedInfo.mint);
-        const isToken2022 = item.account.owner.equals(TOKEN_2022_PROGRAM_ID);
-
-        if (tokenBalance === 0) continue;
-
-        // Always add mint address
-        mintAddresses.push(tokenMint);
-        tokenInfos.push({ parsedInfo, isToken2022 });
-
-        // For all tokens, derive potential Metaplex metadata address
-        const [metaplexAddress] = PublicKey.findProgramAddressSync(
-          [
-            Buffer.from('metadata'),
-            this.METADATA_PROGRAM_ID.toBuffer(),
-            tokenMint.toBuffer(),
-          ],
-          this.METADATA_PROGRAM_ID
-        );
-        metaplexMetadataAddresses.push(metaplexAddress);
-      }
-
-      // Fetch all mint accounts and potential Metaplex metadata accounts in parallel
-      const [mintAccountsInfo, metaplexAccountsInfo] = await Promise.all([
-        connection.getMultipleAccountsInfo(mintAddresses),
-        connection.getMultipleAccountsInfo(metaplexMetadataAddresses)
-      ]);
-
-      // Collect Token2022 metadata addresses from metadata pointers
-      const token2022MetadataAddresses: PublicKey[] = [];
-      const token2022MetadataIndices: number[] = [];
-      const token2022UnpackedMints: Map<PublicKey, Mint> = new Map();
-
-      mintAccountsInfo?.forEach((mintInfo, index) => {
-        if (!mintInfo || !tokenInfos[index].isToken2022) return;
-
-        const extensionTypes = getExtensionTypes(mintInfo.data) as number[];
-        
-        const unpackedMint = unpackMint(mintAddresses[index], mintInfo, mintInfo.owner);
-        token2022UnpackedMints.set(mintAddresses[index], unpackedMint);
-        if (extensionTypes.includes(51716)) { // MetadataPointer
-          const metadataPointer = getMetadataPointerState(unpackedMint);
-          if (metadataPointer?.metadataAddress) {
-            token2022MetadataAddresses.push(metadataPointer.metadataAddress);
-            token2022MetadataIndices.push(index);
-          }
+        freezeAuthority: mint.freezeAuthority,
+        mintAuthority: mint.mintAuthority,
+        name,
+        metadata: {
+          symbol: metadata.symbol.replace(/\0/g, '').trim(),
+          uri: metadata.uri.replace(/\0/g, '').trim(),
         }
-      });
+      };
+    };
+    const getTokenMetadataByMintData = (mintInfo: Mint): SplTokenMetadata | null => {
+      const data = getExtensionData(ExtensionType.TokenMetadata, mintInfo.tlvData);
+      if (data === null) {
+        return null;
+      }
+      return unpack(data);
+    };
+    const useJustTheMetaplexMetadata = (tokenAccountInfo: ParsedTokenAccountInfo, mint: Mint, metaplexMetadata: Metadata | undefined): TokenData | null => {
+      const data = processMetaplexMetadata(tokenAccountInfo, mint, metaplexMetadata);
+      if(data !== null && data.metadata){
+        data.metadata.metaplexMetadata = {
+          isMutable: metaplexMetadata?.isMutable ?? false,
+          updateAuthority: metaplexMetadata?.updateAuthority ? toWeb3JsPublicKey(metaplexMetadata.updateAuthority) : null,
+        };
+      }
+      return data;
+    };
 
-      // Fetch Token2022 metadata accounts in one batch if any exist
-      const token2022AccountsInfo = token2022MetadataAddresses.length > 0 
-        ? await connection.getMultipleAccountsInfo(token2022MetadataAddresses)
-        : [];
-      token2022MetadataAddresses.forEach((address, index) => {
-        if(!token2022AccountsInfo[index]) return;
-        const unpackedMint = unpackMint(address, token2022AccountsInfo[index], token2022AccountsInfo[index].owner);
-        token2022UnpackedMints.set(address, unpackedMint);
-      });
+    let parsedMetadata: (TokenData | null)[] = await Promise.all(
+      tokenAccountsInfos.map(async (tokenAccountInfo, index) => {
+        const mint = mintAccountsInfoMap.get(tokenAccountInfo.mint);
+        const metaplexMetadata = metaplexAccountsInfoMap.get(tokenAccountInfo.mint);
+        if(!mint) return null;
 
-      // Process all tokens
-      const nameOccurrences = new Map<string, number>();
-      let parsedMetadata: (TokenData | null)[] = await Promise.all(
-        mintAddresses.map(async (tokenMint, index) => {
-          if (!mintAccountsInfo?.[index]) return null;
+        if(tokenAccountInfo.programId.equals(TOKEN_2022_PROGRAM_ID)) {
+          const metadataPointerState = getMetadataPointerState(mint);
+          // if there is a metadata pointer
+          if(metadataPointerState !== null && metadataPointerState.metadataAddress){
 
-          const mintInfo = mintAccountsInfo[index];
-          const { parsedInfo, isToken2022 } = tokenInfos[index];
-          const mintAccount = unpackMint(tokenMint, mintInfo, mintInfo.owner);
+            // if it points to the token metadata extension (stored in the mint itself)
+            if(metadataPointerState.metadataAddress.equals(mint.address)){
+              const tokenMetadata = getTokenMetadataByMintData(mint);
+              if(tokenMetadata !== null){
+                const tokenBalance = BigInt(tokenAccountInfo.tokenAmount.amount);
+                const tokenDecimals = Number(tokenAccountInfo.tokenAmount.decimals);
+                const name = tokenMetadata.name.replace(/\0/g, '').trim();
 
-          if (!isToken2022) {
-            // Try Metaplex metadata
-            const metaplexInfo = metaplexAccountsInfo?.[index];
-            if (!metaplexInfo) return null;
-
-            return this.processMetaplexMetadata(
-              tokenMint,
-              mintInfo,
-              parsedInfo,
-              mintAccount,
-              metaplexMetadataAddresses[index],
-              metaplexInfo
-            );
-          }
-
-          // Process Token2022
-          const extensionTypes = getExtensionTypes(mintInfo.data) as number[];
-
-          // Check for metadata pointer
-          if (extensionTypes.includes(51716)) {
-            const token2022Index = token2022MetadataIndices.indexOf(index);
-            if (token2022Index === -1) return null;
-
-            const metadataInfo = token2022AccountsInfo[token2022Index];
-            if (!metadataInfo) return null;
-
-            // If points to Metaplex account
-            if (metadataInfo.owner.equals(this.METADATA_PROGRAM_ID)) {
-              return this.processMetaplexMetadata(
-                tokenMint,
-                mintInfo,
-                parsedInfo,
-                mintAccount,
-                token2022MetadataAddresses[token2022Index],
-                metadataInfo
-              );
+                return {
+                  mint: mint.address,
+                  tokenProgram: tokenAccountInfo.programId,
+                  balanceInDecimals: tokenBalance,
+                  supplyInDecimals: mint.supply,
+                  decimals: tokenDecimals,
+                  freezeAuthority: mint.freezeAuthority,
+                  mintAuthority: mint.mintAuthority,
+                  name,
+                  metadata: {
+                    symbol: tokenMetadata.symbol.replace(/\0/g, '').trim(),
+                    uri: tokenMetadata.uri.replace(/\0/g, '').trim(),
+                    metadataPointer: {
+                      authority: metadataPointerState.authority ?? null,
+                      metadataAddress: metadataPointerState.metadataAddress,
+                    },
+                    tokenMetadata: {
+                      updateAuthority: tokenMetadata.updateAuthority ?? null,
+                    },
+                  },
+                };
+              }
+              return null;
             }
 
-            // Process Token2022 metadata
-            const unpackedMint = token2022UnpackedMints.get(token2022MetadataAddresses[token2022Index]);
-            if (!unpackedMint) return null;
-            const metadata = this.getTokenMetadataByMintData(
-              unpackedMint
-            );
-            if (!metadata) return null;
+            // if it points to a Metaplex metadata account
+            else if(metadataPointerState.metadataAddress.equals(metaplexMetadataAddresses[index])){
+              const data = processMetaplexMetadata(tokenAccountInfo, mint, metaplexMetadata);
+              if(data !== null && data.metadata){
+                data.metadata.metadataPointer = {
+                  authority: metadataPointerState.authority ?? null,
+                  metadataAddress: metadataPointerState.metadataAddress,
+                };
+                data.metadata.metaplexMetadata = {
+                  isMutable: metaplexMetadata?.isMutable ?? false,
+                  updateAuthority: metaplexMetadata?.updateAuthority ? toWeb3JsPublicKey(metaplexMetadata.updateAuthority) : null,
+                };
+              }
+              return data;
+            }
 
-            return {
-              name: metadata.name,
-              symbol: metadata.symbol,
-              uri: metadata.uri,
-              mint: tokenMint,
-              tokenProgram: TOKEN_2022_PROGRAM_ID,
-              balanceInDecimals: BigInt(parsedInfo.tokenAmount.amount),
-              supplyInDecimals: mintAccount.supply,
-              decimals: Number(parsedInfo.tokenAmount.decimals),
-              freezeAuthority: mintAccount.freezeAuthority,
-              mintAuthority: mintAccount.mintAuthority,
-              updateAuthority: metadata.updateAuthority ?? null,
-              isMutable: true
-            };
+            // if points somewhere else
+            else {
+              return useJustTheMetaplexMetadata(tokenAccountInfo, mint, metaplexMetadata);
+            }
           }
-
-          // Check for direct TokenMetadata
-          if (extensionTypes.includes(51712)) {
-            const unpackedMint = token2022UnpackedMints.get(tokenMint);
-            if (!unpackedMint) return null;
-            const metadata = this.getTokenMetadataByMintData(
-              unpackedMint
-            );
-
-            if (!metadata) return null;
-
-            return {
-              name: metadata.name,
-              symbol: metadata.symbol,
-              uri: metadata.uri,
-              mint: tokenMint,
-              tokenProgram: TOKEN_2022_PROGRAM_ID,
-              balanceInDecimals: BigInt(parsedInfo.tokenAmount.amount),
-              supplyInDecimals: mintAccount.supply,
-              decimals: Number(parsedInfo.tokenAmount.decimals),
-              freezeAuthority: mintAccount.freezeAuthority,
-              mintAuthority: mintAccount.mintAuthority,
-              updateAuthority: metadata.updateAuthority ?? null,
-              isMutable: true
-            };
+          // if there is no metadata pointer
+          else {
+            return useJustTheMetaplexMetadata(tokenAccountInfo, mint, metaplexMetadata);
           }
-
-          // Try Metaplex as fallback
-          const metaplexInfo = metaplexAccountsInfo?.[index];
-          if (!metaplexInfo) return null;
-
-          return this.processMetaplexMetadata(
-            tokenMint,
-            mintInfo,
-            parsedInfo,
-            mintAccount,
-            metaplexMetadataAddresses[index],
-            metaplexInfo
-          );
-        })
-      );
-
-      // Filter out nulls and handle name collisions
-      parsedMetadata = parsedMetadata.filter(token => {
-        if (!token) return false;
-        
-        nameOccurrences.set(token.name, (nameOccurrences.get(token.name) || 0) + 1);
-        return true;
-      });
-
-      // Add mint address suffix for duplicate names
-      parsedMetadata = parsedMetadata.map(token => {
-        if (!token) return token;
-        
-        if (nameOccurrences.get(token.name)! > 1) {
-          const mintAddress = token.mint;
-          const prefix = mintAddress.toBase58().slice(0, 4);
-          const suffix = mintAddress.toBase58().slice(-4);
-          token.name = `${token.name} (${prefix}...${suffix})`;
         }
-        return token;
-      });
 
-      parsedMetadata.sort((a, b) => a!.name.localeCompare(b!.name));
-      return parsedMetadata as TokenData[];
-    } catch (error) {
-      console.error('Error fetching token accounts:', error);
-      return [];
-    }
+        // if it's not a token 2022 token
+        else {
+          return useJustTheMetaplexMetadata(tokenAccountInfo, mint, metaplexMetadata);
+        }
+      })
+    );
+    return parsedMetadata;
   }
 
+  private filterTokens(
+    tokens: (TokenData | null)[],
+    tokenAccountsInfos: ParsedTokenAccountInfo[],
+    mintAccountsInfoMap: Map<PublicKey, Mint>,
+    mintAddresses: PublicKey[],
+  ): TokenData[] {
+    const nameOccurrences = new Map<string, number>();
+    const unknownTokensMints = new Set<PublicKey>();
+
+    let allTokens = tokens.map((token, index) => {
+      if(token !== null){
+        nameOccurrences.set(token.name, (nameOccurrences.get(token.name) || 0) + 1);
+        return token;
+      }
+      const mint = mintAccountsInfoMap.get(mintAddresses[index])!;
+      unknownTokensMints.add(mint.address);
+      return {
+        mint: mint.address,
+        tokenProgram: tokenAccountsInfos[index].programId,
+        balanceInDecimals: BigInt(tokenAccountsInfos[index].tokenAmount.amount),
+        supplyInDecimals: mint.supply,
+        decimals: mint.decimals,
+        freezeAuthority: mint.freezeAuthority,
+        mintAuthority: mint.mintAuthority,
+        name: `Unknown Token (${mint.address.toBase58()})`,
+      };
+    });
+
+    // Add mint address suffix for duplicate names
+    allTokens = allTokens.map(token => {
+      if (!token) return token;
+      
+      if (nameOccurrences.get(token.name)! > 1) {
+        const mintAddress = token.mint;
+        const prefix = mintAddress.toBase58().slice(0, 4);
+        const suffix = mintAddress.toBase58().slice(-4);
+        token.name = `${token.name} (${prefix}...${suffix})`;
+      }
+      return token;
+    });
+    allTokens.sort((a, b) => {
+      const aIsUnknown = unknownTokensMints.has(a.mint);
+      const bIsUnknown = unknownTokensMints.has(b.mint);
+      
+      if (aIsUnknown && !bIsUnknown) return 1;
+      if (!aIsUnknown && bIsUnknown) return -1;
+      
+      return a.name.localeCompare(b.name);
+    });
+
+    return allTokens;
+  }
+
+  // -------- IMAGES --------
+
   loadTokenImages(tokens: TokenData[]): Observable<TokenData[]> {
+    interface TokenMetadata {
+      image?: string;
+    }
+
+    // TODO think about the IPFS, Arweave and other rate limits
     const fetchImageUrl = (token: TokenData) => {
-      return this.http.get<TokenMetadata>(token.uri).pipe(
+      if (token.metadata === undefined) return of(token);
+      
+      console.log('token.metadata', token.metadata);
+      return this.http.get<TokenMetadata>(token.metadata.uri).pipe(
         map(metadata => {
-          if (metadata.image && typeof metadata.image === 'string') {
+          if (metadata.image && typeof metadata.image === 'string' && token.metadata) {
             try {
               new URL(metadata.image);
-              token.imageUrl = metadata.image;
+              token.metadata.imageUrl = metadata.image;
             } catch {
               console.warn(`Invalid image URL for token ${token.name}: ${metadata.image}`);
             }
