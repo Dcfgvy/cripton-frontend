@@ -20,6 +20,7 @@ import { PricesService } from '../../app-settings/prices.service';
 import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { TokenData } from '../components/select-user-token/select-user-token.service';
 import { METADATA_PROGRAM_ID } from '../constants/token.constants';
+import { WarningComponent } from "../../components/warning/warning.component";
 
 @Component({
   selector: 'app-revoke-authorities',
@@ -32,8 +33,9 @@ import { METADATA_PROGRAM_ID } from '../constants/token.constants';
     SolanaTokenAuthoritiesComponent,
     ReactiveFormsModule,
     ErrorComponent,
-    Toast
-  ],
+    Toast,
+    WarningComponent
+],
   templateUrl: './revoke-authorities.component.html',
   styleUrl: './revoke-authorities.component.scss',
   providers: [MessageService]
@@ -94,7 +96,6 @@ export class RevokeAuthoritiesComponent implements OnInit {
     this.addOns
   )());
 
-  // TODO: add warnings if pointer and token metadata don't have the same authorities
   private getUpdateAuthorityErrors(token: TokenData, userPublicKey: string): string[] {
     const errors: string[] = [];
     const metadata = token.metadata;
@@ -194,8 +195,30 @@ export class RevokeAuthoritiesComponent implements OnInit {
     return this.authorityErrors().length > 0;
   });
 
+  warnings = computed<string[]>(() => {
+    const warnings: string[] = [];
+    const token = this.selectedToken();
+    if(!token) return warnings;
+
+    if(this.addOns['updateAuthority']?.added() && token.tokenProgram.equals(TOKEN_2022_PROGRAM_ID)){
+      const pointerAuthority = token.metadata?.metadataPointer?.authority;
+      let metadataAuthority: PublicKey | null = null;
+      if(token.metadata?.metadataPointer?.metadataAddress.equals(token.mint)){
+        metadataAuthority = token.metadata?.tokenMetadata?.updateAuthority || null;
+      }
+      else if(token.metadata?.metaplexMetadata){
+        metadataAuthority = token.metadata?.metaplexMetadata?.updateAuthority || null;
+      }
+      
+      if(!pointerAuthority?.equals(metadataAuthority!)){
+        warnings.push('Token metadata and metadata pointer have different authorities, so only the metadata authority will be updated');
+      }
+    }
+
+    return warnings;
+  });
+
   buttonDisabled = computed<boolean>(() => {
-    console.log(this.selectedToken());  // TODO: remove
     // basic checks
     if(!this.selectedToken()) return true;
     if(!this.authoritiesFormValid()) return true;
@@ -249,7 +272,6 @@ export class RevokeAuthoritiesComponent implements OnInit {
         const newAuthorityRaw = this.authoritiesForm.get('updateAuthority')?.value || null;
         const newAuthority = newAuthorityRaw ? new PublicKey(newAuthorityRaw) : null;
         const metadata = token.metadata!;
-        // TODO add support for token 2022
 
         if(token.tokenProgram.equals(TOKEN_2022_PROGRAM_ID) && metadata.metadataPointer !== undefined){
           if(metadata.metadataPointer.metadataAddress.equals(token.mint)){
@@ -303,3 +325,4 @@ export class RevokeAuthoritiesComponent implements OnInit {
     }
   }
 }
+// TODO add FAQ

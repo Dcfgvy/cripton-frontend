@@ -60,6 +60,12 @@ export class SelectUserTokenComponent implements OnInit, OnDestroy {
 
     try {
       this.userTokens = await this.tokenService.fetchUserTokens();
+      this.userTokens = this.userTokens.map(t => {
+        return {
+          ...t,
+          address: t.mint.toBase58(),
+        }
+      });
       this.tokenService.loadTokenImages(this.userTokens).subscribe();
     } catch (error) {
       console.error('Error fetching token accounts:', error);

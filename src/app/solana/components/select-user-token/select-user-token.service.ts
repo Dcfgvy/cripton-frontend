@@ -334,6 +334,7 @@ export class SelectUserTokenService {
     mintAccountsInfoMap: Map<PublicKey, Mint>,
     mintAddresses: PublicKey[],
   ): TokenData[] {
+    // TODO add defaut images and names for popular tokens like USDC, USDT, etc. that don't have metadata
     const nameOccurrences = new Map<string, number>();
     const unknownTokensMints = new Set<PublicKey>();
 

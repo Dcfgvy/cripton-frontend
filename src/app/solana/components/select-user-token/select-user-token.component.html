@@ -8,6 +8,9 @@
   [loading]="isFetchingInProgress()"
   fluid
   [disabled]="walletService.selectedWalletSignal() === null"
+  [filter]="userTokens.length > 5"
+  filterPlaceholder="Search by name or address"
+  [filterFields]="['name', 'symbol', 'address']"
 >
   <ng-template #selectedItem let-selectedOption>
     @if (selectedOption) {
@@ -26,8 +29,5 @@
       <!-- Name -->
       <div>{{ token.name }}</div>
     </div>
-  </ng-template>
-  <ng-template #header>
-    <div class="font-medium p-3">Your Tokens</div>
   </ng-template>
 </p-select>
