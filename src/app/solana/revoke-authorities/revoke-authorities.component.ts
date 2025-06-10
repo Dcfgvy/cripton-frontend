@@ -17,8 +17,9 @@ import { Toast } from 'primeng/toast';
 import { RevokeAuthoritiesService, UpdateAuthoritiesData } from './revoke-authorities.service';
 import { PublicKey } from '@solana/web3.js';
 import { PricesService } from '../../app-settings/prices.service';
-import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { TokenData } from '../components/select-user-token/select-user-token.service';
+import { METADATA_PROGRAM_ID } from '../constants/token.constants';
 
 @Component({
   selector: 'app-revoke-authorities',
@@ -93,16 +94,64 @@ export class RevokeAuthoritiesComponent implements OnInit {
     this.addOns
   )());
 
+  // TODO: add warnings if pointer and token metadata don't have the same authorities
+  private getUpdateAuthorityErrors(token: TokenData, userPublicKey: string): string[] {
+    const errors: string[] = [];
+    const metadata = token.metadata;
+    if(!metadata) {
+      errors.push('Token metadata is not available');
+      return errors;
+    }
+
+    let currentAuthority: PublicKey | null = null;
+    // if Token Metadata is used
+    if(metadata.metadataPointer?.metadataAddress.equals(token.mint)){
+      if(!metadata.tokenMetadata){
+        errors.push('Token metadata is not available');
+        return errors;
+      }
+      currentAuthority = metadata.tokenMetadata.updateAuthority;
+    }
+
+    // if Metaplex Metadata is used
+    else if(metadata.metaplexMetadata){
+      if(!metadata.metaplexMetadata?.isMutable) {
+        errors.push('Token metadata is immutable, Update Authority cannot be changed');
+        return errors;
+      }
+      currentAuthority = metadata.metaplexMetadata.updateAuthority;
+    }
+
+    // checking authorities
+    const currentAuthorityString = currentAuthority?.toBase58();
+    const newAuthority = this.authoritiesForm.get('updateAuthority')?.value;
+
+    if(!currentAuthorityString || currentAuthorityString !== userPublicKey) {
+      errors.push('You must be the current Update Authority to transfer or revoke it');
+    }
+    if(newAuthority) {
+      if(newAuthority === userPublicKey) {
+        errors.push('New Update Authority cannot be the same as current authority');
+      }
+      if(newAuthority === token.mint.toBase58()) {
+        errors.push('New Update Authority cannot be the token\'s mint address');
+      }
+    }
+
+    return errors;
+  }
+
   authorityErrors = computed<string[]>(() => {
     const errors: string[] = [];
     const userPublicKey: string | undefined = this.walletService.selectedWalletSignal()?.publicKey?.toBase58();
-    
-    if(!userPublicKey || !this.selectedToken()) {
+    const token = this.selectedToken();
+
+    if(!userPublicKey || !token) {
       return errors;
     }
 
     if(this.addOns['freezeAuthority']?.added()) {
-      const currentAuthority = this.selectedToken()?.freezeAuthority?.toBase58();
+      const currentAuthority = token.freezeAuthority?.toBase58();
       if(!currentAuthority || currentAuthority !== userPublicKey) {
         errors.push('You must be the current Freeze Authority to transfer or revoke it');
       }
@@ -112,14 +161,14 @@ export class RevokeAuthoritiesComponent implements OnInit {
         if(newAuthority === userPublicKey) {
           errors.push('New Freeze Authority cannot be the same as current authority');
         }
-        if(newAuthority === this.selectedToken()?.mint.toBase58()) {
+        if(newAuthority === token.mint.toBase58()) {
           errors.push('New Freeze Authority cannot be the token\'s mint address');
         }
       }
     }
 
     if(this.addOns['mintAuthority']?.added()) {
-      const currentAuthority = this.selectedToken()?.mintAuthority?.toBase58();
+      const currentAuthority = token.mintAuthority?.toBase58();
       if(!currentAuthority || currentAuthority !== userPublicKey) {
         errors.push('You must be the current Mint Authority to transfer or revoke it');
       }
@@ -129,31 +178,14 @@ export class RevokeAuthoritiesComponent implements OnInit {
         if(newAuthority === userPublicKey) {
           errors.push('New Mint Authority cannot be the same as current authority');
         }
-        if(newAuthority === this.selectedToken()?.mint.toBase58()) {
+        if(newAuthority === token.mint.toBase58()) {
           errors.push('New Mint Authority cannot be the token\'s mint address');
         }
       }
     }
 
     if(this.addOns['updateAuthority']?.added()) {
-      // TODO add support for token 2022
-      if(!this.selectedToken()?.metadata?.metaplexMetadata?.isMutable) {
-        errors.push('Token metadata is immutable, Update Authority cannot be changed');
-      }
-      const currentAuthority = this.selectedToken()?.metadata?.metaplexMetadata?.updateAuthority?.toBase58();
-      if(!currentAuthority || currentAuthority !== userPublicKey) {
-        errors.push('You must be the current Update Authority to transfer or revoke it');
-      }
-
-      const newAuthority = this.authoritiesForm.get('updateAuthority')?.value;
-      if(newAuthority) {
-        if(newAuthority === userPublicKey) {
-          errors.push('New Update Authority cannot be the same as current authority');
-        }
-        if(newAuthority === this.selectedToken()?.mint.toBase58()) {
-          errors.push('New Update Authority cannot be the token\'s mint address');
-        }
-      }
+      errors.push(...this.getUpdateAuthorityErrors(token, userPublicKey));
     }
 
     return errors;
@@ -214,21 +246,39 @@ export class RevokeAuthoritiesComponent implements OnInit {
       }
 
       if (this.addOns['updateAuthority'].added()) {
-        const newAuthority = this.authoritiesForm.get('updateAuthority')?.value || null;
+        const newAuthorityRaw = this.authoritiesForm.get('updateAuthority')?.value || null;
+        const newAuthority = newAuthorityRaw ? new PublicKey(newAuthorityRaw) : null;
+        const metadata = token.metadata!;
         // TODO add support for token 2022
-        if(token.tokenProgram.equals(TOKEN_PROGRAM_ID)){ // Original token program with Metaplex Metadata
-          if(newAuthority === null) {  // if revoked
+
+        if(token.tokenProgram.equals(TOKEN_2022_PROGRAM_ID) && metadata.metadataPointer !== undefined){
+          if(metadata.metadataPointer.metadataAddress.equals(token.mint)){
             data.updateAuthority = {
-              currentAuthority: token.metadata!.metaplexMetadata!.updateAuthority!,
-              newAuthority: token.metadata!.metaplexMetadata!.updateAuthority!,
-              isMutable: false
-            };
-          } else {
-            data.updateAuthority = {  // if transferred
-              currentAuthority: token.metadata!.metaplexMetadata!.updateAuthority!,
-              newAuthority: new PublicKey(newAuthority),
-              isMutable: true
-            };
+              currentAuthority: metadata.tokenMetadata!.updateAuthority!,
+              newAuthority: newAuthority,
+              updateInMetadata: true,
+              updateInPointer: metadata.metadataPointer.authority?.equals(metadata.tokenMetadata!.updateAuthority!),
+            }
+          }
+          else if(metadata.metaplexMetadata !== undefined) {
+            data.updateAuthority = {
+              currentAuthority: metadata.metaplexMetadata!.updateAuthority!,
+              newAuthority: newAuthority,
+              updateInMetaplex: true,
+              updateInPointer: metadata.metadataPointer.authority?.equals(metadata.metaplexMetadata!.updateAuthority!),
+              isMutable: newAuthority !== null // do not update if we're revoking the authority
+            }
+          }
+        }
+        // Original token program with Metaplex Metadata
+        else {
+          if(metadata.metaplexMetadata !== undefined) {
+            data.updateAuthority = {
+              currentAuthority: metadata.metaplexMetadata!.updateAuthority!,
+              newAuthority: newAuthority,
+              updateInMetaplex: true,
+              isMutable: newAuthority !== null // do not update if we're revoking the authority
+            }
           }
         }
       }

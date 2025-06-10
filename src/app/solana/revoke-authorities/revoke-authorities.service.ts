@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { LAMPORTS_PER_SOL, PublicKey, Transaction } from '@solana/web3.js';
-import { createSetAuthorityInstruction, AuthorityType } from '@solana/spl-token';
+import { createSetAuthorityInstruction, AuthorityType, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
+import { createUpdateAuthorityInstruction } from '@solana/spl-token-metadata';
 import { TransactionsHandlerService, SendTransactionWithFeesArgs } from '../transactions-handler/transactions-handler.service';
 import { WalletService } from '../../wallet/wallet.service';
 import { NetworkService } from '../../network-switch/network-switch.service';
@@ -9,6 +10,7 @@ import { createNoopSigner, createUmi, Umi } from '@metaplex-foundation/umi';
 import { defaultProgramRepository } from '@metaplex-foundation/umi-program-repository';
 import { web3JsEddsa } from '@metaplex-foundation/umi-eddsa-web3js';
 import { fromWeb3JsPublicKey, toWeb3JsInstruction } from '@metaplex-foundation/umi-web3js-adapters';
+import type { TokenData } from '../components/select-user-token/select-user-token.service';
 
 export interface UpdateAuthoritiesData {
   mint: PublicKey;
@@ -26,8 +28,13 @@ export interface UpdateAuthoritiesData {
   updateAuthority?: {
     currentAuthority: PublicKey;
     newAuthority: PublicKey | null;
+    updateInPointer?: boolean;
+    updateInMetadata?: boolean;
+    // Metaplex zone
+    updateInMetaplex?: boolean;
     isMutable?: boolean;
   };
+  metadata?: TokenData['metadata'];
 }
 
 @Injectable({
@@ -82,20 +89,40 @@ export class RevokeAuthoritiesService {
     }
 
     if (data.updateAuthority) {
-      const metadataPDA = findMetadataPda(this.getUmiContext(), { mint: fromWeb3JsPublicKey(data.mint) })[0];
-
-      let updateAuthority: PublicKey | null | undefined = data.updateAuthority.newAuthority;
-      if(updateAuthority === null || updateAuthority === data.updateAuthority.currentAuthority) updateAuthority = undefined;
-
-      const transferInstructions = updateMetadataAccountV2(this.getUmiContext(), {
-        metadata: metadataPDA,
-        updateAuthority: createNoopSigner(fromWeb3JsPublicKey(data.updateAuthority.currentAuthority)),
-        newUpdateAuthority: updateAuthority ? fromWeb3JsPublicKey(updateAuthority) : undefined,
-        isMutable: data.updateAuthority.isMutable,
-      }).getInstructions();
-
-      for(const inst of transferInstructions){
-        transaction.add(toWeb3JsInstruction(inst));
+      if(data.updateAuthority.updateInMetaplex){
+        const metadataPDA = findMetadataPda(this.getUmiContext(), { mint: fromWeb3JsPublicKey(data.mint) })[0];
+  
+        let updateAuthority: PublicKey | null | undefined = data.updateAuthority.newAuthority;
+        if(updateAuthority === null || updateAuthority === data.updateAuthority.currentAuthority) updateAuthority = undefined;
+  
+        const transferInstructions = updateMetadataAccountV2(this.getUmiContext(), {
+          metadata: metadataPDA,
+          updateAuthority: createNoopSigner(fromWeb3JsPublicKey(data.updateAuthority.currentAuthority)),
+          newUpdateAuthority: updateAuthority ? fromWeb3JsPublicKey(updateAuthority) : undefined,
+          isMutable: data.updateAuthority.isMutable,
+        }).getInstructions();
+  
+        for(const inst of transferInstructions){
+          transaction.add(toWeb3JsInstruction(inst));
+        }
+      }
+      if(data.updateAuthority.updateInPointer){
+        transaction.add(createSetAuthorityInstruction(
+          data.mint,
+          data.updateAuthority.currentAuthority,
+          AuthorityType.MetadataPointer,
+          data.updateAuthority.newAuthority,
+          [],
+          TOKEN_2022_PROGRAM_ID
+        ));
+      }
+      if(data.updateAuthority.updateInMetadata){
+        transaction.add(createUpdateAuthorityInstruction({
+          metadata: data.mint,
+          oldAuthority: data.updateAuthority.currentAuthority,
+          newAuthority: data.updateAuthority.newAuthority,
+          programId: TOKEN_2022_PROGRAM_ID
+        }));
       }
     }
 

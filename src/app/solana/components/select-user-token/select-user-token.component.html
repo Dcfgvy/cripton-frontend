@@ -13,7 +13,7 @@
     @if (selectedOption) {
       <div class="flex items-center gap-2">
         <!-- Image -->
-        <img [src]="selectedOption.imageUrl || 'images/no-image-placeholder.svg'" class="border-round" style="width: 25px; height: 25px;">f
+        <img [src]="selectedOption?.metadata?.imageUrl || 'images/no-image-placeholder.svg'" class="border-round" style="width: 25px; height: 25px;">
         <!-- Name -->
         <div>{{ selectedOption.name }}</div>
       </div>
@@ -22,7 +22,7 @@
   <ng-template #item let-token>
     <div class="flex items-center gap-2">
       <!-- Image -->
-      <img [src]="token.imageUrl || 'images/no-image-placeholder.svg'" class="border-round" style="width: 25px; height: 25px;">
+      <img [src]="token?.metadata?.imageUrl || 'images/no-image-placeholder.svg'" class="border-round" style="width: 25px; height: 25px;">
       <!-- Name -->
       <div>{{ token.name }}</div>
     </div>

@@ -33,3 +33,20 @@ a {
 .overflow-break-word {
   overflow-wrap: break-word !important;
 }
+
+.material-icons {
+  font-display: block;
+  display: inline-flex;
+  width: 24px;
+  overflow: hidden;
+  visibility: hidden;
+  position: relative;
+}
+
+.material-icons::before {
+  content: "";
+  display: block;
+  width: 24px;
+  visibility: visible;
+  background: transparent;
+}

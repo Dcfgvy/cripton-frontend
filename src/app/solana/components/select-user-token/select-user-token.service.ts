@@ -14,6 +14,7 @@ import { deserializeMetadata, Metadata } from '@dcfgvy/mpl-token-metadata';
 import { fromWeb3JsPublicKey, toWeb3JsPublicKey } from '@metaplex-foundation/umi-web3js-adapters';
 import { sol } from '@metaplex-foundation/umi';
 import { unpack, TokenMetadata as SplTokenMetadata } from '@solana/spl-token-metadata';
+import { METADATA_PROGRAM_ID } from '../../constants/token.constants';
 
 export interface TokenData {
   mint: PublicKey;
@@ -30,13 +31,16 @@ export interface TokenData {
     symbol: string;
     uri: string;
     imageUrl?: string;
+    /** Always points either to the token metadata extension or to the Metaplex metadata account. */
     metadataPointer?: {
       metadataAddress: PublicKey;
       authority: PublicKey | null;
     };
+    /** Only one of `tokenMetadata` or `metaplexMetadata` can be present at a time. */
     tokenMetadata?: {
       updateAuthority: PublicKey | null;
     },
+    /** Only one of `tokenMetadata` or `metaplexMetadata` can be present at a time. */
     metaplexMetadata?: {
       updateAuthority: PublicKey | null;
       isMutable: boolean;
@@ -63,8 +67,6 @@ interface ParsedTokenAccountInfo {
   providedIn: 'root'
 })
 export class SelectUserTokenService {
-  private readonly METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
-
   constructor(
     private readonly walletService: WalletService,
     private readonly networkService: NetworkService,
@@ -149,10 +151,10 @@ export class SelectUserTokenService {
       const [metaplexAddress] = PublicKey.findProgramAddressSync(
         [
           Buffer.from('metadata'),
-          this.METADATA_PROGRAM_ID.toBuffer(),
+          METADATA_PROGRAM_ID.toBuffer(),
           tokenMint.toBuffer(),
         ],
-        this.METADATA_PROGRAM_ID
+        METADATA_PROGRAM_ID
       );
       metaplexMetadataAddresses.push(metaplexAddress);
     }
@@ -189,7 +191,7 @@ export class SelectUserTokenService {
       if(!metaplexAccountInfo) continue;
       const metadata = deserializeMetadata({
         ...metaplexAccountInfo,
-        owner: fromWeb3JsPublicKey(this.METADATA_PROGRAM_ID),
+        owner: fromWeb3JsPublicKey(METADATA_PROGRAM_ID),
         lamports: sol(0),
         rentEpoch: BigInt(0),
         publicKey: fromWeb3JsPublicKey(metaplexMetadataAddresses[i])
@@ -342,6 +344,10 @@ export class SelectUserTokenService {
       }
       const mint = mintAccountsInfoMap.get(mintAddresses[index])!;
       unknownTokensMints.add(mint.address);
+
+      const mintAddress = mint.address.toBase58();
+      const prefix = mintAddress.slice(0, 4);
+      const suffix = mintAddress.slice(-4);
       return {
         mint: mint.address,
         tokenProgram: tokenAccountsInfos[index].programId,
@@ -350,7 +356,7 @@ export class SelectUserTokenService {
         decimals: mint.decimals,
         freezeAuthority: mint.freezeAuthority,
         mintAuthority: mint.mintAuthority,
-        name: `Unknown Token (${mint.address.toBase58()})`,
+        name: `Unknown Token (${prefix}...${suffix})`,
       };
     });
 
@@ -359,9 +365,9 @@ export class SelectUserTokenService {
       if (!token) return token;
       
       if (nameOccurrences.get(token.name)! > 1) {
-        const mintAddress = token.mint;
-        const prefix = mintAddress.toBase58().slice(0, 4);
-        const suffix = mintAddress.toBase58().slice(-4);
+        const mintAddress = token.mint.toBase58();
+        const prefix = mintAddress.slice(0, 4);
+        const suffix = mintAddress.slice(-4);
         token.name = `${token.name} (${prefix}...${suffix})`;
       }
       return token;
@@ -384,22 +390,43 @@ export class SelectUserTokenService {
   loadTokenImages(tokens: TokenData[]): Observable<TokenData[]> {
     interface TokenMetadata {
       image?: string;
+      logo?: string;
+
+      logoUrl?: string;
+      logoURL?: string;
+      logoUri?: string;
+      logoURI?: string;
+
+      imageUrl?: string;
+      imageURL?: string;
+      imageUri?: string;
+      imageURI?: string;
     }
 
     // TODO think about the IPFS, Arweave and other rate limits
     const fetchImageUrl = (token: TokenData) => {
       if (token.metadata === undefined) return of(token);
       
-      console.log('token.metadata', token.metadata);
       return this.http.get<TokenMetadata>(token.metadata.uri).pipe(
         map(metadata => {
-          if (metadata.image && typeof metadata.image === 'string' && token.metadata) {
-            try {
-              new URL(metadata.image);
-              token.metadata.imageUrl = metadata.image;
-            } catch {
-              console.warn(`Invalid image URL for token ${token.name}: ${metadata.image}`);
-            }
+          let imageUrl: string | undefined;
+          
+          if(metadata.image) imageUrl = metadata.image;
+          else if(metadata.logo) imageUrl = metadata.logo;
+
+          else if(metadata.logoUrl) imageUrl = metadata.logoUrl;
+          else if(metadata.logoURL) imageUrl = metadata.logoURL;
+          else if(metadata.logoUri) imageUrl = metadata.logoUri;
+          else if(metadata.logoURI) imageUrl = metadata.logoURI;
+
+          else if(metadata.imageUrl) imageUrl = metadata.imageUrl;
+          else if(metadata.imageURL) imageUrl = metadata.imageURL;
+          else if(metadata.imageUri) imageUrl = metadata.imageUri;
+          else if(metadata.imageURI) imageUrl = metadata.imageURI;
+
+          if(imageUrl && typeof imageUrl === 'string'){
+            new URL(imageUrl);
+            token.metadata!.imageUrl = imageUrl;
           }
           return token;
         }),
