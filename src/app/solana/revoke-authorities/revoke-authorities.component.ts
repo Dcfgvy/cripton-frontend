@@ -22,6 +22,9 @@ import { TokenData } from '../components/select-user-token/select-user-token.ser
 import { WarningComponent } from "../../components/warning/warning.component";
 import { QuestionAndAnswer, FaqComponent } from '../../components/faq/faq.component';
 import { TestnetWarningComponent } from "../../components/testnet-warning/testnet-warning.component";
+import { NetworkService } from '../../network-switch/network-switch.service';
+import { CelebrationMessageComponent } from "../../components/celebration-message/celebration-message.component";
+import { SolanaExplorerLinkComponent } from "../components/solana-explorer-link/solana-explorer-link.component";
 
 @Component({
   selector: 'app-revoke-authorities',
@@ -37,7 +40,9 @@ import { TestnetWarningComponent } from "../../components/testnet-warning/testne
     Toast,
     WarningComponent,
     FaqComponent,
-    TestnetWarningComponent
+    TestnetWarningComponent,
+    CelebrationMessageComponent,
+    SolanaExplorerLinkComponent
 ],
   templateUrl: './revoke-authorities.component.html',
   styleUrl: './revoke-authorities.component.scss',
@@ -52,6 +57,7 @@ export class RevokeAuthoritiesComponent implements OnInit {
     private readonly revokeAuthoritiesService: RevokeAuthoritiesService,
     private readonly messageService: MessageService,
     private readonly pricesService: PricesService,
+    public readonly networkService: NetworkService,
   ) {}
 
   addOns: Record<string, AddOn> = {
@@ -238,6 +244,11 @@ export class RevokeAuthoritiesComponent implements OnInit {
   });
 
   loading = false;
+  createdState = {
+    isCreated: false,
+    network: 'mainnet-beta',
+    signature: '',
+  };
   async updateAuthorities() {
     const token = this.selectedToken();
     if (!token) {
@@ -308,14 +319,14 @@ export class RevokeAuthoritiesComponent implements OnInit {
         }
       }
 
+      const network = `${this.networkService.selectedNetwork.code}`;
       const signature = await this.revokeAuthoritiesService.updateAuthorities(data as UpdateAuthoritiesData);
       
-      // TODO refetch user's tokens after transaction is executed (because the metadata and authorities are changed)
-      this.messageService.add({ 
-        severity: 'success', 
-        summary: `Successfully updated ${token.metadata ? ' $' + token.metadata.symbol : ''}authorities!`,
-        detail: `Transaction signature: ${signature}` 
-      });
+      this.createdState = {
+        isCreated: true,
+        network: network,
+        signature: signature,
+      }
     } catch (error: any) {
       console.error('Error updating authorities:', error);
       this.messageService.add({ 
@@ -326,6 +337,18 @@ export class RevokeAuthoritiesComponent implements OnInit {
     } finally {
       this.loading = false;
     }
+  }
+
+  reset() {
+    this.selectedToken.set(null);
+    this.authoritiesForm.reset();
+    for(const addOn of Object.values(this.addOns)) { addOn.added.set(false); }
+
+    this.createdState = {
+      isCreated: false,
+      network: 'mainnet-beta',
+      signature: '',
+    };
   }
 
   // ----- FAQ -----

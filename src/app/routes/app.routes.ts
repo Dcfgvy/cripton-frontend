@@ -43,7 +43,7 @@ export const routes: Routes = [
         data: {
           title: 'Revoke or Transfer Solana Token Authorities',
           description: 'Revoke or Transfer Freeze, Mint and Update authorities of your Solana tokens for just 0.01 SOL! Works with both original SPL tokens and Token 2022 extensions',
-          keywords: 'revoke freeze authority, revoke mint authority, revoke update authority, Solana SPL token, SPL token, Solana Token 2022, Token 2022, tokens, blockchain'
+          keywords: 'revoke freeze authority, revoke mint authority, revoke update authority, Solana SPL token, SPL token, Solana Token 2022, Token 2022, tokens'
         },
         resolve: { seo: SeoResolver }
       },

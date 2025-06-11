@@ -1,0 +1,35 @@
+@if(explorer() === 'explorer'){
+  @if(type() === 'token'){
+    <a [href]="`https://explorer.solana.com/address/${address()}?cluster=${network()}`" target="_blank" rel="noopener noreferrer" class="w-full p-button p-button-secondary explorer">
+      <span class="material-symbols-outlined">open_in_new</span>
+      <span>
+        View on Solana Explorer
+      </span>
+    </a>
+  } @else if(type() === 'transaction'){
+    <a [href]="`https://explorer.solana.com/tx/${address()}?cluster=${network()}`" target="_blank" rel="noopener noreferrer" class="w-full p-button p-button-secondary explorer">
+      <span class="material-symbols-outlined">open_in_new</span>
+      <span>
+        View on Solana Explorer
+      </span>
+    </a>
+  }
+}
+
+@else if(explorer() === 'solscan'){
+  @if(type() === 'token'){
+    <a [href]="`https://solscan.io/token/${address()}?cluster=${network()}`" target="_blank" rel="noopener noreferrer" class="w-full p-button p-button-secondary solscan">
+      <span class="material-symbols-outlined">open_in_new</span>
+      <span>
+        View on Solscan
+      </span>
+    </a>
+  } @else if(type() === 'transaction'){
+    <a [href]="`https://solscan.io/tx/${address()}?cluster=${network()}`" target="_blank" rel="noopener noreferrer" class="w-full p-button p-button-secondary solscan">
+      <span class="material-symbols-outlined">open_in_new</span>
+      <span>
+        View on Solscan
+      </span>
+    </a>
+  }
+}

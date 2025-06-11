@@ -45,6 +45,7 @@ import { TestnetTokenDataRemovalWarningComponent } from "../../../components/tes
 import { TotalFeesComponent } from "../../../components/total-fees/total-fees.component";
 import { AddOnService } from '../../../components/add-on/add-on.service';
 import { SolanaTokenAuthoritiesComponent } from "../../components/solana-token-authorities/solana-token-authorities.component";
+import { CelebrationMessageComponent } from "../../../components/celebration-message/celebration-message.component";
 
 // u64 max value: 18,446,744,073,709,551,615 (2^64-1)
 // Our limit: 10,000,000,000,000,000,000 (10 * 10^18)
@@ -112,7 +113,8 @@ export function supplyValidator(): ValidatorFn {
     WarningComponent,
     TestnetTokenDataRemovalWarningComponent,
     TotalFeesComponent,
-    SolanaTokenAuthoritiesComponent
+    SolanaTokenAuthoritiesComponent,
+    CelebrationMessageComponent
 ],
   templateUrl: './create-token-form.component.html',
   styleUrl: './create-token-form.component.scss',

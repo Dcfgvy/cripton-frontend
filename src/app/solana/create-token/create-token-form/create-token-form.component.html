@@ -467,16 +467,13 @@
         <p-step-panel [value]="4">
           <ng-template #content>
             <div class="flex flex-column items-center">
-              <div class="flex items-center justify-content-center mt-3 mb-4">
-                <img style="height: 40px; width: 40px;" src="images/party-popper.png">
-                <span class="font-semibold text-3xl ml-2">Your Token has been created!</span>
-              </div>
+              <app-celebration-message>Your Token has been created!</app-celebration-message>
 
               <div class="flex justify-content-center items-center">
                 <app-token-created-body [address]="actualTokenMint.publicKey.toBase58()" />
               </div>
   
-              <button class="mt-4" pButton (click)="onReset.emit()"> <!-- TODO: make it the same width as Your token has been created -->
+              <button class="mt-4" pButton (click)="onReset.emit()">
                 <span class="font-medium">Create a New Token</span>
               </button>
             </div>

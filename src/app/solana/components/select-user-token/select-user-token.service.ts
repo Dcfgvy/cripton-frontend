@@ -414,6 +414,7 @@ export class SelectUserTokenService {
   // -------- IMAGES --------
 
   loadTokenImages(tokens: TokenData[]): Observable<TokenData[]> {
+    // TODO think about IPFS, Arweave rate limits
     interface TokenMetadata {
       image?: string;
       logo?: string;
@@ -428,7 +429,6 @@ export class SelectUserTokenService {
       imageUri?: string;
       imageURI?: string;
     }
-
     const network = this.networkService.selectedNetwork.code;
 
     const fetchImageUrl = (token: TokenData) => {

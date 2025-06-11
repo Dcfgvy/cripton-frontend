@@ -10,7 +10,7 @@
     </span>
   </button>
 
-  @if(networkService.selectedNetwork.isTest === false){
+  @if(isTestnet === false){
     <a href="https://raydium.io/liquidity/create-pool/" target="_blank" rel="noopener noreferrer" class="w-full p-button p-button-secondary">
       <span class="material-symbols-outlined">water_drop</span>
       <span>
@@ -19,17 +19,6 @@
     </a>
   }
 
-  <a [href]="`https://explorer.solana.com/address/${address()}?cluster=${networkService.selectedNetwork.code}`" target="_blank" rel="noopener noreferrer" class="w-full p-button p-button-secondary explorer">
-    <span class="material-symbols-outlined">open_in_new</span>
-    <span>
-      View on Solana Explorer
-    </span>
-  </a>
-  
-  <a [href]="`https://solscan.io/token/${address()}?cluster=${networkService.selectedNetwork.code}`" target="_blank" rel="noopener noreferrer" class="w-full p-button p-button-secondary solscan">
-    <span class="material-symbols-outlined">open_in_new</span>
-    <span>
-      View on Solscan
-    </span>
-  </a>
+  <app-solana-explorer-link explorer="explorer" type="token" [address]="address()" [network]="tokenNetwork" />
+  <app-solana-explorer-link explorer="solscan" type="token" [address]="address()" [network]="tokenNetwork" />
 </div>
