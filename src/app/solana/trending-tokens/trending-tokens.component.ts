@@ -115,6 +115,12 @@ export class TrendingTokensComponent implements OnInit, OnDestroy {
   async launchToken(){
     this.tokenLaunchLoading = true;
 
+    if(!this.walletService.selectedWallet?.publicKey){
+      this.messageService.add({ severity: 'error', summary: 'Please connect your wallet' });
+      this.tokenLaunchLoading = false;
+      return;
+    }
+
     const balance = await this.walletService.getBalanceLamports();
     if(balance < this.creationCost.cost * LAMPORTS_PER_SOL){
       this.messageService.add({ severity: 'error', summary: 'Insufficient balance', detail: `You must have at least ${this.creationCost.cost} SOL` });

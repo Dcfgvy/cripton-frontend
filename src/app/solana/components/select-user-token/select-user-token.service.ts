@@ -15,6 +15,7 @@ import { fromWeb3JsPublicKey, toWeb3JsPublicKey } from '@metaplex-foundation/umi
 import { sol } from '@metaplex-foundation/umi';
 import { unpack, TokenMetadata as SplTokenMetadata } from '@solana/spl-token-metadata';
 import { METADATA_PROGRAM_ID } from '../../constants/token.constants';
+import { popularSplTokens, TokensByNetwork } from './popular-spl-tokens';
 
 export interface TokenData {
   mint: PublicKey;
@@ -334,19 +335,41 @@ export class SelectUserTokenService {
     mintAccountsInfoMap: Map<PublicKey, Mint>,
     mintAddresses: PublicKey[],
   ): TokenData[] {
-    // TODO add defaut images and names for popular tokens like USDC, USDT, etc. that don't have metadata
     const nameOccurrences = new Map<string, number>();
     const unknownTokensMints = new Set<PublicKey>();
+    const network = this.networkService.selectedNetwork.code;
 
     let allTokens = tokens.map((token, index) => {
       if(token !== null){
         nameOccurrences.set(token.name, (nameOccurrences.get(token.name) || 0) + 1);
         return token;
       }
-      const mint = mintAccountsInfoMap.get(mintAddresses[index])!;
-      unknownTokensMints.add(mint.address);
 
+      const mint = mintAccountsInfoMap.get(mintAddresses[index])!;
       const mintAddress = mint.address.toBase58();
+      
+      // Check if this is a known popular token
+      const popularToken = popularSplTokens[network as keyof TokensByNetwork]?.[mintAddress];
+      if (popularToken) {
+        return {
+          mint: mint.address,
+          tokenProgram: tokenAccountsInfos[index].programId,
+          balanceInDecimals: BigInt(tokenAccountsInfos[index].tokenAmount.amount),
+          supplyInDecimals: mint.supply,
+          decimals: mint.decimals,
+          freezeAuthority: mint.freezeAuthority,
+          mintAuthority: mint.mintAuthority,
+          name: popularToken.name,
+          metadata: {
+            symbol: popularToken.symbol,
+            uri: '', // Empty since we have direct image URL
+            imageUrl: popularToken.imageUrl
+          }
+        };
+      }
+
+      // If not a known token, mark as unknown
+      unknownTokensMints.add(mint.address);
       const prefix = mintAddress.slice(0, 4);
       const suffix = mintAddress.slice(-4);
       return {
@@ -373,6 +396,8 @@ export class SelectUserTokenService {
       }
       return token;
     });
+
+    // Sort tokens: Known tokens first (alphabetically), then unknown tokens
     allTokens.sort((a, b) => {
       const aIsUnknown = unknownTokensMints.has(a.mint);
       const bIsUnknown = unknownTokensMints.has(b.mint);
@@ -404,38 +429,58 @@ export class SelectUserTokenService {
       imageURI?: string;
     }
 
-    // TODO think about the IPFS, Arweave and other rate limits
+    const network = this.networkService.selectedNetwork.code;
+
     const fetchImageUrl = (token: TokenData) => {
-      if (token.metadata === undefined) return of(token);
-      
-      return this.http.get<TokenMetadata>(token.metadata.uri).pipe(
-        map(metadata => {
-          let imageUrl: string | undefined;
-          
-          if(metadata.image) imageUrl = metadata.image;
-          else if(metadata.logo) imageUrl = metadata.logo;
+      // First check if it's a known popular token
+      const popularToken = popularSplTokens[network as keyof TokensByNetwork]?.[token.mint.toBase58()];
+      if (popularToken) {
+        if (!token.metadata) {
+          token.metadata = {
+            symbol: popularToken.symbol,
+            uri: '',
+            imageUrl: popularToken.imageUrl
+          };
+        } else if (!token.metadata.imageUrl) {
+          token.metadata.imageUrl = popularToken.imageUrl;
+        }
+        return of(token);
+      }
 
-          else if(metadata.logoUrl) imageUrl = metadata.logoUrl;
-          else if(metadata.logoURL) imageUrl = metadata.logoURL;
-          else if(metadata.logoUri) imageUrl = metadata.logoUri;
-          else if(metadata.logoURI) imageUrl = metadata.logoURI;
+      // If not a known token and has metadata URI, try to fetch image
+      if (token.metadata?.uri) {
+        return this.http.get<TokenMetadata>(token.metadata.uri).pipe(
+          map(metadata => {
+            let imageUrl: string | undefined;
+            
+            if(metadata.image) imageUrl = metadata.image;
+            else if(metadata.logo) imageUrl = metadata.logo;
 
-          else if(metadata.imageUrl) imageUrl = metadata.imageUrl;
-          else if(metadata.imageURL) imageUrl = metadata.imageURL;
-          else if(metadata.imageUri) imageUrl = metadata.imageUri;
-          else if(metadata.imageURI) imageUrl = metadata.imageURI;
+            else if(metadata.logoUrl) imageUrl = metadata.logoUrl;
+            else if(metadata.logoURL) imageUrl = metadata.logoURL;
+            else if(metadata.logoUri) imageUrl = metadata.logoUri;
+            else if(metadata.logoURI) imageUrl = metadata.logoURI;
 
-          if(imageUrl && typeof imageUrl === 'string'){
-            new URL(imageUrl);
-            token.metadata!.imageUrl = imageUrl;
-          }
-          return token;
-        }),
-        catchError(error => {
-          console.warn(`Failed to fetch metadata for token ${token.name}:`, error);
-          return of(token);
-        })
-      );
+            else if(metadata.imageUrl) imageUrl = metadata.imageUrl;
+            else if(metadata.imageURL) imageUrl = metadata.imageURL;
+            else if(metadata.imageUri) imageUrl = metadata.imageUri;
+            else if(metadata.imageURI) imageUrl = metadata.imageURI;
+
+            if(imageUrl && typeof imageUrl === 'string'){
+              new URL(imageUrl);
+              token.metadata!.imageUrl = imageUrl;
+            }
+            return token;
+          }),
+          catchError(error => {
+            console.warn(`Failed to fetch metadata for token ${token.name}:`, error);
+            return of(token);
+          })
+        );
+      }
+
+      // If no metadata at all, just return the token as is
+      return of(token);
     };
 
     return forkJoin(tokens.map(token => fetchImageUrl(token)));

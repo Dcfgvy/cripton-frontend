@@ -19,13 +19,13 @@ export class SolanaComponent {
   toolsList: BlockchainTool[] = [
     {
       title: 'Solana Token Creator',
-      url: 'create-token',
+      url: '/solana/create-token',
       icon: 'add_circle',
       isIconMD: true,
     },
     {
       title: 'Copy Trending Coins',
-      url: 'trending',
+      url: '/solana/trending',
       icon: 'whatshot',
       isIconMD: true,
     },
@@ -43,8 +43,14 @@ export class SolanaComponent {
     // },
     {
       title: 'Update Authorities',
-      url: 'authorities',
+      url: '/solana/authorities',
       icon: 'lock_person',
+      isIconMD: true,
+    },
+    {
+      title: 'Manage Liquidity',
+      url: 'https://raydium.io/portfolio',
+      icon: 'water_drop',
       isIconMD: true,
     },
     // {

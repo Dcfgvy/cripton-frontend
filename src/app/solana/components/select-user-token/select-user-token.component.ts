@@ -59,8 +59,8 @@ export class SelectUserTokenComponent implements OnInit, OnDestroy {
     this.userTokens = [];
 
     try {
-      this.userTokens = await this.tokenService.fetchUserTokens();
-      this.userTokens = this.userTokens.map(t => {
+      const rawTokens = await this.tokenService.fetchUserTokens();
+      this.userTokens = rawTokens.map(t => {
         return {
           ...t,
           address: t.mint.toBase58(),

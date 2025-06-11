@@ -17,10 +17,11 @@ import { Toast } from 'primeng/toast';
 import { RevokeAuthoritiesService, UpdateAuthoritiesData } from './revoke-authorities.service';
 import { PublicKey } from '@solana/web3.js';
 import { PricesService } from '../../app-settings/prices.service';
-import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
 import { TokenData } from '../components/select-user-token/select-user-token.service';
-import { METADATA_PROGRAM_ID } from '../constants/token.constants';
 import { WarningComponent } from "../../components/warning/warning.component";
+import { QuestionAndAnswer, FaqComponent } from '../../components/faq/faq.component';
+import { TestnetWarningComponent } from "../../components/testnet-warning/testnet-warning.component";
 
 @Component({
   selector: 'app-revoke-authorities',
@@ -34,7 +35,9 @@ import { WarningComponent } from "../../components/warning/warning.component";
     ReactiveFormsModule,
     ErrorComponent,
     Toast,
-    WarningComponent
+    WarningComponent,
+    FaqComponent,
+    TestnetWarningComponent
 ],
   templateUrl: './revoke-authorities.component.html',
   styleUrl: './revoke-authorities.component.scss',
@@ -324,5 +327,29 @@ export class RevokeAuthoritiesComponent implements OnInit {
       this.loading = false;
     }
   }
+
+  // ----- FAQ -----
+  
+  faqList: QuestionAndAnswer[] = [
+    {
+      "question": "What are token authorities?",
+      "answer": "Token authorities are the addresses that have the ability to control the token. There are three types of authorities: Freeze, Mint and Update. Each of them can be transferred or revoked."
+    },
+    {
+      "question": "Why would I want to revoke authorities of my token?",
+      "answer": "Revoking each of Freeze, Mint or Update authorities prevents further actions like minting new tokens or modifying the token's metadata. This adds a layer of security and will increase trust from potential buyers."
+    },
+    {
+      "question": "How do I transfer an authority of my token?",
+      "answer": 'To transfer a token authority, select an authority (Freeze, Mint, or Update), enter the new address in the corresponding input field, then click the "Update Authorities" button and confirm the transaction.'
+    },
+    {
+      "question": "Which Token Programs are supported?",
+      "answer": "We support both the Original Token Program and the Token 2022 Program (Token Extension Program) in order to provide a smooth experience for all use cases. This includes compatibility with Metaplex metadata and Token 2022's Metadata extension"
+    },
+    {
+      "question": "Can I test it for free?",
+      "answer": "Yes, you can test the tool for free when switched to Solana Devnet. Keep in mind that you’ll need some Devnet tokens to perform authority updates during testing."
+    },
+  ]
 }
-// TODO add FAQ
