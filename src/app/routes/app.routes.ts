@@ -7,8 +7,8 @@ export const routes: Routes = [
     path: '',
     loadComponent: () => import('../main/main.component').then((m) => m.MainComponent),
     data: {
-      title: 'SPL Token Creator',
-      description: 'Create Solana SPL token without coding. Copy trending meme coins on Pump Fun',
+      title: 'Solana Token Creator',
+      description: 'Create Solana SPL tokens without coding. Copy trending meme coins on Pump Fun',
       keywords: 'create solana token, free tokens generator, create SPL token, copy trending meme coins, copy trending coins'
     },
     resolve: { seo: SeoResolver }

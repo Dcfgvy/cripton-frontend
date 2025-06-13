@@ -9,7 +9,7 @@ import { ButtonDirective } from 'primeng/button';
 import { formatNumberShort } from '../../utils/functions';
 import { TextLinkComponent } from "../../components/text-link/text-link.component";
 import { PricesService } from '../../app-settings/prices.service';
-import type { Price } from '../../app-settings/app-settings.service';
+import { AppSettingsService, Price } from '../../app-settings/app-settings.service';
 import { TokenCreatedPopupComponent } from "../token-creation/token-created-popup/token-created-popup.component";
 import { TokenConfirmationPopupComponent } from "../token-creation/token-confirmation-popup/token-confirmation-popup.component";
 import { NetworkService } from '../../network-switch/network-switch.service';
@@ -49,6 +49,7 @@ export class TrendingTokensComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private readonly pricesService: PricesService,
     public readonly networkService: NetworkService,
+    public readonly settingsService: AppSettingsService,
     private readonly walletService: WalletService,
     private readonly messageService: MessageService,
     private readonly tokenCreationService: TokenCreationService,

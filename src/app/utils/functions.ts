@@ -21,22 +21,35 @@ export function formatElapsedTime(start: Date): string {
 }
 
 export function formatTimeMinutes(minutes: number): string {
-  const hours = Math.floor(minutes / 60);
+  const months = Math.floor(minutes / (60 * 24 * 30));
+  const days = Math.floor((minutes % (60 * 24 * 30)) / (60 * 24));
+  const hours = Math.floor((minutes % (60 * 24)) / 60);
   const leftMinutes = minutes % 60;
-  console.log('minutes', minutes)
 
   let parts: string[] = [];
 
-  if (hours === 1) {
-    parts.push(`${hours} hour`);
+  if (months === 1) {
+    parts.push(`1 month`);
+  } else if (months > 1) {
+    parts.push(`${months} months`);
   }
-  else if (hours > 1) {
+
+  if (days === 1) {
+    parts.push(`1 day`);
+  } else if (days > 1) {
+    parts.push(`${days} days`);
+  }
+
+  if (hours === 1) {
+    parts.push(`1 hour`);
+  } else if (hours > 1) {
     parts.push(`${hours} hours`);
   }
+
   if (leftMinutes === 1) {
-    parts.push(`${leftMinutes} minute`);
-  }
-  else if (leftMinutes > 1) {
+    parts.push(`1 minute`);
+  } else if (leftMinutes > 1 || parts.length === 0) {
+    // Always show minutes if everything else is zero
     parts.push(`${leftMinutes} minutes`);
   }
 
@@ -66,4 +79,16 @@ export async function sleep(ms: number): Promise<void> {
       res();
     }, ms);
   })
+}
+
+export function getIpfsCid(url: string): string {
+  try {
+    const urlObj = new URL(url);
+    const path = urlObj.pathname;
+    const cid = path.split('/').pop();
+    return cid || '';
+  } catch (error) {
+    console.error('Error getting IPFS CID:', error);
+    return '';
+  }
 }

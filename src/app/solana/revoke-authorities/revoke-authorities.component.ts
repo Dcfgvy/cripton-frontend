@@ -363,7 +363,7 @@ export class RevokeAuthoritiesComponent implements OnInit {
       "answer": "Revoking each of Freeze, Mint or Update authorities prevents further actions like minting new tokens or modifying the token's metadata. This adds a layer of security and will increase trust from potential buyers."
     },
     {
-      "question": "How do I transfer an authority of my token?",
+      "question": "How do I transfer authorities of my token?",
       "answer": 'To transfer a token authority, select an authority (Freeze, Mint, or Update), enter the new address in the corresponding input field, then click the "Update Authorities" button and confirm the transaction.'
     },
     {
