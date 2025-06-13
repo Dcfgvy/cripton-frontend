@@ -1,14 +1,12 @@
 <div class="w-full">
-  @if(isDev){
-    <p-card>
-      <p class="text-3xl text-center font-bold mt-0">
-        <img src="images/blockchain_logos/solana.svg" style="height: 20px;">
-        <span class="ml-2">Solana Toolkit</span>
-      </p>
-    
-      <app-blockchain-tools [tools]="toolsList" />
-    </p-card>
-  }
+  <p-card>
+    <p class="text-3xl text-center font-bold mt-0">
+      <img src="images/blockchain_logos/solana.svg" style="height: 20px;">
+      <span class="ml-2">Solana Toolkit</span>
+    </p>
+  
+    <app-blockchain-tools [tools]="toolsList" />
+  </p-card>
 
   <div class="w-full mt-4">
     <router-outlet />
