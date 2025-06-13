@@ -15,7 +15,6 @@ import { environment } from '../../environments/environment';
   styleUrl: './solana.component.scss'
 })
 export class SolanaComponent {
-  readonly isDev = !environment.production;
   toolsList: BlockchainTool[] = [
     {
       title: 'Solana Token Creator',
