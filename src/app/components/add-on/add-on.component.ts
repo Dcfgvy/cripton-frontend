@@ -52,7 +52,7 @@ export class AddOnComponent implements OnInit, AfterContentInit {
   onRemoved = output();
 
   constructor(
-    private readonly settingsService: AppSettingsService,
+    public readonly settingsService: AppSettingsService,
     @Optional() private controlContainer: ControlContainer
   ) {}
 
@@ -72,14 +72,15 @@ export class AddOnComponent implements OnInit, AfterContentInit {
     this.setControlState(this.added());
   }
 
-  get servicePrice(){
-    return this.settingsService.currentSettings?.prices[this.chain()][this.serviceName()];
-  }
+  servicePrice = computed(() => {
+    return this.settingsService.settingsSignal()?.prices[this.chain()][this.serviceName()];
+  })
+
   isFree = computed<boolean>(() => {
-    return this.servicePrice?.isTemporarilyFree || false;
+    return this.servicePrice()?.isTemporarilyFree || false;
   })
   usualCost = computed<number>(() => {
-    return this.servicePrice?.cost || 0;
+    return this.servicePrice()?.cost || 0;
   })
   cost = computed<number>(() => {
     if(this.isFree()) return 0; // makes an add-on free (so that a discount is shown)

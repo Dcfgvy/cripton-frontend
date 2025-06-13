@@ -19,19 +19,19 @@ export class SolanaComponent {
   toolsList: BlockchainTool[] = [
     {
       title: 'Solana Token Creator',
-      url: 'create-token',
+      url: '/solana/create-token',
       icon: 'add_circle',
       isIconMD: true,
     },
     {
       title: 'Copy Trending Coins',
-      url: 'trending',
+      url: '/solana/trending',
       icon: 'whatshot',
       isIconMD: true,
     },
     // {
     //   title: 'Solana Multisender',
-    //   url: 'trwefwefwefwes',
+    //   url: 'multisender',
     //   icon: 'send_money',
     //   isIconMD: true,
     // },
@@ -41,12 +41,18 @@ export class SolanaComponent {
     //   icon: 'ac_unit',
     //   isIconMD: true,
     // },
-    // {
-    //   title: 'Revoke Mint Authority',
-    //   url: 'trwefwefwefwes',
-    //   icon: 'cancel',
-    //   isIconMD: true,
-    // },
+    {
+      title: 'Update Authorities',
+      url: '/solana/authorities',
+      icon: 'lock_person',
+      isIconMD: true,
+    },
+    {
+      title: 'Manage Liquidity',
+      url: 'https://raydium.io/portfolio',
+      icon: 'water_drop',
+      isIconMD: true,
+    },
     // {
     //   title: 'Update Token Metadata',
     //   url: 'trwefwefwefwes',

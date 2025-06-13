@@ -48,7 +48,7 @@ export class CreateTokenComponent {
       "answer": "Yes, you can create unlimited SPL tokens for free on the Solana Devnet."
     },
     {
-      "question": "Can I create meme coin on Solana via your tool?",
+      "question": "Can I create meme coins on Solana via your tool?",
       "answer": "Yes. Our tool is ideal for launching meme coins on Solana - create, mint, and manage them with ease."
     }
   ]

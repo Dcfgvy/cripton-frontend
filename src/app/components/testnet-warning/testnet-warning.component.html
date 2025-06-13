@@ -1,7 +1,7 @@
 @if (networkService.selectedNetwork.isTest) {
   <div class="mt-3">
     <app-warning>
-      You'll need {{ networkService.selectedNetwork.name }} SOL to do this, you can get some 
+      Make sure your wallet is in {{ networkService.selectedNetwork.name }} mode and you have enough {{ networkService.selectedNetwork.name }} SOL, you can get some 
       <app-text-link link="https://faucet.solana.com/" [showRedirectIcon]="true">here</app-text-link>
     </app-warning>
   </div>

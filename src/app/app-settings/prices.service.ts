@@ -33,6 +33,7 @@ export class PricesService {
         SolanaServiceName.TrendingTokenCreation,
         SolanaServiceName.MultisenderProTransfer,
         SolanaServiceName.AffiliateSharePercents,
+        SolanaServiceName.UpdateAuthorities,
       ];
       for(const service of solanaServices){
         solanaPrices[service] = {
@@ -53,6 +54,7 @@ export class PricesService {
       solanaTrendingTokenCreation: solanaPrices[SolanaServiceName.TrendingTokenCreation],
       solanaMultisenderProTransfer: solanaPrices[SolanaServiceName.MultisenderProTransfer],
       solanaAffiliateSharePercents: solanaPrices[SolanaServiceName.AffiliateSharePercents],
+      solanaUpdateAuthorities: solanaPrices[SolanaServiceName.UpdateAuthorities],
     };
   });
 
@@ -60,19 +62,19 @@ export class PricesService {
     SOL: 0,
   });
   fetchCryptoPrices(){
-  // Get SOL price
-  this.http.get<{ price: string }>('https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT').subscribe({
-    next: (data) => {
-      // Update the signal AFTER we receive the data
-      this.cryptoPrices.update(prices => ({
-        ...prices,
-        SOL: Number(data.price)
-      }));
-    },
-    error: (err) => {
-      console.error(err);
-    }
-  });
+    // Get SOL price
+    this.http.get<{ price: string }>('https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT').subscribe({
+      next: (data) => {
+        // Update the signal AFTER we receive the data
+        this.cryptoPrices.update(prices => ({
+          ...prices,
+          SOL: Number(data.price)
+        }));
+      },
+      error: (err) => {
+        console.error(err);
+      }
+    });
   }
   initCryptoPrices(){
     if(isPlatformBrowser(this.platformId)){

@@ -66,18 +66,11 @@ export class WalletService {
   public selectedWalletSignal = signal<SolanaWalletAdapter | null>(null);
   private selectedWalletSubject = new BehaviorSubject<SolanaWalletAdapter | null>(this.selectedWallet);
   public selectedWallet$: Observable<SolanaWalletAdapter | null> = this.selectedWalletSubject.asObservable();
-  // private sub: any;
-  // private connection: Connection;
 
 	constructor(
 		private readonly networkService: NetworkService,
     @Inject(PLATFORM_ID) private platformId: Object,
 	){
-		// this.connection = new Connection(this.networkService.selectedNetwork.url);
-    // this.sub = this.networkService.selectedNetwork$.subscribe(network => {
-    //   this.connection = new Connection(network.url);
-    // });
-
     if(isPlatformBrowser(platformId)){
       this.restoreConnectedWallet();
     }
@@ -131,6 +124,12 @@ export class WalletService {
     this.selectedWallet = wallet;
     this.selectedWalletSignal.set(wallet);
     this.selectedWalletSubject.next(wallet);
+    this.selectedWallet?.addListener('connect', () => {
+      // user switched to a different wallet in the same wallet extension
+      this.selectedWallet = wallet;
+      this.selectedWalletSignal.set(wallet);
+      this.selectedWalletSubject.next(wallet);
+    });
   }
 
   async disconnect(): Promise<void> {

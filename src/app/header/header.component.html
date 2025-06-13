@@ -3,38 +3,54 @@
     <app-logo />
   </div>
 
-  <div class="hidden md:flex align-items-center flex-grow-1 justify-content-center">
-    <nav class="flex flex-wrap justify-content-center gap-0 xl:gap-2">
-      <a routerLink="/solana/create-token" class="p-button p-button-text no-underline text-sm md:text-base">
-        <span class="material-symbols-outlined">add_circle</span>
-        <span class="hidden sm:inline">Create Token</span>
-      </a>
+  @defer {
+    <div class="hidden lg:flex align-items-center flex-grow-1 justify-content-center">
+      <!-- <nav class="flex flex-wrap justify-content-center gap-0 xl:gap-2">
+        <a routerLink="/solana/create-token" class="p-button p-button-text no-underline text-sm md:text-base">
+          <span class="material-symbols-outlined">add_circle</span>
+          <span class="hidden sm:inline">Create Token</span>
+        </a>
+    
+        <a routerLink="/solana/trending" class="p-button p-button-text no-underline text-sm md:text-base">
+          <span class="material-symbols-outlined">whatshot</span>
+          <span class="hidden sm:inline">Trending Coins</span>
+        </a>
+    
+        <a href="https://raydium.io/portfolio" target="_blank" rel="noopener noreferrer" class="p-button p-button-text no-underline text-sm md:text-base">
+          <span class="material-symbols-outlined">water_drop</span>
+          <span class="hidden sm:inline">Manage Liquidity</span>
+        </a>
   
-      <a routerLink="/solana/trending" class="p-button p-button-text no-underline text-sm md:text-base">
-        <span class="material-symbols-outlined">whatshot</span>
-        <span class="hidden sm:inline">Trending Coins</span>
-      </a>
-  
-      <a href="https://raydium.io/portfolio" target="_blank" rel="noopener noreferrer" class="p-button p-button-text no-underline text-sm md:text-base">
-        <span class="material-symbols-outlined">water_drop</span>
-        <span class="hidden sm:inline">Manage Liquidity</span>
-      </a>
+        <a routerLink="/affiliate" class="p-button p-button-text no-underline text-sm md:text-base hidden xl:flex">
+          <span class="material-symbols-outlined">money_bag</span>
+          <span class="hidden sm:inline">Affiliate Program</span>
+        </a>
+      </nav> -->
+      <nav class="flex flex-wrap justify-content-center gap-0 xl:gap-2">
+        <a routerLink="/" class="p-button p-button-text no-underline text-sm md:text-base">
+          <span class="material-symbols-outlined">home</span>
+          <span class="hidden sm:inline">Home</span>
+        </a>
 
-      <a routerLink="/affiliate" class="p-button p-button-text no-underline text-sm md:text-base hidden xl:flex">
-        <span class="material-symbols-outlined">money_bag</span>
-        <span class="hidden sm:inline">Affiliate Program</span>
-      </a>
-    </nav>
-  </div>
+        <a routerLink="/solana/create-token" class="p-button p-button-text no-underline text-sm md:text-base">
+          <span class="material-symbols-outlined">add_circle</span>
+          <span class="hidden sm:inline">Create a Token</span>
+        </a>
 
-  <div class="hidden md:flex align-items-center justify-content-end gap-3 logo-container">
-    <app-network-switch></app-network-switch>
-    <app-wallet></app-wallet>
-  </div>
+        <a routerLink="/affiliate" class="p-button p-button-text no-underline text-sm md:text-base">
+          <span class="material-symbols-outlined">money_bag</span>
+          <span class="hidden sm:inline">Affiliate Program</span>
+        </a>
+      </nav>
+    </div>
   
-  <!-- Mobile menu button - only visible on small screens -->
-  @if(isMobileView){
-    <div class="flex md:hidden align-items-center justify-content-end gap-2">
+    <div class="hidden lg:flex align-items-center justify-content-end gap-3 logo-container mr-2">
+      <app-network-switch></app-network-switch>
+      <app-wallet></app-wallet>
+    </div>
+    
+    <!-- Mobile menu button - only visible on small screens -->
+    <div class="flex lg:hidden align-items-center justify-content-end gap-2">
       <app-network-switch></app-network-switch>
       <button 
         class="p-button p-button-text p-button-rounded" 
@@ -43,6 +59,7 @@
       </button>
     </div>
   }
+  
 </header>
 
 <div class="header-gap mb-1"></div>
@@ -51,23 +68,28 @@
 
 @defer {
   <p-drawer header="Menu" [(visible)]="showMobileMenu" styleClass="w-full" position="right">
-    <nav class="flex flex-column gap-2">
-      <a routerLink="/solana/create-token" class="p-button p-button-text no-underline" (click)="closeDrawerWithTimeout()">
+    <nav class="flex flex-column align-items-start gap-2">
+      <a routerLink="/solana/create-token" class="p-button p-button-text no-underline px-0" (click)="closeDrawerWithTimeout()">
         <span class="material-symbols-outlined">add_circle</span>
-        Create Token
+        Create a Token
       </a>
       
-      <a routerLink="/solana/trending" class="p-button p-button-text no-underline" (click)="closeDrawerWithTimeout()">
+      <a routerLink="/solana/trending" class="p-button p-button-text no-underline px-0" (click)="closeDrawerWithTimeout()">
         <span class="material-symbols-outlined">whatshot</span>
         Trending Coins
       </a>
+
+      <a routerLink="/solana/authorities" class="p-button p-button-text no-underline px-0" (click)="closeDrawerWithTimeout()">
+        <span class="material-symbols-outlined">lock_person</span>
+        Update Authorities
+      </a>
       
-      <a href="https://raydium.io/portfolio" target="_blank" rel="noopener noreferrer" class="p-button p-button-text no-underline" (click)="closeDrawerWithTimeout()">
+      <a href="https://raydium.io/portfolio" target="_blank" rel="noopener noreferrer" class="p-button p-button-text no-underline px-0" (click)="closeDrawerWithTimeout()">
         <span class="material-symbols-outlined">water_drop</span>
         Manage Liquidity
       </a>
   
-      <a routerLink="/affiliate" class="p-button p-button-text no-underline" (click)="closeDrawerWithTimeout()">
+      <a routerLink="/affiliate" class="p-button p-button-text no-underline px-0" (click)="closeDrawerWithTimeout()">
         <span class="material-symbols-outlined">money_bag</span>
         Affiliate Program
       </a>

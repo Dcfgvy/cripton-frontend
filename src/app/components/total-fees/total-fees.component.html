@@ -1,0 +1,12 @@
+<div class="flex justify-content-center">
+  <span>
+    <span>Total fees:</span>
+    
+    @if (settingsService.settingsSignal()) {
+      @if(formattedCostWithoutDiscounts() > 0 && formattedCostWithoutDiscounts() !== formattedCost()){
+        <span class="font-semibold line-through text-color-secondary ml-1">{{ formattedCostWithoutDiscounts() }} {{ currency() }}</span>
+      }
+      <span class="font-semibold ml-1">{{ formattedCost() }} {{ currency() }}</span>
+    }
+  </span>
+</div>

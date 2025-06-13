@@ -9,10 +9,8 @@
       </div>
     }
 
-    <span class="hidden md:inline-block">
-      <span>Total fees:</span>
-      <span class="font-semibold line-through text-color-secondary ml-1">{{ totalCostWithoutDiscounts().toFixed(2) }} SOL</span>
-      <span class="font-semibold ml-1">{{ totalCost().toFixed(2) }} SOL</span>
+    <span class="hidden md:block">
+      <app-total-fees [cost]="totalCost()" [costWithoutDiscounts]="totalCostWithoutDiscounts()" />
     </span>
 
     @if(page < 3){
@@ -27,11 +25,7 @@
   </div>
 
   <div class="md:hidden text-center mt-3">
-    <span>
-      <span>Total fees:</span>
-      <span class="font-semibold line-through text-color-secondary ml-1">{{ totalCostWithoutDiscounts().toFixed(2) }} SOL</span>
-      <span class="font-semibold ml-1">{{ totalCost().toFixed(2) }} SOL</span>
-    </span>
+    <app-total-fees [cost]="totalCost()" [costWithoutDiscounts]="totalCostWithoutDiscounts()" />
   </div>
 </ng-template>
 
@@ -403,53 +397,8 @@
                       <span class="text-xl">Authorities</span><br>
                       <span class="text-sm text-color-secondary">Solana Tokens have 3 authorities: Freeze Authority, Mint Authority, and Update Authority.<br>Revoke them to attract more investors</span>
                     </div>
-                    <!-- FREEZE -->
-                    <div class="field col-12 flex">
-                      <div class="pr-2"><i class="bi bi-snow text-3xl" ></i></div>
-                      <app-add-on class="flex-grow-1" [(added)]="addOns['freezeAuthority'].added" [serviceName]="addOns['freezeAuthority'].serviceName"
-                      formName="freezeAuthority"
-                      >
-                        <div title>Revoke Freeze</div>
-                        <div description>Revoking Freeze authority will prevent anyone from freezing holders' accounts in the future</div>
-  
-                        <div>
-                          <span class="text-sm">If you want to transfer the Freeze Authority, paste another Solana address below:</span>
-                          <input class="w-full mt-1" name="Transfer Freeze Authority" placeholder="Paste address here" type="text" pInputText pSize="small" formControlName="freezeAuthority" [maxlength]="50">
-                        </div>
-                      </app-add-on>
-                    </div>
-                    <!-- MINT -->
-                    <div class="field col-12 flex">
-                      <div class="pr-2"><i class="bi bi-boxes text-3xl" ></i></div>
-                      <app-add-on class="flex-grow-1" [(added)]="addOns['mintAuthority'].added" [serviceName]="addOns['mintAuthority'].serviceName"
-                      formName="mintAuthority">
-                        <div title>Revoke Mint</div>
-                        <div description>Revoking Mint authority shows that the supply is fixed and cannot grow </div>
-  
-                        <div>
-                          <span class="text-sm">If you want to transfer the Mint Authority, paste another Solana address below:</span>
-                          <input class="w-full mt-1" name="Transfer Mint Authority" placeholder="Paste address here" type="text" pInputText pSize="small" formControlName="mintAuthority" [maxlength]="50">
-                        </div>
-                      </app-add-on>
-                    </div>
-                    <!-- UPDATE -->
-                    <div class="field col-12 flex">
-                      <div style="padding-right: 0.8rem;"><i class="bi bi-pen text-2xl" ></i></div>
-                      <app-add-on class="flex-grow-1" [(added)]="addOns['updateAuthority'].added" [serviceName]="addOns['updateAuthority'].serviceName" tag="Or use PUMP.FUN Authority" tagSeverity="success"
-                      formName="updateAuthority">
-                        <div title>Revoke Update</div>
-                        <div description>Revoking Update authority means token metadata cannot be updated by anyone </div>
-                      
-                        <div>
-                          <span class="text-sm">If you want to transfer the Update Authority, paste another Solana address below:</span>
-                          <input class="w-full mt-1" name="Transfer Update Authority" placeholder="Paste address here" type="text" pInputText pSize="small" formControlName="updateAuthority" [maxlength]="50">
-                        </div>
-                        <p-button variant="text" size="small" (onClick)="pastePumpFunUpdateAddress()">Paste PUMP.FUN Update Authority address</p-button>
-
-                        <app-alert-banner>
-                          If you transfer the Update Authority to Pump.Fun, token metadata will become immutable. That means Pump.Fun address will be displayed in the metadata, but nobody will be able to change it, just like if your token was created on Pump.Fun
-                        </app-alert-banner>
-                      </app-add-on>
+                    <div class="field col-12 p-0 mb-0">
+                      <app-solana-token-authorities [(form)]="settingsForm" [(addOns)]="addOns" [smallerGap]="false"/>
                     </div>
                   </ng-container>
                 </div>
@@ -470,16 +419,13 @@
         <p-step-panel [value]="4">
           <ng-template #content>
             <div class="flex flex-column items-center">
-              <div class="flex items-center justify-content-center mt-3 mb-4">
-                <img style="height: 40px; width: 40px;" src="images/party-popper.png">
-                <span class="font-semibold text-3xl ml-2">Your Token has been created!</span>
-              </div>
+              <app-celebration-message>Your Token has been created!</app-celebration-message>
 
               <div class="flex justify-content-center items-center">
                 <app-token-created-body [address]="actualTokenMint.publicKey.toBase58()" />
               </div>
   
-              <button class="mt-4" pButton (click)="onReset.emit()"> <!-- TODO: make it the same width as Your token has been created -->
+              <button class="mt-4" pButton (click)="onReset.emit()">
                 <span class="font-medium">Create a New Token</span>
               </button>
             </div>

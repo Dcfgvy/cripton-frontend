@@ -42,7 +42,7 @@ export class MainComponent {
   // Calculator inputs
   numReferrals = signal<number>(10);
   tokensPerReferral = signal<number>(3);
-  private readonly FEE_PER_TOKEN: number = 0.08;
+  private readonly FEE_PER_TOKEN: number = 0.065;
 
   calculatedEarnings = computed<AffiliateCalcResult>(() => {
     const monthlyEarnings = this.numReferrals() * this.tokensPerReferral() * this.FEE_PER_TOKEN * (this.pricesService.prices().solanaAffiliateSharePercents.cost / 100);
